@@ -11,19 +11,27 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.1.x — core + CLI
+## Status: v0.2.x — core + CLI + material maps
 
 The MVP path proves the recipe -> texture pipeline before any GUI exists.
 Current graph:
 
 ```
 Load -> Crop/Perspective -> Downsample -> Noise Reduce -> Value Group
-     -> Tile Assist -> OKLab Palette Quantize -> Dither -> Upscale -> Pad
-     -> Export (albedo + recipe + build report)
+     -> Tile Assist -> OKLab Palette Quantize -> Dither
+     -> Material Maps (height -> normal / roughness / emissive)
+     -> Upscale -> Pad -> Export (pack + recipe + build report)
 ```
 
 Palette work happens in OKLab (perceptual clustering, TDD §12.2). Dithering
 is grid-aligned and can never introduce colors outside the active palette.
+
+Every build now emits a **pack**: albedo + normal (OpenGL Y+, seamless on
+tiled axes) + stepped roughness by default, height/emissive opt-in, plus a
+`<asset>.pack.json` manifest carrying map filenames, tileable axes, and
+`meters_per_tile`. The manifest is the contract downstream tools read —
+point Zoo's `--skins` at a folder of packs and compiled assets pick up the
+paint job.
 
 ## Install
 
@@ -63,7 +71,7 @@ is the ancestor of this tool and will eventually delegate here.
 
 ## Roadmap
 
-Post-v0.1 in TDD order: edge-aware downsampling (§12.1), protected/
-suppression masks, alpha/decal extraction (§7.11), material maps (§7.13),
-atlas packing (§7.15), batch folders, then the PySide6 desktop app and the
-Blender/Godot importers.
+Post-v0.2 in TDD order: edge-aware downsampling (§12.1), protected/
+suppression masks, alpha/decal extraction (§7.11), atlas packing (§7.15),
+batch folders, then the PySide6 desktop app and the Blender/Godot
+importers.

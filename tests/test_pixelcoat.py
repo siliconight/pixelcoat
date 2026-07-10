@@ -120,3 +120,90 @@ def test_cli_process_and_validate(tmp_path, source):
         [sys.executable, "-m", "pixelcoat.cli.main", "validate",
          str(recipe_path)], capture_output=True, text=True, env=env)
     assert res2.returncode == 0, res2.stdout + res2.stderr
+
+
+# ---------------------------------------------------------------- v0.2 maps
+
+from pixelcoat.core import maps
+
+
+def test_maps_emitted_and_pack_manifest(tmp_path, source):
+    r = _recipe(source, palette__max_colors=8)
+    report = pipeline.build(r, str(tmp_path / "build"))
+    out = tmp_path / "build" / "t"
+    assert (out / "t_normal.png").exists()
+    assert (out / "t_roughness.png").exists()
+    pack = json.loads((out / "t.pack.json").read_text())
+    assert pack["schema"] == "pixelcoat-pack/1"
+    assert pack["meters_per_tile"] == 1.0
+    for fname in pack["maps"].values():
+        assert (out / fname).exists()
+    assert set(report["maps"]) == {"albedo", "normal", "roughness"}
+
+
+def test_maps_align_with_albedo(tmp_path, source):
+    r = _recipe(source, export__padding=2, pixel__display_scale=2)
+    pipeline.build(r, str(tmp_path / "build"))
+    out = tmp_path / "build" / "t"
+    a = Image.open(out / "t_albedo.png").size
+    assert Image.open(out / "t_normal.png").size == a
+    assert Image.open(out / "t_roughness.png").size == a
+
+
+def test_normal_flat_height_is_neutral():
+    n = maps.normal_from_height(np.full((8, 8), 0.5, np.float32), 2.0)
+    assert np.allclose(n, [0.5, 0.5, 1.0], atol=1e-6)
+
+
+def test_normal_wrap_continuity():
+    rng = np.random.default_rng(9)
+    h = rng.random((16, 16)).astype(np.float32)
+    n = maps.normal_from_height(h, 2.0, wrap_x=True, wrap_y=True)
+    n_rolled = maps.normal_from_height(
+        np.roll(h, 5, axis=1), 2.0, wrap_x=True, wrap_y=True)
+    assert np.allclose(np.roll(n, 5, axis=1), n_rolled, atol=1e-6)
+
+
+def test_normal_opengl_green_convention():
+    # Height increasing downward in image space -> OpenGL Y+ green > 0.5.
+    h = np.linspace(0, 1, 16, dtype=np.float32)[:, None].repeat(16, axis=1)
+    n = maps.normal_from_height(h, 2.0)
+    assert (n[1:-1, :, 1] > 0.5).all()
+    flipped = maps.normal_from_height(h, 2.0, flip_g=True)
+    assert (flipped[1:-1, :, 1] < 0.5).all()
+
+
+def test_roughness_levels_and_range():
+    rng = np.random.default_rng(4)
+    h = rng.random((32, 32)).astype(np.float32)
+    r = maps.roughness_from_height(h, 0.6, 0.3, levels=4)
+    assert r.min() >= 0.0 and r.max() <= 1.0
+    assert len(np.unique(np.round(r, 6))) <= 4
+
+
+def test_emissive_indices_selects_palette_entries():
+    pal = np.array([[0, 0, 0], [1, 0.2, 0.1], [0.3, 0.3, 0.3]], np.float32)
+    rgb = pal[np.array([[0, 1], [2, 1]])]
+    e = maps.emissive_indices(rgb, pal, [1])
+    assert np.allclose(e[0, 1], pal[1]) and np.allclose(e[1, 1], pal[1])
+    assert np.allclose(e[0, 0], 0) and np.allclose(e[1, 0], 0)
+
+
+def test_maps_deterministic(tmp_path, source):
+    r = _recipe(source, dither__method="bayer")
+    pipeline.build(r, str(tmp_path / "a"))
+    pipeline.build(r, str(tmp_path / "b"))
+    for name in ("normal", "roughness"):
+        a = (tmp_path / "a" / "t" / f"t_{name}.png").read_bytes()
+        b = (tmp_path / "b" / "t" / f"t_{name}.png").read_bytes()
+        assert a == b
+
+
+def test_v01_recipe_still_builds(tmp_path, source):
+    raw = {"schema_version": "0.1", "asset_id": "old",
+           "source": {"path": source},
+           "pixel": {"working_width": 32, "working_height": 32}}
+    r = Recipe.from_dict(raw)
+    report = pipeline.build(r, str(tmp_path / "build"))
+    assert "normal" in report["maps"]          # 0.2 defaults apply
+    assert (tmp_path / "build" / "old" / "old.pack.json").exists()

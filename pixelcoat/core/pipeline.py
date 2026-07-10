@@ -16,7 +16,8 @@ import numpy as np
 
 from ..recipe import Recipe
 from ..version import __version__
-from . import dithering, image_io, quantization, simplification, tiling, transforms
+from . import (dithering, image_io, maps, quantization, simplification,
+               tiling, transforms)
 
 
 def build(recipe: Recipe, out_dir: str) -> dict:
@@ -56,19 +57,66 @@ def build(recipe: Recipe, out_dir: str) -> dict:
     rgb = dithering.apply(rgb, palette, recipe.dither.method,
                           recipe.dither.strength).astype(np.float32)
 
+    # Material maps (TDD §7.13) are derived at working resolution from the
+    # post-dither albedo so they stay pixel-aligned through upscale + pad.
+    wrap_x = recipe.tiling.enabled and recipe.tiling.axes in ("x", "both")
+    wrap_y = recipe.tiling.enabled and recipe.tiling.axes in ("y", "both")
+    extra: dict[str, np.ndarray] = {}
+    m = recipe.maps
+    if m.normal or m.roughness or m.height:
+        h = maps.height_from_albedo(rgb, m.height_smooth, wrap_x, wrap_y)
+        if m.normal:
+            extra["normal"] = maps.normal_from_height(
+                h, m.normal_strength, wrap_x, wrap_y, m.normal_flip_g)
+        if m.roughness:
+            extra["roughness"] = maps.to_rgb(maps.roughness_from_height(
+                h, m.roughness_base, m.roughness_variation,
+                m.roughness_levels, m.roughness_invert))
+        if m.height:
+            extra["height"] = maps.to_rgb(h)
+    if m.emissive_mode == "indices":
+        extra["emissive"] = maps.emissive_indices(rgb, palette,
+                                                  m.emissive_indices)
+    elif m.emissive_mode == "threshold":
+        extra["emissive"] = maps.emissive_threshold(rgb, m.emissive_threshold)
+
     out = np.concatenate([rgb, alpha], axis=-1)
 
-    if recipe.export.nearest_neighbor_upscale and recipe.pixel.display_scale > 1:
-        s = recipe.pixel.display_scale
-        out = out.repeat(s, axis=0).repeat(s, axis=1)
-    if recipe.export.padding > 0:
-        out = _pad_extrude(out, recipe.export.padding)
+    def _finish(arr: np.ndarray) -> np.ndarray:
+        if recipe.export.nearest_neighbor_upscale and recipe.pixel.display_scale > 1:
+            s = recipe.pixel.display_scale
+            arr = arr.repeat(s, axis=0).repeat(s, axis=1)
+        if recipe.export.padding > 0:
+            arr = _pad_extrude(arr, recipe.export.padding)
+        return arr
+
+    out = _finish(out)
 
     asset_dir = os.path.join(out_dir, recipe.asset_id)
     os.makedirs(asset_dir, exist_ok=True)
     albedo = os.path.join(asset_dir, f"{recipe.asset_id}_albedo.png")
     image_io.save_png(out, albedo)
+    map_files = {"albedo": os.path.basename(albedo)}
+    for name, arr in extra.items():
+        p = os.path.join(asset_dir, f"{recipe.asset_id}_{name}.png")
+        image_io.save_png(_finish(arr), p)
+        map_files[name] = os.path.basename(p)
     recipe.save(os.path.join(asset_dir, f"{recipe.asset_id}.pixelcoat.json"))
+
+    # Pack manifest: the cross-tool contract consumers (Zoo, Patina, the
+    # Godot importer) read instead of guessing filenames.
+    pack = {
+        "schema": "pixelcoat-pack/1",
+        "tool_version": __version__,
+        "asset_id": recipe.asset_id,
+        "maps": map_files,
+        "tileable": recipe.tiling.axes if recipe.tiling.enabled else None,
+        "meters_per_tile": recipe.export.meters_per_tile,
+        "source_sha256": sha,
+    }
+    pack_path = os.path.join(asset_dir, f"{recipe.asset_id}.pack.json")
+    with open(pack_path, "w", encoding="utf-8") as f:
+        json.dump(pack, f, indent=2, sort_keys=True)
 
     report = {
         "tool_version": __version__,
@@ -80,7 +128,9 @@ def build(recipe: Recipe, out_dir: str) -> dict:
             (rgb.reshape(-1, 3) * 255).astype(np.uint8), axis=0))),
         "palette_size": int(len(palette)),
         "duration_seconds": round(time.perf_counter() - t0, 4),
-        "files": [os.path.basename(albedo)],
+        "maps": sorted(map_files),
+        "files": sorted(map_files.values()) + [
+            f"{recipe.asset_id}.pack.json"],
     }
     with open(os.path.join(asset_dir, "build_report.json"), "w",
               encoding="utf-8") as f:

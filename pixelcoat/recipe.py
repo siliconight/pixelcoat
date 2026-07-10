@@ -20,6 +20,7 @@ _DOWNSAMPLE = ("box", "nearest")            # "edge_aware" arrives post-v0.1
 _PALETTE_METHODS = ("oklab_kmeans", "fixed")
 _DITHER = ("none", "bayer", "floyd_steinberg")
 _EXPORT_TYPES = ("surface_texture", "decal", "sign")
+_EMISSIVE_MODES = ("none", "indices", "threshold")
 
 
 @dataclass
@@ -65,11 +66,32 @@ class Tiling:
 
 
 @dataclass
+class Maps:
+    """Material map generation (TDD §7.13): the texture-and-depth stage.
+    Normal + roughness ship by default so every pack reads as a material,
+    not a flat print; height/emissive are opt-in."""
+    normal: bool = True
+    normal_strength: float = 2.0
+    normal_flip_g: bool = False                      # DirectX-style consumers
+    height: bool = False                             # emit the height field
+    height_smooth: int = 1                           # 3x3 median passes
+    roughness: bool = True
+    roughness_base: float = 0.6
+    roughness_variation: float = 0.25
+    roughness_levels: int = 4                        # stepped PS1 response
+    roughness_invert: bool = False
+    emissive_mode: str = "none"                      # none | indices | threshold
+    emissive_indices: list[int] = field(default_factory=list)
+    emissive_threshold: float = 0.85
+
+
+@dataclass
 class Export:
     type: str = "surface_texture"
     format: str = "png"
     nearest_neighbor_upscale: bool = True
     padding: int = 0
+    meters_per_tile: float = 1.0                     # physical repeat size
 
 
 @dataclass
@@ -84,6 +106,7 @@ class Recipe:
     palette: Palette = field(default_factory=Palette)
     dither: Dither = field(default_factory=Dither)
     tiling: Tiling = field(default_factory=Tiling)
+    maps: Maps = field(default_factory=Maps)
     export: Export = field(default_factory=Export)
 
     # ---------------------------------------------------------------- io
@@ -101,6 +124,7 @@ class Recipe:
         _fill(r.palette, raw.get("palette"))
         _fill(r.dither, raw.get("dither"))
         _fill(r.tiling, raw.get("tiling"))
+        _fill(r.maps, raw.get("maps"))               # absent in 0.1 recipes
         _fill(r.export, raw.get("export"))
         r.validate(where)
         return r
@@ -128,6 +152,7 @@ class Recipe:
             "palette": dataclasses.asdict(self.palette),
             "dither": dataclasses.asdict(self.dither),
             "tiling": dataclasses.asdict(self.tiling),
+            "maps": dataclasses.asdict(self.maps),
             "export": dataclasses.asdict(self.export),
         }
 
@@ -164,6 +189,24 @@ class Recipe:
             bad("perspective_quad must be four [x, y] pairs (TL,TR,BR,BL)")
         if self.tiling.axes not in ("x", "y", "both"):
             bad("tiling axes must be x, y, or both")
+        if not 0.0 <= self.maps.normal_strength <= 8.0:
+            bad("maps normal_strength must be within 0..8")
+        if not 0 <= self.maps.height_smooth <= 8:
+            bad("maps height_smooth must be within 0..8")
+        if not 0.0 <= self.maps.roughness_base <= 1.0:
+            bad("maps roughness_base must be within 0..1")
+        if not 0.0 <= self.maps.roughness_variation <= 1.0:
+            bad("maps roughness_variation must be within 0..1")
+        if not 2 <= self.maps.roughness_levels <= 32:
+            bad("maps roughness_levels must be within 2..32")
+        if self.maps.emissive_mode not in _EMISSIVE_MODES:
+            bad(f"maps emissive_mode must be one of {_EMISSIVE_MODES}")
+        if self.maps.emissive_mode == "indices" and not self.maps.emissive_indices:
+            bad("maps emissive_mode 'indices' requires emissive_indices")
+        if not 0.0 <= self.maps.emissive_threshold <= 1.0:
+            bad("maps emissive_threshold must be within 0..1")
+        if self.export.meters_per_tile <= 0.0:
+            bad("export meters_per_tile must be > 0")
 
 
 def _fill(target, raw: dict | None) -> None:
