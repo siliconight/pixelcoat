@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixelcoat"
+description = "Controlled pixel-art surface treatments for 3D worlds."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dynamic = ["version"]
+dependencies = ["numpy", "pillow"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+pixelcoat = "pixelcoat.cli.main:main"
+
+[tool.setuptools]
+packages = ["pixelcoat", "pixelcoat.core", "pixelcoat.cli"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pixelcoat.version.__version__"}
