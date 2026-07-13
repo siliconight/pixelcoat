@@ -889,3 +889,324 @@ def test_v06_defaults_keep_pixel_bytes(tmp_path, source):
     for f in sorted((tmp_path / "a" / "t").glob("*.png")):
         assert f.read_bytes() == \
             (tmp_path / "b" / "t" / f.name).read_bytes()
+
+
+# --------------------------------------------------- v0.7 alpha / decals
+
+from pixelcoat.core import alpha as alpha_mod
+
+
+@pytest.fixture
+def keyed_source(tmp_path):
+    """Magenta background, red square subject, thin blue border detail."""
+    img = np.zeros((128, 128, 3), np.float32)
+    img[:] = (1.0, 0.0, 1.0)                   # magenta key
+    img[32:96, 32:96] = (0.8, 0.1, 0.1)        # subject
+    img[32:36, 32:96] = (0.1, 0.2, 0.9)        # top border detail
+    p = tmp_path / "keyed.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    return str(p)
+
+
+def _decal_recipe(src, **alpha_kw):
+    r = _recipe(src)
+    r.pixel.working_width = 64
+    r.pixel.working_height = 64
+    r.palette.max_colors = 8
+    r.alpha.source = alpha_kw.pop("source", "color_key")
+    for k, v in alpha_kw.items():
+        setattr(r.alpha, k, v)
+    r.export.type = "decal"
+    return r
+
+
+def test_color_key_decal_end_to_end(tmp_path, keyed_source):
+    r = _decal_recipe(keyed_source, color_key="#ff00ff")
+    r.export.padding = 4
+    report = pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "t"
+    pack = json.loads((out / "t.pack.json").read_text())
+    assert pack["export_type"] == "decal"
+    assert pack["maps"]["albedo"] == "t_decal.png"   # TDD 8.2 naming
+    a = np.asarray(Image.open(out / "t_decal.png"), np.float32) / 255
+    assert a.shape[2] == 4
+    # background transparent, subject opaque
+    assert a[36, 36, 3] == 1.0
+    assert a[4, 4, 3] == 0.0
+    # padding transparent (not extruded alpha)
+    assert a[:4, :, 3].max() == 0.0 and a[:, :4, 3].max() == 0.0
+    assert "final_color_count" in report
+
+
+def test_transparent_rgb_has_no_fringe(tmp_path, keyed_source):
+    r = _decal_recipe(keyed_source, color_key="#ff00ff")
+    pipeline.build(r, str(tmp_path / "b"))
+    a = np.asarray(Image.open(tmp_path / "b" / "t" / "t_decal.png"),
+                   np.float32) / 255
+    transparent = a[..., 3] == 0
+    # acceptance: no magenta left behind under transparent pixels
+    rgb = a[..., :3][transparent]
+    magenta_like = (rgb[:, 0] > 0.6) & (rgb[:, 1] < 0.3) & (rgb[:, 2] > 0.6)
+    assert magenta_like.sum() == 0
+
+
+def test_pixel_hard_alpha_is_binary(tmp_path, keyed_source):
+    r = _decal_recipe(keyed_source, color_key="#ff00ff", feather=6.0,
+                      pixel_hard=True)
+    pipeline.build(r, str(tmp_path / "b"))
+    a = np.asarray(Image.open(tmp_path / "b" / "t" / "t_decal.png"))
+    assert set(np.unique(a[..., 3])) <= {0, 255}
+    r2 = _decal_recipe(keyed_source, color_key="#ff00ff", feather=6.0,
+                       pixel_hard=False, cutoff=0.1)
+    r2.asset_id = "soft"
+    pipeline.build(r2, str(tmp_path / "b"))
+    a2 = np.asarray(Image.open(tmp_path / "b" / "soft" / "soft_decal.png"))
+    assert len(np.unique(a2[..., 3])) > 2      # soft edge survives
+
+
+def test_alpha_dilate_grows_coverage(tmp_path, keyed_source):
+    def coverage(dilate, aid):
+        r = _decal_recipe(keyed_source, color_key="#ff00ff", dilate=dilate)
+        r.asset_id = aid
+        pipeline.build(r, str(tmp_path / "b"))
+        a = np.asarray(Image.open(tmp_path / "b" / aid /
+                                  f"{aid}_decal.png"))
+        return int((a[..., 3] > 0).sum())
+    assert coverage(2, "d2") > coverage(0, "d0")
+
+
+def test_luminance_and_mask_sources(tmp_path):
+    img = np.zeros((64, 64, 3), np.float32)
+    img[16:48, 16:48] = 0.9                    # bright subject on black
+    p = tmp_path / "lum.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    r = _decal_recipe(str(p), source="luminance", luminance_threshold=0.5)
+    pipeline.build(r, str(tmp_path / "b"))
+    a = np.asarray(Image.open(tmp_path / "b" / "t" / "t_decal.png"))
+    assert a[32, 32, 3] == 255 and a[4, 4, 3] == 0
+
+    mask = np.zeros((64, 64), np.uint8)
+    mask[:, 32:] = 255
+    mp = tmp_path / "amask.png"
+    Image.fromarray(mask).save(mp)
+    r2 = _decal_recipe(str(p), source="mask", mask_path=str(mp))
+    r2.asset_id = "m"
+    pipeline.build(r2, str(tmp_path / "b"))
+    a2 = np.asarray(Image.open(tmp_path / "b" / "m" / "m_decal.png"))
+    assert a2[32, 48, 3] == 255 and a2[32, 8, 3] == 0
+
+
+def test_flood_select_keeps_enclosed_holes(tmp_path):
+    # ring subject: the enclosed center matches the background color but
+    # is NOT corner-connected, so flood must keep it opaque
+    img = np.zeros((96, 96, 3), np.float32)
+    img[:] = (0.2, 0.6, 0.2)                   # background
+    img[24:72, 24:72] = (0.8, 0.2, 0.1)        # subject block
+    img[40:56, 40:56] = (0.2, 0.6, 0.2)        # enclosed hole, bg color
+    p = tmp_path / "ring.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    r = _decal_recipe(str(p), source="flood", flood_tolerance=0.08)
+    pipeline.build(r, str(tmp_path / "b"))
+    a = np.asarray(Image.open(tmp_path / "b" / "t" / "t_decal.png"))
+    assert a[4, 4, 3] == 0                     # background gone
+    assert a[32, 32, 3] == 255                 # enclosed center kept
+
+
+def test_premultiplied_export(tmp_path, keyed_source):
+    r = _decal_recipe(keyed_source, color_key="#ff00ff",
+                      premultiplied=True)
+    pipeline.build(r, str(tmp_path / "b"))
+    a = np.asarray(Image.open(tmp_path / "b" / "t" / "t_decal.png"))
+    transparent = a[..., 3] == 0
+    assert a[..., :3][transparent].max() == 0  # premult: rgb*0 = 0
+
+
+def test_decal_requires_alpha_source(tmp_path, source):
+    r = _recipe(source)
+    r.export.type = "decal"
+    with pytest.raises(ValueError, match="alpha source"):
+        r.validate()
+
+
+def test_v07_defaults_keep_pixel_bytes(tmp_path, source):
+    r = _recipe(source)
+    r.dither.method = "bayer"
+    r.tiling.enabled = True
+    pipeline.build(r, str(tmp_path / "a"))
+    r2 = Recipe.from_dict(r.to_dict())
+    r2.asset_id = "t"
+    pipeline.build(r2, str(tmp_path / "b"))
+    for f in sorted((tmp_path / "a" / "t").glob("*.png")):
+        assert f.read_bytes() == \
+            (tmp_path / "b" / "t" / f.name).read_bytes()
+
+
+def test_cli_decal(tmp_path, keyed_source):
+    env = dict(os.environ, PYTHONPATH=os.getcwd())
+    out = tmp_path / "cli"
+    res = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "process",
+         keyed_source, "--width", "64", "--height", "64",
+         "--alpha", "color_key", "--alpha-key", "#ff00ff",
+         "--alpha-feather", "2", "--decal",
+         "--output", str(out), "--json"],
+        capture_output=True, text=True, env=env)
+    assert res.returncode == 0, res.stderr
+    report = json.loads(res.stdout)
+    aid = report["asset_id"]
+    assert (out / aid / f"{aid}_decal.png").exists()
+
+
+# ---------------------------------------------------------- v0.8 atlas
+
+from pixelcoat.core import atlas as atlas_mod
+
+
+@pytest.fixture
+def three_packs(tmp_path):
+    """Three decal packs of different sizes (one tall for rotation)."""
+    rng = np.random.default_rng(15)
+    paths = []
+    for aid, (w, h), color in (("poster", (48, 48), (0.8, 0.2, 0.2)),
+                               ("sign", (32, 32), (0.2, 0.8, 0.2)),
+                               ("banner", (24, 64), (0.2, 0.2, 0.8))):
+        img = np.full((128, 128, 3), (1.0, 0.0, 1.0), np.float32)
+        img[16:112, 16:112] = color
+        img[20:40, 20:60] += rng.normal(0, 0.05, (20, 40, 3))
+        p = tmp_path / f"{aid}.png"
+        Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8)) \
+            .save(p)
+        r = _recipe(str(p))
+        r.asset_id = aid
+        r.pixel.working_width = w
+        r.pixel.working_height = h
+        r.palette.max_colors = 6
+        r.alpha.source = "color_key"
+        r.alpha.color_key = "#ff00ff"
+        r.export.type = "decal"
+        pipeline.build(r, str(tmp_path / "packs"))
+        paths.append(str(tmp_path / "packs" / aid / f"{aid}.pack.json"))
+    return paths
+
+
+def test_atlas_end_to_end(tmp_path, three_packs):
+    report = atlas_mod.build_atlas(three_packs, "city01",
+                                   str(tmp_path / "out"), gutter=2)
+    out = tmp_path / "out" / "city01"
+    man = json.loads((out / "city01_atlas.json").read_text())
+    assert man["schema_version"] == "pixelcoat-atlas/1"
+    assert len(man["entries"]) == 3
+    aw, ah = man["width"], man["height"]
+    atlas_alb = np.asarray(Image.open(
+        out / man["maps"]["albedo"]), np.float32) / 255.0
+    assert atlas_alb.shape[:2] == (ah, aw)
+
+    # no overlaps
+    cover = np.zeros((ah, aw), np.int32)
+    for e in man["entries"]:
+        x, y, w, h = e["rect_px"]
+        cover[y:y + h, x:x + w] += 1
+    assert cover.max() == 1
+
+    # rects crop back to exact source pixels (rotation honored)
+    for e in man["entries"]:
+        x, y, w, h = e["rect_px"]
+        crop = atlas_alb[y:y + h, x:x + w]
+        pack_dir = os.path.dirname(three_packs[0]).replace(
+            "poster", e["id"])
+        src_pack = json.loads(open(os.path.join(
+            os.path.dirname(os.path.dirname(three_packs[0])),
+            e["id"], e["source_pack"])).read())
+        src_img = np.asarray(Image.open(os.path.join(
+            os.path.dirname(os.path.dirname(three_packs[0])), e["id"],
+            src_pack["maps"]["albedo"])).convert("RGBA"),
+            np.float32) / 255.0
+        if e["rotated"]:
+            src_img = np.rot90(src_img, k=-1)
+        assert np.abs(crop - src_img).max() < 1 / 254.0, e["id"]
+
+    # uv consistent with rect
+    e0 = man["entries"][0]
+    assert abs(e0["uv"][0] - e0["rect_px"][0] / aw) < 1e-9
+    assert report["occupancy"] > 0.3
+    assert (out / "city01_preview.png").exists()
+
+
+def test_atlas_deterministic(tmp_path, three_packs):
+    atlas_mod.build_atlas(three_packs, "a", str(tmp_path / "o1"))
+    atlas_mod.build_atlas(three_packs, "a", str(tmp_path / "o2"))
+    for f in sorted((tmp_path / "o1" / "a").glob("*")):
+        assert f.read_bytes() == (tmp_path / "o2" / "a" / f.name) \
+            .read_bytes(), f.name
+
+
+def test_atlas_rotation_and_toggle(tmp_path, three_packs):
+    man_r = atlas_mod.build_atlas(three_packs, "r", str(tmp_path / "o"))
+    m = json.loads((tmp_path / "o" / "r" / "r_atlas.json").read_text())
+    banner = next(e for e in m["entries"] if e["id"] == "banner")
+    assert banner["rotated"] is True           # 24x64 -> laid on its side
+    assert banner["rect_px"][2] > banner["rect_px"][3]
+    atlas_mod.build_atlas(three_packs, "nr", str(tmp_path / "o"),
+                          allow_rotate=False)
+    m2 = json.loads((tmp_path / "o" / "nr" / "nr_atlas.json").read_text())
+    banner2 = next(e for e in m2["entries"] if e["id"] == "banner")
+    assert banner2["rotated"] is False
+
+
+def test_atlas_pow2_and_alpha_gutter(tmp_path, three_packs):
+    atlas_mod.build_atlas(three_packs, "p2", str(tmp_path / "o"),
+                          gutter=4, pow2=True)
+    man = json.loads((tmp_path / "o" / "p2" / "p2_atlas.json").read_text())
+    assert man["width"] & (man["width"] - 1) == 0
+    assert man["height"] & (man["height"] - 1) == 0
+    alb = np.asarray(Image.open(
+        tmp_path / "o" / "p2" / man["maps"]["albedo"]))
+    # decal atlas: gutters transparent everywhere outside entry rects
+    inside = np.zeros(alb.shape[:2], bool)
+    for e in man["entries"]:
+        x, y, w, h = e["rect_px"]
+        inside[y:y + h, x:x + w] = True
+    assert alb[..., 3][~inside].max() == 0
+    assert all(e["alpha_mode"] == "cutout" for e in man["entries"])
+
+
+def test_atlas_neutral_fill_for_missing_maps(tmp_path, three_packs, source):
+    # a pack without normal/roughness joins one that has them
+    r = _recipe(source)
+    r.asset_id = "flat"
+    r.maps.normal = False
+    r.maps.roughness = False
+    pipeline.build(r, str(tmp_path / "extra"))
+    packs = three_packs + [str(tmp_path / "extra" / "flat" /
+                               "flat.pack.json")]
+    atlas_mod.build_atlas(packs, "mix", str(tmp_path / "o"))
+    man = json.loads((tmp_path / "o" / "mix" / "mix_atlas.json").read_text())
+    normal = np.asarray(Image.open(
+        tmp_path / "o" / "mix" / man["maps"]["normal"]), np.int32)
+    flat = next(e for e in man["entries"] if e["id"] == "flat")
+    x, y, w, h = flat["rect_px"]
+    region = normal[y:y + h, x:x + w, :3]
+    assert np.abs(region - (128, 128, 255)).max() <= 1  # neutral normal
+
+
+def test_atlas_rejects_mixed_modes(tmp_path, three_packs, g7_source):
+    r = _g7_recipe(g7_source, size=64)
+    pipeline.build(r, str(tmp_path / "g7"))
+    with pytest.raises(ValueError, match="mixed processing modes"):
+        atlas_mod.build_atlas(
+            three_packs + [str(tmp_path / "g7" / "g" / "g.pack.json")],
+            "bad", str(tmp_path / "o"))
+
+
+def test_cli_atlas(tmp_path, three_packs):
+    env = dict(os.environ, PYTHONPATH=os.getcwd())
+    res = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "atlas",
+         os.path.dirname(os.path.dirname(three_packs[0])),
+         "--name", "cli01", "--output", str(tmp_path / "o"),
+         "--pow2", "--json"],
+        capture_output=True, text=True, env=env)
+    assert res.returncode == 0, res.stderr
+    report = json.loads(res.stdout)
+    assert report["entries"] == 3
+    assert (tmp_path / "o" / "cli01" / "cli01_atlas.json").exists()

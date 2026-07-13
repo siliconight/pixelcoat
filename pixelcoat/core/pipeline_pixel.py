@@ -18,8 +18,8 @@ import numpy as np
 
 from ..recipe import Recipe
 from ..version import __version__
-from . import (dithering, image_io, maps, quantization, simplification,
-               tiling, transforms)
+from . import (alpha as alpha_mod, dithering, image_io, maps,
+               quantization, simplification, tiling, transforms)
 
 
 def build_pixel(recipe: Recipe, out_dir: str) -> dict:
@@ -32,6 +32,15 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
     arr = transforms.apply(src, recipe.transform.crop,
                            recipe.transform.perspective_quad,
                            recipe.transform.rotation_degrees, target)
+
+    # Alpha extraction at SOURCE resolution (TDD 7.11): feathering acts
+    # in source space, then the downsample turns the feathered edge into
+    # clean coverage at working resolution.
+    has_alpha = recipe.alpha.source != "none"
+    if has_alpha:
+        arr = arr.copy()
+        arr[..., 3] = alpha_mod.extract(arr, recipe.alpha)
+
     arr = transforms.downsample(arr, target, recipe.pixel.downsample_method,
                                 recipe.pixel.edge_preserve)
 
@@ -78,6 +87,10 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
             indices, recipe.simplification.island_removal, protected)
         rgb = palette[indices].astype(np.float32)
 
+    if has_alpha:
+        rgb, a2 = alpha_mod.finalize(rgb, alpha[..., 0], recipe.alpha)
+        alpha = a2[..., None]
+
     # Material maps (TDD §7.13) are derived at working resolution from the
     # post-dither albedo so they stay pixel-aligned through upscale + pad.
     wrap_x = recipe.tiling.enabled and recipe.tiling.axes in ("x", "both")
@@ -105,21 +118,27 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
                                          (rgb.shape[1], rgb.shape[0]))
         extra["emissive"] = maps.to_rgb(emask.astype(np.float32))
 
-    out = np.concatenate([rgb, alpha], axis=-1)
+    out_rgb = rgb * alpha if recipe.alpha.premultiplied else rgb
+    out = np.concatenate([out_rgb, alpha], axis=-1)
 
     def _finish(arr: np.ndarray) -> np.ndarray:
         if recipe.export.nearest_neighbor_upscale and recipe.pixel.display_scale > 1:
             s = recipe.pixel.display_scale
             arr = arr.repeat(s, axis=0).repeat(s, axis=1)
         if recipe.export.padding > 0:
-            arr = _pad_extrude(arr, recipe.export.padding)
+            if recipe.export.type == "decal":
+                arr = _pad_decal(arr, recipe.export.padding)
+            else:
+                arr = _pad_extrude(arr, recipe.export.padding)
         return arr
 
     out = _finish(out)
 
     asset_dir = os.path.join(out_dir, recipe.asset_id)
     os.makedirs(asset_dir, exist_ok=True)
-    albedo = os.path.join(asset_dir, f"{recipe.asset_id}_albedo.png")
+    albedo_name = "decal" if recipe.export.type == "decal" else "albedo"
+    albedo = os.path.join(asset_dir,
+                          f"{recipe.asset_id}_{albedo_name}.png")
     image_io.save_png(out, albedo)
     map_files = {"albedo": os.path.basename(albedo)}
     for name, arr in extra.items():
@@ -138,6 +157,7 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
         "maps": map_files,
         "tileable": recipe.tiling.axes if recipe.tiling.enabled else None,
         "meters_per_tile": recipe.export.meters_per_tile,
+        "export_type": recipe.export.type,        # additive in 0.7
         "source_sha256": sha,
     }
     pack_path = os.path.join(asset_dir, f"{recipe.asset_id}.pack.json")
@@ -151,8 +171,11 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
         "source_sha256": sha,
         "working_resolution": list(target),
         "output_resolution": [out.shape[1], out.shape[0]],
+        # Opaque pixels only: defringe fill under transparent pixels is
+        # deliberately off-palette and invisible.
         "final_color_count": int(len(np.unique(
-            (rgb.reshape(-1, 3) * 255).astype(np.uint8), axis=0))),
+            (rgb[alpha[..., 0] > 0].reshape(-1, 3) * 255)
+            .astype(np.uint8), axis=0))),
         "palette_size": int(len(palette)),
         "duration_seconds": round(time.perf_counter() - t0, 4),
         "maps": sorted(map_files),
@@ -169,3 +192,15 @@ def _pad_extrude(arr: np.ndarray, pad: int) -> np.ndarray:
     """Border extrusion padding (TDD §7.11): edge pixels repeat outward so
     mipmaps and atlas packing don't bleed."""
     return np.pad(arr, ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+
+
+def _pad_decal(arr: np.ndarray, pad: int) -> np.ndarray:
+    """Decal padding: RGB extrudes (mipmap-safe colors) but alpha pads
+    ZERO — a decal's padding must stay transparent (TDD §7.11)."""
+    out = np.pad(arr, ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+    if out.shape[2] == 4:
+        out[:pad, :, 3] = 0.0
+        out[-pad:, :, 3] = 0.0
+        out[:, :pad, 3] = 0.0
+        out[:, -pad:, 3] = 0.0
+    return out

@@ -53,6 +53,25 @@ def main(argv: list[str] | None = None) -> int:
                     help="dissolve palette islands of <= N pixels")
     pr.add_argument("--protected-mask", default=None,
                     help="grayscale mask; >50%% keeps source detail")
+    pr.add_argument("--alpha", default="none",
+                    choices=["none", "source", "color_key", "luminance",
+                             "mask", "flood"],
+                    help="alpha extraction source (TDD 7.11)")
+    pr.add_argument("--alpha-key", default="#ff00ff",
+                    help="color_key hex, e.g. '#00ff00'")
+    pr.add_argument("--alpha-tolerance", type=float, default=None,
+                    help="color_key / flood tolerance 0..1")
+    pr.add_argument("--alpha-threshold", type=float, default=0.5,
+                    help="luminance threshold 0..1")
+    pr.add_argument("--alpha-invert", action="store_true")
+    pr.add_argument("--alpha-mask", default=None,
+                    help="grayscale alpha mask path")
+    pr.add_argument("--alpha-feather", type=float, default=0.0,
+                    help="source-space feather radius, px")
+    pr.add_argument("--alpha-dilate", type=int, default=0)
+    pr.add_argument("--decal", action="store_true",
+                    help="decal export: <asset>_decal.png, transparent "
+                         "padding")
     pr.add_argument("--tile", default=None, choices=["x", "y", "both"])
     pr.add_argument("--scale", type=int, default=1,
                     help="nearest-neighbor display scale")
@@ -70,6 +89,19 @@ def main(argv: list[str] | None = None) -> int:
 
     va = sub.add_parser("validate", help="validate recipe file(s) or a dir")
     va.add_argument("paths", nargs="+")
+
+    at = sub.add_parser("atlas", help="pack pixelcoat packs into one "
+                                      "atlas + UV manifest (TDD 7.15)")
+    at.add_argument("packs", nargs="+",
+                    help=".pack.json files, or directories to scan")
+    at.add_argument("--name", required=True, help="atlas name")
+    at.add_argument("--output", default="./build")
+    at.add_argument("--gutter", type=int, default=2)
+    at.add_argument("--pow2", action="store_true",
+                    help="round atlas dimensions up to powers of two")
+    at.add_argument("--no-rotate", action="store_true",
+                    help="disable 90-degree rotation")
+    at.add_argument("--json", action="store_true", dest="json_log")
 
     pc = sub.add_parser("preview-compression",
                         help="write legacy block-compression previews for "
@@ -89,10 +121,42 @@ def main(argv: list[str] | None = None) -> int:
             return _build_from(args)
         if args.cmd == "preview-compression":
             return _preview_compression(args)
+        if args.cmd == "atlas":
+            return _atlas(args)
         return _validate(args)
     except (ValueError, OSError) as e:
         print(f"pixelcoat: error: {e}", file=sys.stderr)
         return 1
+
+
+def _atlas(args) -> int:
+    import glob as _glob
+    import json as _json
+
+    from ..core import atlas as atlas_mod
+
+    packs: list[str] = []
+    for p in args.packs:
+        if os.path.isdir(p):
+            packs.extend(_glob.glob(os.path.join(p, "**", "*.pack.json"),
+                                    recursive=True))
+        else:
+            packs.append(p)
+    if not packs:
+        raise ValueError("no .pack.json files found")
+    report = atlas_mod.build_atlas(
+        [os.path.abspath(p) for p in sorted(set(packs))],
+        args.name, os.path.abspath(args.output),
+        gutter=args.gutter, pow2=args.pow2,
+        allow_rotate=not args.no_rotate)
+    if args.json_log:
+        print(_json.dumps(report, indent=2))
+    else:
+        print(f"[atlas] {report['atlas']}: {report['entries']} entries "
+              f"-> {report['size'][0]}x{report['size'][1]} "
+              f"({report['occupancy']:.0%} occupancy, "
+              f"{len(report['maps'])} maps)")
+    return 0
 
 
 def _preview_compression(args) -> int:
@@ -157,6 +221,19 @@ def _process(args) -> int:
     if args.protected_mask:
         r.simplification.protected_mask = os.path.abspath(
             args.protected_mask)
+    r.alpha.source = args.alpha
+    r.alpha.color_key = args.alpha_key
+    if args.alpha_tolerance is not None:
+        r.alpha.tolerance = args.alpha_tolerance
+        r.alpha.flood_tolerance = args.alpha_tolerance
+    r.alpha.luminance_threshold = args.alpha_threshold
+    r.alpha.invert = args.alpha_invert
+    if args.alpha_mask:
+        r.alpha.mask_path = os.path.abspath(args.alpha_mask)
+    r.alpha.feather = args.alpha_feather
+    r.alpha.dilate = args.alpha_dilate
+    if args.decal:
+        r.export.type = "decal"
     if args.tile:
         r.tiling.enabled = True
         r.tiling.axes = args.tile

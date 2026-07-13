@@ -11,7 +11,7 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.6.x — two processing modes
+## Status: v0.8.x — two processing modes
 
 `processing_mode` selects the graph; recipes without one are `pixel`.
 
@@ -146,9 +146,35 @@ logos, window frames. `maps.emissive_mode: "mask"` +
 `emissive_mask_path` cuts an emissive straight from an authored mask
 (signage/neon feeding engine-side emission).
 
+**Decals (v0.7, TDD 7.11)**: alpha extraction at SOURCE resolution
+(feather in source space) from the image's own alpha, a color key
+(`--alpha color_key --alpha-key '#ff00ff'`), a luminance threshold, an
+authored mask, or corner-seeded background flood select
+(`--alpha flood`). Working-res controls: alpha cutoff, pixel-hard
+binary alpha (default), dilation, and transparent-RGB defringe —
+transparent pixels take extruded neighbor colors so bilinear sampling
+and mipmaps never pull a background fringe. `--decal` exports
+`<asset>_decal.png` (pack key stays `albedo`, `export_type: "decal"`)
+with transparent padding instead of extruded alpha. Premultiplied
+export available. Edge-guided subject extraction and polygon selection
+are deliberately absent per the TDD's manual-masks-first MVP guidance.
+
+**Atlases (v0.8, TDD 7.15)**: `pixelcoat atlas <packs-or-dirs> --name
+city01` packs compatible packs into one atlas PER MAP — every entry's
+albedo, normal, and roughness land at the same rect, so one UV drives
+every channel; maps missing from some entries get that map's neutral
+fill (flat normal, mid roughness). Deterministic shelf packing (same
+inputs = same bytes), 90-degree rotation recorded per entry
+(`--no-rotate` to disable), `--pow2`, configurable `--gutter` with
+half-gutter edge extrusion per entry (mipmap-safe RGB, alpha stays zero
+in gutters for decal atlases). Manifest `<atlas>_atlas.json`
+(pixelcoat-atlas/1) carries rect_px / uv / rotated / pivot / alpha_mode
+/ source_pack per entry, plus `<atlas>_preview.png` with outlined rects
+(TDD 8.3).
+
 ## Roadmap
 
 The Generation 7 epic (Slices 1-5) is complete. TDD 7.4 simplification
 (edge-aware downsampling, island removal, protected masks) shipped in
-v0.6. Remaining pixel-path items continue in TDD order: decals + alpha
-(7.11), atlas + trim sheets (7.15), batch folders (6.2), desktop app.
+v0.6. Decals (7.11) shipped in v0.7, atlases (7.15) in v0.8. Remaining
+pixel-path items in TDD order: batch folders (6.2), desktop app.

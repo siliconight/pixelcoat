@@ -21,6 +21,7 @@ _PALETTE_METHODS = ("oklab_kmeans", "fixed")
 _DITHER = ("none", "bayer", "floyd_steinberg")
 _EXPORT_TYPES = ("surface_texture", "decal", "sign")
 _EMISSIVE_MODES = ("none", "indices", "threshold", "mask")
+_ALPHA_SOURCES = ("none", "source", "color_key", "luminance", "mask", "flood")
 _PROCESSING_MODES = ("pixel", "generation_7")
 _G7_RESAMPLE = ("lanczos", "bicubic", "box")
 _G7_HEIGHT_SOURCES = ("inferred", "imported", "combined")
@@ -72,6 +73,26 @@ class Dither:
 class Tiling:
     enabled: bool = False
     axes: str = "both"                               # x | y | both
+
+
+@dataclass
+class Alpha:
+    """Alpha extraction + decal controls (TDD 7.11). Sources run at
+    SOURCE resolution (feather in source space); controls run at working
+    resolution after quantize + dither. "none" bypasses everything."""
+    source: str = "none"    # none|source|color_key|luminance|mask|flood
+    color_key: str = "#ff00ff"
+    tolerance: float = 0.12                          # color_key
+    luminance_threshold: float = 0.5
+    invert: bool = False
+    mask_path: str | None = None
+    flood_tolerance: float = 0.10
+    feather: float = 0.0                             # source-space px
+    cutoff: float = 0.5
+    pixel_hard: bool = True
+    dilate: int = 0                                  # grow opaque, px
+    rgb_cleanup: bool = True                         # defringe
+    premultiplied: bool = False
 
 
 @dataclass
@@ -263,6 +284,7 @@ class Recipe:
     dither: Dither = field(default_factory=Dither)
     tiling: Tiling = field(default_factory=Tiling)
     maps: Maps = field(default_factory=Maps)
+    alpha: Alpha = field(default_factory=Alpha)
     generation_7: Generation7 = field(default_factory=Generation7)
     export: Export = field(default_factory=Export)
 
@@ -283,6 +305,7 @@ class Recipe:
         _fill(r.dither, raw.get("dither"))
         _fill(r.tiling, raw.get("tiling"))
         _fill(r.maps, raw.get("maps"))               # absent in 0.1 recipes
+        _fill(r.alpha, raw.get("alpha"))             # absent pre-0.7
         r.generation_7.fill(raw.get("generation_7"))  # absent pre-0.3
         _fill(r.export, raw.get("export"))
         r.validate(where)
@@ -313,6 +336,7 @@ class Recipe:
             "dither": dataclasses.asdict(self.dither),
             "tiling": dataclasses.asdict(self.tiling),
             "maps": dataclasses.asdict(self.maps),
+            "alpha": dataclasses.asdict(self.alpha),
             "export": dataclasses.asdict(self.export),
         }
         if self.processing_mode == "generation_7":
@@ -345,6 +369,26 @@ class Recipe:
             bad("dither strength must be within 0..1")
         if self.export.type not in _EXPORT_TYPES:
             bad(f"export type must be one of {_EXPORT_TYPES}")
+        al = self.alpha
+        if al.source not in _ALPHA_SOURCES:
+            bad(f"alpha source must be one of {_ALPHA_SOURCES}")
+        if al.source == "mask" and not al.mask_path:
+            bad("alpha source 'mask' requires alpha mask_path")
+        if al.source == "color_key":
+            code = al.color_key.lstrip("#")
+            if len(code) != 6 or any(c not in "0123456789abcdefABCDEF"
+                                     for c in code):
+                bad(f"alpha color_key '{al.color_key}' is not #rrggbb")
+        for name, v in (("tolerance", al.tolerance),
+                        ("flood_tolerance", al.flood_tolerance),
+                        ("luminance_threshold", al.luminance_threshold),
+                        ("cutoff", al.cutoff)):
+            if not 0.0 <= v <= 1.0:
+                bad(f"alpha {name} must be within 0..1")
+        if al.feather < 0 or al.dilate < 0:
+            bad("alpha feather and dilate must be >= 0")
+        if self.export.type == "decal" and al.source == "none":
+            bad("export type 'decal' requires an alpha source")
         if self.transform.rotation_degrees % 90 != 0:
             bad("rotation_degrees must be a multiple of 90 in v0.1")
         q = self.transform.perspective_quad

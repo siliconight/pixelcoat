@@ -4,6 +4,79 @@ All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).
 
+## [0.8.0] - 2026-07-13
+
+### Added
+- **Atlas and trim-sheet packing** (TDD 7.15, output 8.3):
+  `core/atlas.py` + `pixelcoat atlas <packs-or-dirs> --name <atlas>`.
+  No recipe or pipeline changes — recipes stay schema 0.7 and every
+  existing output is untouched by construction (additive module + CLI;
+  byte-compatibility tests stay green).
+- One atlas PER MAP: every entry's albedo/normal/roughness land at the
+  same rect, so a single UV rect drives every channel. Maps missing
+  from some entries are filled with that map's neutral value (flat
+  normal 128/128/255, mid roughness, black emissive) instead of
+  rejecting the input; mixed processing modes are rejected with a
+  grouping hint.
+- Deterministic shelf packing: entries sort tallest-first with asset-id
+  tiebreak; same inputs produce byte-identical atlases. 90-degree
+  rotation on by default, taken only when it lays an entry wider than
+  tall, recorded per entry (`--no-rotate` to disable). `--pow2` rounds
+  dimensions up; `--gutter N` spacing with HALF-gutter edge extrusion
+  per entry so two entries sharing a gutter strip each own their side
+  (mipmap-safe RGB); alpha stays zero throughout gutters when any entry
+  carries alpha (decal atlases sample clean at every filter level —
+  same rule as the single-decal exporter).
+- Manifest `<atlas>_atlas.json` (schema pixelcoat-atlas/1) per the TDD
+  example: rect_px, uv, rotated, pivot, alpha_mode, source_pack per
+  entry + atlas maps/size/gutter. `<atlas>_preview.png` with outlined
+  entry rects (8.3). Build report includes occupancy.
+- CLI accepts .pack.json paths or directories (recursive scan).
+- 7 new tests (80 total): end to end (manifest, no overlaps, rects crop
+  back to exact source pixels with rotation honored, uv consistency),
+  byte-determinism across runs, rotation + toggle, pow2 + transparent
+  gutters, neutral fill for missing maps, mixed-mode rejection,
+  atlas CLI.
+
+## [0.7.0] - 2026-07-13
+
+### Added
+- **Alpha + decal generation** (TDD 7.11), the posters-and-signs
+  release. Schema 0.7; alpha.source defaults to "none" which bypasses
+  everything; both paths verified byte-identical against baselines.
+- **Alpha sources** (`core/alpha.py`), run at SOURCE resolution so
+  feathering happens in source space and the downsample turns feathered
+  edges into clean coverage: existing source alpha; color-key removal
+  (hex key + tolerance, soft shoulder to 1.5x tol); luminance threshold
+  (+ invert); authored grayscale mask; background flood select seeded
+  from the four corners (PIL C floodfill; enclosed holes that match the
+  background color are correctly kept — they are not corner-connected).
+  Edge-guided subject extraction and polygon selection deliberately
+  absent per the TDD MVP guidance (manual masks over unreliable
+  recognition; polygons are GUI-era).
+- **Decal controls** at working resolution, after quantize + dither:
+  alpha cutoff; pixel-hard binary alpha (default on); dilation padding;
+  transparent-RGB cleanup (iterative defringe — transparent pixels take
+  extruded opaque-neighbor colors, so the 7.11 acceptance criterion
+  "no color fringes" is a tested property, and border extrusion falls
+  out of the same fill); straight or premultiplied alpha.
+- **Decal export** (`export.type: "decal"`, CLI `--decal`): file named
+  `<asset>_decal.png` per TDD 8.2 with the pack key remaining "albedo"
+  (consumers read keys, not filenames); padding extrudes RGB for
+  mipmap safety but zero-pads ALPHA — decal padding stays transparent.
+  Packs gain an additive `export_type` field.
+- CLI: `--alpha {source,color_key,luminance,mask,flood}`, `--alpha-key`,
+  `--alpha-tolerance`, `--alpha-threshold`, `--alpha-invert`,
+  `--alpha-mask`, `--alpha-feather`, `--alpha-dilate`, `--decal`.
+- Build-report `final_color_count` now counts OPAQUE pixels only (the
+  defringe fill under transparent pixels is deliberately off-palette
+  and invisible).
+- 10 new tests (73 total): color-key end to end + TDD 8.2 naming +
+  transparent padding, no-fringe acceptance criterion, pixel-hard vs
+  soft alpha, dilation growth, luminance + mask sources, flood keeping
+  enclosed background-colored holes, premultiplied export, decal
+  requires an alpha source, v0.7 defaults byte-compatibility, decal CLI.
+
 ## [0.6.0] - 2026-07-13
 
 ### Added
