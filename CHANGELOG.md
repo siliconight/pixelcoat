@@ -4,6 +4,41 @@ All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).
 
+## [0.6.0] - 2026-07-13
+
+### Added
+- **Pixel-path simplification slice** (TDD 7.4 + 7.13). Schema 0.6;
+  every new field defaults off; both processing paths verified
+  byte-identical against their baselines (pixel vs v0.2, gen7 vs v0.5).
+- **Edge-aware downsampling**: `pixel.downsample_method: "edge_aware"`
+  (+ `pixel.edge_preserve` 0..1, CLI `--downsample edge_aware
+  --edge-preserve`). Per output cell, source pixels are weighted by
+  similarity to the cell's MEDIAN color, so boundary cells resolve to
+  their majority side instead of smearing both sides into a mud tone the
+  palette never contained. edge_preserve 0 approximates box; 1 commits
+  hard. Deterministic, pure NumPy (4x lanczos supersample + weighted
+  cell collapse).
+- **Small-island removal**: `simplification.island_removal` (CLI
+  `--island-removal N`) dissolves connected same-palette regions of
+  <= N pixels into their most common neighbor after dithering.
+  8-connectivity ON PURPOSE: ordered-dither checkerboards chain
+  diagonally into large components and survive; genuinely isolated
+  specks go (fixture: 117 of 9216 pixels touched on a bayer build vs
+  1608 orphans under 4-connectivity, which would have eaten the dither).
+- **Protected detail mask**: `simplification.protected_mask` (grayscale
+  path, >50% = protected; CLI `--protected-mask`). Protected regions
+  keep source detail through noise reduction, value banding, and island
+  removal — lettering, logos, window frames, cracks (TDD 7.4).
+- **Mask-driven emissive**: `maps.emissive_mode: "mask"` +
+  `maps.emissive_mask_path` — emissive cut directly from an authored
+  mask, pixel-aligned with albedo (TDD 7.13; signage/neon feeding
+  engine-side emission).
+- 6 new tests (63 total): edge-aware boundary commitment + box
+  approximation at strength 0, island removal end to end + protected
+  exemption, protected mask preserving detail banding would erase,
+  emissive mask mode + validation, v0.6 defaults byte-compatibility
+  round trip.
+
 ## [0.5.0] - 2026-07-13
 
 ### Added

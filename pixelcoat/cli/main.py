@@ -46,6 +46,13 @@ def main(argv: list[str] | None = None) -> int:
     pr.add_argument("--palette", default=None,
                     help="fixed palette JSON (hex list)")
     pr.add_argument("--value-bands", type=int, default=0)
+    pr.add_argument("--downsample", default="box",
+                    choices=["box", "nearest", "edge_aware"])
+    pr.add_argument("--edge-preserve", type=float, default=0.5)
+    pr.add_argument("--island-removal", type=int, default=0,
+                    help="dissolve palette islands of <= N pixels")
+    pr.add_argument("--protected-mask", default=None,
+                    help="grayscale mask; >50%% keeps source detail")
     pr.add_argument("--tile", default=None, choices=["x", "y", "both"])
     pr.add_argument("--scale", type=int, default=1,
                     help="nearest-neighbor display scale")
@@ -144,6 +151,12 @@ def _process(args) -> int:
     r.dither.strength = args.dither_strength
     r.dither.seed = args.seed
     r.simplification.value_bands = args.value_bands
+    r.pixel.downsample_method = args.downsample
+    r.pixel.edge_preserve = args.edge_preserve
+    r.simplification.island_removal = args.island_removal
+    if args.protected_mask:
+        r.simplification.protected_mask = os.path.abspath(
+            args.protected_mask)
     if args.tile:
         r.tiling.enabled = True
         r.tiling.axes = args.tile

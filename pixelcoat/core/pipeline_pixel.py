@@ -32,10 +32,19 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
     arr = transforms.apply(src, recipe.transform.crop,
                            recipe.transform.perspective_quad,
                            recipe.transform.rotation_degrees, target)
-    arr = transforms.downsample(arr, target, recipe.pixel.downsample_method)
+    arr = transforms.downsample(arr, target, recipe.pixel.downsample_method,
+                                recipe.pixel.edge_preserve)
 
     alpha = arr[..., 3:4]
     rgb = arr[..., :3]
+
+    # Protected detail mask (TDD 7.4): masked regions keep their source
+    # detail through smoothing, banding, and island removal.
+    protected = None
+    if recipe.simplification.protected_mask:
+        protected = simplification.load_mask(
+            recipe.simplification.protected_mask, target)
+    pre_simplify = rgb if protected is None else rgb.copy()
 
     if recipe.simplification.noise_reduction > 0:
         rgb = simplification.noise_reduce(
@@ -45,6 +54,8 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
         rgb = simplification.value_band(
             np.concatenate([rgb, alpha], axis=-1),
             recipe.simplification.value_bands)[..., :3]
+    if protected is not None:
+        rgb = simplification.protect(rgb, pre_simplify, protected)
 
     if recipe.tiling.enabled:
         rgb = tiling.make_tileable(rgb, recipe.tiling.axes)
@@ -58,6 +69,14 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
 
     rgb = dithering.apply(rgb, palette, recipe.dither.method,
                           recipe.dither.strength).astype(np.float32)
+
+    if recipe.simplification.island_removal > 0:
+        # Post-dither pixels are exact palette entries: index by match.
+        d2 = ((rgb[..., None, :] - palette[None, None]) ** 2).sum(-1)
+        indices = d2.argmin(axis=-1)
+        indices = simplification.remove_islands(
+            indices, recipe.simplification.island_removal, protected)
+        rgb = palette[indices].astype(np.float32)
 
     # Material maps (TDD §7.13) are derived at working resolution from the
     # post-dither albedo so they stay pixel-aligned through upscale + pad.
@@ -81,6 +100,10 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
                                                   m.emissive_indices)
     elif m.emissive_mode == "threshold":
         extra["emissive"] = maps.emissive_threshold(rgb, m.emissive_threshold)
+    elif m.emissive_mode == "mask":
+        emask = simplification.load_mask(m.emissive_mask_path,
+                                         (rgb.shape[1], rgb.shape[0]))
+        extra["emissive"] = maps.to_rgb(emask.astype(np.float32))
 
     out = np.concatenate([rgb, alpha], axis=-1)
 

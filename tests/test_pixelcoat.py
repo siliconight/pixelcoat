@@ -766,3 +766,126 @@ def test_blender_addon_parses_and_covers_maps():
                    "repeats_per_meter", "detail_mask",
                    "wet_detail_strength_scale"):
         assert needle in src, needle
+
+
+# --------------------------------------------- v0.6 simplification/masks
+
+from pixelcoat.core import simplification as simp, transforms as tf
+
+
+def test_edge_aware_downsample_keeps_boundaries_crisp():
+    # boundary at a 25/75 cell split: box smears, edge-aware commits to
+    # the majority side (a 50/50 split would be genuinely ambiguous)
+    src = np.zeros((256, 256, 4), np.float32)
+    src[..., 3] = 1.0
+    src[:, :98, :3] = (0.9, 0.1, 0.1)
+    src[:, 98:, :3] = (0.1, 0.1, 0.9)
+    box = tf.downsample(src, (32, 32), "box")
+    ea = tf.downsample(src, (32, 32), "edge_aware", edge_preserve=1.0)
+
+    def mud(a):  # pixels that are neither source tone
+        d_red = np.abs(a[..., :3] - (0.9, 0.1, 0.1)).sum(-1)
+        d_blue = np.abs(a[..., :3] - (0.1, 0.1, 0.9)).sum(-1)
+        return int((np.minimum(d_red, d_blue) > 0.3).sum())
+
+    assert mud(ea) < mud(box)
+    assert mud(ea) == 0                        # fully committed at 1.0
+
+
+def test_edge_aware_low_strength_approaches_box():
+    rng = np.random.default_rng(4)
+    src = rng.random((128, 128, 4)).astype(np.float32)
+    src[..., 3] = 1.0
+    box = tf.downsample(src, (32, 32), "box")
+    soft = tf.downsample(src, (32, 32), "edge_aware", edge_preserve=0.0)
+    assert np.abs(soft - box).mean() < 0.03
+
+
+def test_island_removal_end_to_end(tmp_path, source):
+    rng = np.random.default_rng(8)
+    img = np.zeros((128, 128, 3), np.float32)
+    img[:, :64] = (0.85, 0.1, 0.1)
+    img[:, 64:] = (0.1, 0.1, 0.85)
+    speck = rng.random((128, 128)) > 0.995     # isolated bright specks
+    img[speck] = (1.0, 1.0, 0.2)
+    p = tmp_path / "specks.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+
+    def build(island):
+        r = _recipe(str(p))
+        r.pixel.working_width = 64
+        r.pixel.working_height = 64
+        r.pixel.downsample_method = "nearest"  # keep specks alive
+        r.palette.max_colors = 8
+        r.simplification.island_removal = island
+        r.asset_id = f"i{island}"
+        pipeline.build(r, str(tmp_path / "b"))
+        return np.asarray(Image.open(
+            tmp_path / "b" / f"i{island}" / f"i{island}_albedo.png"))
+
+    dirty = build(0)
+    clean = build(3)
+    yellow = lambda a: int(((a[..., 0] > 180) & (a[..., 1] > 180)).sum())
+    assert yellow(dirty) > 0
+    assert yellow(clean) < yellow(dirty) * 0.2  # specks dissolved
+
+
+def test_protected_mask_preserves_detail(tmp_path):
+    # background 0.70 and band 0.78 collapse into the SAME value band
+    # (2 bands: both round to 1), so banding erases the band — unless
+    # the protected mask keeps it.
+    img = np.full((128, 128, 3), 0.70, np.float32)
+    img[60:68, :] = 0.78                       # subtle detail band
+    p = tmp_path / "subtle.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    mask = np.zeros((128, 128), np.uint8)
+    mask[56:72, :] = 255
+    mp = tmp_path / "mask.png"
+    Image.fromarray(mask).save(mp)
+
+    def band_contrast(mask_path, aid):
+        r = _recipe(str(p))
+        r.asset_id = aid
+        r.pixel.working_width = 128
+        r.pixel.working_height = 128
+        r.simplification.value_bands = 2
+        r.simplification.protected_mask = mask_path
+        r.palette.max_colors = 8
+        pipeline.build(r, str(tmp_path / "b"))
+        a = np.asarray(Image.open(tmp_path / "b" / aid /
+                                  f"{aid}_albedo.png"), np.float32)
+        return abs(a[60:68, :, 0].mean() - a[10:40, :, 0].mean())
+
+    assert band_contrast(None, "raw") < 2      # banding erased it
+    assert band_contrast(str(mp), "prot") > 8  # mask kept it
+
+
+def test_emissive_mask_mode(tmp_path, source):
+    mask = np.zeros((32, 32), np.uint8)
+    mask[8:16, 8:16] = 255
+    mp = tmp_path / "em.png"
+    Image.fromarray(mask).save(mp)
+    r = _recipe(source)
+    r.maps.emissive_mode = "mask"
+    r.maps.emissive_mask_path = str(mp)
+    report = pipeline.build(r, str(tmp_path / "b"))
+    assert "emissive" in report["maps"]
+    em = np.asarray(Image.open(tmp_path / "b" / "t" / "t_emissive.png"))
+    assert em[..., 0].max() == 255 and em[..., 0].min() == 0
+    r2 = _recipe(source)
+    r2.maps.emissive_mode = "mask"
+    with pytest.raises(ValueError, match="emissive_mask_path"):
+        r2.validate()
+
+
+def test_v06_defaults_keep_pixel_bytes(tmp_path, source):
+    r = _recipe(source)
+    r.dither.method = "bayer"
+    r.tiling.enabled = True
+    pipeline.build(r, str(tmp_path / "a"))
+    r2 = Recipe.from_dict(r.to_dict())         # 0.6 round trip
+    r2.asset_id = "t"
+    pipeline.build(r2, str(tmp_path / "b"))
+    for f in sorted((tmp_path / "a" / "t").glob("*.png")):
+        assert f.read_bytes() == \
+            (tmp_path / "b" / "t" / f.name).read_bytes()

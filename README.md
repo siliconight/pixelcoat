@@ -11,7 +11,7 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.5.x — two processing modes
+## Status: v0.6.x — two processing modes
 
 `processing_mode` selects the graph; recipes without one are `pixel`.
 
@@ -133,8 +133,22 @@ driven by the pack manifest, never filename guessing. Details:
 roughness where gloss shifts), identical UV boundaries, listed under
 `pack.variants`. Wet remains its own toggle.
 
+**Pixel-path simplification (v0.6, TDD 7.4)**: `--downsample
+edge_aware` weights each output cell by similarity to the cell's median
+color, so boundaries resolve to their majority side instead of the mud
+tone a palette never contained (`--edge-preserve 0..1`).
+`--island-removal N` dissolves palette islands of <= N pixels into their
+dominant neighbor — 8-connectivity on purpose, so ordered-dither
+checkerboards chain diagonally and survive while true specks go.
+`simplification.protected_mask` (grayscale, >50% = protected) carries
+source detail through smoothing, banding, and island removal: lettering,
+logos, window frames. `maps.emissive_mode: "mask"` +
+`emissive_mask_path` cuts an emissive straight from an authored mask
+(signage/neon feeding engine-side emission).
+
 ## Roadmap
 
-The Generation 7 epic (Slices 1-5) is complete. Pixel-path items
-(edge-aware downsampling, masks, decals, atlases, batch, GUI) continue on
-the TDD order.
+The Generation 7 epic (Slices 1-5) is complete. TDD 7.4 simplification
+(edge-aware downsampling, island removal, protected masks) shipped in
+v0.6. Remaining pixel-path items continue in TDD order: decals + alpha
+(7.11), atlas + trim sheets (7.15), batch folders (6.2), desktop app.

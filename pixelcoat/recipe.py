@@ -16,11 +16,11 @@ from dataclasses import dataclass, field
 
 from .version import RECIPE_SCHEMA_VERSION, __version__, DEFAULT_SEED
 
-_DOWNSAMPLE = ("box", "nearest")            # "edge_aware" arrives post-v0.1
+_DOWNSAMPLE = ("box", "nearest", "edge_aware")
 _PALETTE_METHODS = ("oklab_kmeans", "fixed")
 _DITHER = ("none", "bayer", "floyd_steinberg")
 _EXPORT_TYPES = ("surface_texture", "decal", "sign")
-_EMISSIVE_MODES = ("none", "indices", "threshold")
+_EMISSIVE_MODES = ("none", "indices", "threshold", "mask")
 _PROCESSING_MODES = ("pixel", "generation_7")
 _G7_RESAMPLE = ("lanczos", "bicubic", "box")
 _G7_HEIGHT_SOURCES = ("inferred", "imported", "combined")
@@ -42,12 +42,15 @@ class Pixel:
     working_height: int = 128
     display_scale: int = 1                           # nearest-neighbor only
     downsample_method: str = "box"
+    edge_preserve: float = 0.5                       # edge_aware only, 0..1
 
 
 @dataclass
 class Simplification:
     noise_reduction: float = 0.0                     # 0..1 median passes
     value_bands: int = 0                             # 0 = off
+    island_removal: int = 0          # dissolve palette islands <= N px
+    protected_mask: str | None = None                # grayscale mask path
 
 
 @dataclass
@@ -86,7 +89,8 @@ class Maps:
     roughness_variation: float = 0.25
     roughness_levels: int = 4                        # stepped PS1 response
     roughness_invert: bool = False
-    emissive_mode: str = "none"                      # none | indices | threshold
+    emissive_mode: str = "none"          # none | indices | threshold | mask
+    emissive_mask_path: str | None = None
     emissive_indices: list[int] = field(default_factory=list)
     emissive_threshold: float = 0.85
 
@@ -362,6 +366,12 @@ class Recipe:
             bad(f"maps emissive_mode must be one of {_EMISSIVE_MODES}")
         if self.maps.emissive_mode == "indices" and not self.maps.emissive_indices:
             bad("maps emissive_mode 'indices' requires emissive_indices")
+        if self.maps.emissive_mode == "mask" and not self.maps.emissive_mask_path:
+            bad("maps emissive_mode 'mask' requires emissive_mask_path")
+        if not 0.0 <= self.pixel.edge_preserve <= 1.0:
+            bad("pixel edge_preserve must be within 0..1")
+        if self.simplification.island_removal < 0:
+            bad("simplification island_removal must be >= 0")
         if not 0.0 <= self.maps.emissive_threshold <= 1.0:
             bad("maps emissive_threshold must be within 0..1")
         if self.export.meters_per_tile <= 0.0:
