@@ -11,7 +11,7 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.3.x — two processing modes
+## Status: v0.4.x — two processing modes
 
 `processing_mode` selects the graph; recipes without one are `pixel`.
 
@@ -54,8 +54,29 @@ not physically accurate delighting.
 Gen7 packs use `pixelcoat-pack/2` — additive over `pack/1` (maps /
 tileable / meters_per_tile read the same way) plus `processing_mode`,
 `material_profile`, and `import_hints` (per-map color space, normal
-format, roughness-source-normal). Pixel packs stay `pack/1` and gain only
-an additive `processing_mode` field.
+format, compression suggestions, roughness-source-normal). Pixel packs
+stay `pack/1` and gain only an additive `processing_mode` field.
+
+**Detail textures** (`generation_7.detail_texture`, off by default): a
+small repeating detail albedo + detail normal tile for close-range
+sharpness, extracted from the most ORDINARY window of the source's
+high-frequency band (or procedural / imported), plus a full-res
+detail_mask that fades the grain where the base maps already carry
+unique features. When enabled, the Gen7-authentic split applies: the
+base normal absorbs unique micro geometry and the detail slot carries
+the tile; the pack gains a `detail` block (repeats per meter, blend
+mode, strength, distance fade). When disabled, output is byte-identical
+to v0.3.
+
+**Previews** (`generation_7.preview`, off by default) — never alter
+canonical PNGs; everything lands under `<asset>/previews/`: linear-space
+mip strips with per-level normal renormalization and a shimmer warning
+when high-frequency normals average short at distance; deterministic
+legacy block-compression previews (BC1-style color, BC5-style
+two-channel normals with Z reconstruction, BC4-style masks) with per-map
+family suggestions and error stats in the build report; a 3x3 repetition
+grid for tiled surfaces. Tiled builds also flag unique landmarks that
+would read as obvious repeats.
 
 ## Install
 
@@ -79,6 +100,10 @@ pixelcoat process wall.jpg --mode generation_7 \
     --width 1024 --height 1024 --tile both --meters-per-tile 2.0 \
     --output build
 
+# Compression previews for an existing pack (reads only; writes
+# only under previews/)
+pixelcoat preview-compression build/wall/wall.pack.json --profile legacy_bc
+
 # Rebuild any saved recipe (mode travels in the recipe)
 pixelcoat build build/wall/wall.pixelcoat.json --output build --force
 
@@ -92,9 +117,8 @@ the saved recipe. On PowerShell, keep commands single-line.
 
 ## Roadmap
 
-Gen7 Slice 4 (detail textures, mipmap preview, block-compression preview,
-one-recipe variation exports) and Slice 5 (Godot 4.7 / Blender importers)
-arrive next — `detail_texture` and `preview` recipe sections already
-validate-and-refuse so recipes stay forward-compatible. Pixel-path items
+Gen7 Slice 5 (Godot 4.7 / Blender importers driven by pack metadata) and
+one-recipe variation exports (darker/dirtier/damaged — the masks already
+ship, so importers can build these today) arrive next. Pixel-path items
 (edge-aware downsampling, masks, decals, atlases, batch, GUI) continue on
 the TDD order.

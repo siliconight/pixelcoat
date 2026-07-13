@@ -64,16 +64,62 @@ def main(argv: list[str] | None = None) -> int:
     va = sub.add_parser("validate", help="validate recipe file(s) or a dir")
     va.add_argument("paths", nargs="+")
 
+    pc = sub.add_parser("preview-compression",
+                        help="write legacy block-compression previews for "
+                             "an existing pack (never alters the pack)")
+    pc.add_argument("pack", help="path to a <asset>.pack.json")
+    pc.add_argument("--profile", default="legacy_bc",
+                    choices=["legacy_bc"])
+    pc.add_argument("--output", default=None,
+                    help="preview dir (default: <pack dir>/previews/"
+                         "compression)")
+
     args = p.parse_args(argv)
     try:
         if args.cmd == "process":
             return _process(args)
         if args.cmd == "build":
             return _build_from(args)
+        if args.cmd == "preview-compression":
+            return _preview_compression(args)
         return _validate(args)
     except (ValueError, OSError) as e:
         print(f"pixelcoat: error: {e}", file=sys.stderr)
         return 1
+
+
+def _preview_compression(args) -> int:
+    """Roadmap §19 CLI: previews from an existing pack's canonical PNGs.
+    Reads only; writes only under the preview directory."""
+    import json as _json
+
+    import numpy as np
+    from PIL import Image
+
+    from ..core import preview as pv
+
+    pack_path = os.path.abspath(args.pack)
+    with open(pack_path, encoding="utf-8") as f:
+        pack = _json.load(f)
+    pack_dir = os.path.dirname(pack_path)
+    out_dir = os.path.abspath(args.output) if args.output else \
+        os.path.join(pack_dir, "previews", "compression")
+    os.makedirs(out_dir, exist_ok=True)
+
+    for name, fname in sorted(pack.get("maps", {}).items()):
+        arr = np.asarray(Image.open(os.path.join(pack_dir, fname))
+                         .convert("RGBA"), np.float32) / 255.0
+        fam = pv.suggest_family(
+            name, has_varying_alpha=float(arr[..., 3].std()) > 1e-4)
+        bc = pv.preview_block_compression(arr, fam)
+        stem = os.path.splitext(fname)[0]
+        out = os.path.join(out_dir, f"{stem}_bc.png")
+        Image.fromarray(
+            (np.clip(bc, 0, 1) * 255).astype(np.uint8)).save(out)
+        err = float(np.abs(bc[..., :3] - arr[..., :3]).mean())
+        print(f"  {name:<20} {fam:<15} mean_abs_error {err:.5f}")
+    print(f"previews -> {out_dir}")
+    return 0
 
 
 def _process(args) -> int:

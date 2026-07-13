@@ -472,14 +472,20 @@ def test_v02_recipe_defaults_to_pixel(tmp_path, source):
     assert report["processing_mode"] == "pixel"
 
 
-def test_g7_slice4_features_rejected(g7_source):
+def test_g7_slice4_validation(g7_source):
     r = _g7_recipe(g7_source)
     r.generation_7.detail_texture.enabled = True
-    with pytest.raises(ValueError, match="v0.4"):
+    r.generation_7.detail_texture.source = "telepathy"
+    with pytest.raises(ValueError, match="source"):
         r.validate()
     r = _g7_recipe(g7_source)
-    r.generation_7.preview.generate_mipmaps = True
-    with pytest.raises(ValueError, match="v0.4"):
+    r.generation_7.detail_texture.enabled = True
+    r.generation_7.detail_texture.source = "imported"
+    with pytest.raises(ValueError, match="import_path"):
+        r.validate()
+    r = _g7_recipe(g7_source)
+    r.generation_7.preview.compression_preview = "jpeg"
+    with pytest.raises(ValueError, match="compression_preview"):
         r.validate()
 
 
@@ -524,3 +530,157 @@ def test_cli_g7_process_with_profile(tmp_path, g7_source):
         [sys.executable, "-m", "pixelcoat.cli.main", "validate",
          str(recipe_path)], capture_output=True, text=True, env=env)
     assert res2.returncode == 0, res2.stdout + res2.stderr
+
+
+# ------------------------------------------------------ v0.4 slice 4
+
+from pixelcoat.core import preview as pv_mod
+
+
+def test_detail_tiles_and_mask(tmp_path, g7_source):
+    r = _g7_recipe(g7_source)
+    r.generation_7.detail_texture.enabled = True
+    r.generation_7.detail_texture.size = 64
+    report = pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "g"
+    pack = json.loads((out / "g.pack.json").read_text())
+    for key in ("detail_albedo", "detail_normal", "detail_mask"):
+        assert key in pack["maps"]
+    da = Image.open(out / "g_detail_albedo.png")
+    dn = Image.open(out / "g_detail_normal.png")
+    assert da.size == (64, 64) and dn.size == (64, 64)  # unpadded tiles
+    mask = Image.open(out / "g_detail_mask.png")
+    assert mask.size == Image.open(out / "g_albedo.png").size
+    # tile seam sits inside the distribution of interior row/col pairs
+    # (same p99 test the pipeline applies) + mean-neutral for blending
+    a = np.asarray(da, np.float32)[..., :3] / 255
+    pairs_y = np.abs(np.diff(a, axis=0)).mean(axis=(1, 2))
+    pairs_x = np.abs(np.diff(a, axis=1)).mean(axis=(0, 2))
+    assert np.abs(a[0] - a[-1]).mean() <= \
+        max(1.5 * np.percentile(pairs_y, 99), 2.5 / 255)
+    assert np.abs(a[:, 0] - a[:, -1]).mean() <= \
+        max(1.5 * np.percentile(pairs_x, 99), 2.5 / 255)
+    assert abs(cs.srgb_to_linear(a).mean() - 0.5) < 0.1  # linear-neutral
+    assert pack["detail"]["repeats_per_meter"] == 8.0
+    assert pack["import_hints"]["wet_detail_strength_scale"] == 0.3
+    assert not report["warnings"]
+
+
+def test_detail_off_keeps_v03_outputs(tmp_path, g7_source):
+    r1 = _g7_recipe(g7_source, weathering__edge_wear=0.3)
+    pipeline.build(r1, str(tmp_path / "a"))
+    r2 = _g7_recipe(g7_source, weathering__edge_wear=0.3)
+    r2.generation_7.detail_texture.enabled = True
+    pipeline.build(r2, str(tmp_path / "b"))
+    base = np.asarray(Image.open(tmp_path / "a" / "g" / "g_albedo.png"))
+    with_dt = np.asarray(Image.open(tmp_path / "b" / "g" / "g_albedo.png"))
+    assert np.array_equal(base, with_dt)      # albedo untouched by detail
+
+
+def test_previews_do_not_change_canonical_outputs(tmp_path, g7_source):
+    r1 = _g7_recipe(g7_source, size=64)
+    pipeline.build(r1, str(tmp_path / "a"))
+    r2 = _g7_recipe(g7_source, size=64)
+    r2.generation_7.preview.generate_mipmaps = True
+    r2.generation_7.preview.compression_preview = "legacy_bc"
+    report = pipeline.build(r2, str(tmp_path / "b"))
+    for f in sorted((tmp_path / "a" / "g").glob("*.png")):
+        assert f.read_bytes() == \
+            (tmp_path / "b" / "g" / f.name).read_bytes(), f.name
+    pdir = tmp_path / "b" / "g" / "previews"
+    assert (pdir / report["preview"]["mip_strips"]["albedo"]).exists()
+    assert (pdir / report["preview"]["compression"]["normal"]["file"]
+            ).exists()
+    assert report["preview"]["compression"]["normal"]["family"] == \
+        "two_channel"
+    assert report["preview"]["compression"]["albedo"]["family"] in (
+        "color_block", "color_alpha")
+
+
+def test_bc1_reduces_to_four_colors_per_block():
+    rng = np.random.default_rng(9)
+    a = rng.random((16, 16, 3)).astype(np.float32)
+    out = pv_mod.preview_block_compression(a, "color_block")
+    block = out[:4, :4].reshape(-1, 3)
+    assert len(np.unique(block, axis=0)) <= 4
+
+
+def test_bc5_reconstructs_unit_normals():
+    rng = np.random.default_rng(10)
+    vec = rng.normal(size=(32, 32, 3)).astype(np.float32)
+    vec[..., 2] = np.abs(vec[..., 2]) + 0.5
+    vec /= np.linalg.norm(vec, axis=-1, keepdims=True)
+    enc = (vec * 0.5 + 0.5).astype(np.float32)
+    out = pv_mod.preview_block_compression(enc, "two_channel")
+    dec = out * 2.0 - 1.0
+    ln = np.linalg.norm(dec, axis=-1)
+    assert np.abs(ln - 1.0).max() < 0.02      # renormalized
+    assert (dec[..., 2] >= 0).all()           # Z reconstructed positive
+
+
+def test_mip_chain_renormalizes_and_flags_noise():
+    rng = np.random.default_rng(12)
+    noisy = rng.random((128, 128, 3)).astype(np.float32)
+    levels, lengths = pv_mod.mip_chain(noisy, is_normal=True)
+    assert lengths[3] < 0.82                  # shimmer metric triggers
+    vec = levels[3] * 2.0 - 1.0
+    assert np.abs(np.linalg.norm(vec, axis=-1) - 1.0).max() < 1e-3
+    flat = np.zeros((64, 64, 3), np.float32)
+    flat[..., 2] = 1.0
+    _, flat_lengths = pv_mod.mip_chain((flat * 0.5 + 0.5), is_normal=True)
+    assert min(flat_lengths) > 0.98           # clean normal stays long
+
+
+def test_procedural_and_imported_detail(tmp_path, g7_source):
+    r = _g7_recipe(g7_source)
+    r.generation_7.detail_texture.enabled = True
+    r.generation_7.detail_texture.source = "procedural"
+    r.generation_7.detail_texture.size = 64
+    pipeline.build(r, str(tmp_path / "a"))
+    proc = np.asarray(Image.open(tmp_path / "a" / "g" /
+                                 "g_detail_albedo.png"))
+
+    tile_src = tmp_path / "tile.png"
+    rng = np.random.default_rng(3)
+    Image.fromarray((rng.random((96, 96, 3)) * 255).astype(np.uint8)) \
+        .save(tile_src)
+    r = _g7_recipe(g7_source)
+    r.generation_7.detail_texture.enabled = True
+    r.generation_7.detail_texture.source = "imported"
+    r.generation_7.detail_texture.import_path = str(tile_src)
+    r.generation_7.detail_texture.size = 64
+    report = pipeline.build(r, str(tmp_path / "b"))
+    imp = np.asarray(Image.open(tmp_path / "b" / "g" /
+                                "g_detail_albedo.png"))
+    assert imp.shape[:2] == (64, 64)
+    assert not np.array_equal(proc, imp)
+    assert any("resized" in w for w in report["warnings"])
+
+
+def test_landmark_warning_on_unique_feature(tmp_path):
+    rng = np.random.default_rng(6)
+    img = 0.45 + 0.05 * rng.random((256, 256, 3)).astype(np.float32)
+    img[96:160, 96:160] = 0.95                # one glaring landmark
+    p = tmp_path / "landmark.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    r = _g7_recipe(str(p), size=256)
+    r.tiling.enabled = True
+    report = pipeline.build(r, str(tmp_path / "b"))
+    assert any("landmark" in w for w in report["warnings"])
+
+
+def test_cli_preview_compression(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, size=64)
+    pipeline.build(r, str(tmp_path / "b"))
+    pack = tmp_path / "b" / "g" / "g.pack.json"
+    env = dict(os.environ, PYTHONPATH=os.getcwd())
+    res = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "preview-compression",
+         str(pack), "--profile", "legacy_bc"],
+        capture_output=True, text=True, env=env)
+    assert res.returncode == 0, res.stderr
+    pdir = tmp_path / "b" / "g" / "previews" / "compression"
+    assert (pdir / "g_albedo_bc.png").exists()
+    assert (pdir / "g_normal_bc.png").exists()
+    # canonical pack untouched
+    assert json.loads(pack.read_text())["schema"] == "pixelcoat-pack/2"

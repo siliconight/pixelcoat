@@ -4,6 +4,66 @@ All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).
 
+## [0.4.0] - 2026-07-13
+
+### Added
+- **Generation 7 Slice 4** (docs/ROADMAP_generation_7.md SS16-19):
+  detail textures, mipmap preview, legacy block-compression preview.
+  Schema 0.4; 0.1-0.3 recipes load unchanged; with the new features off,
+  Gen7 canonical output is byte-identical to v0.3 (verified).
+- **Detail textures** (`core/detail_texture.py`, SS16), off by default:
+  - `generation_7.detail_texture` — source extracted | procedural |
+    imported, tile size 32..512, repeats_per_meter, blend_mode, strength.
+  - Extracted tiles crop the most ORDINARY high-frequency window (median
+    micro-energy candidate — a unique landmark repeated 8x/meter reads
+    instantly as tiling), keep only the window's own high-frequency band,
+    are forced wrap-continuous on both axes, and re-centered so linear
+    mean is exactly 0.5 (neutral under overlay/linear blending).
+  - Procedural: seeded multi-octave value noise. Imported: authored tile,
+    resized + wrap-repaired.
+  - Full-res `detail_mask` fades grain where the base maps already carry
+    strong unique high-frequency content; wraps with the surface.
+  - Gen7-authentic split when enabled: base normal is built from COMBINED
+    height (unique micro features merge into it), `detail_normal` becomes
+    the small repeating tile, `detail_albedo` joins the pack, and
+    `wet_detail_normal` is replaced by an importer hint
+    (`wet_detail_strength_scale`). Pack gains a `detail` block
+    (repeats_per_meter, blend_mode, strength, tile_size, uv guidance,
+    distance fade) for Godot's secondary detail slots.
+  - Tiles export unpadded (they are their own repeat unit) and are seam-
+    validated as wrap-both regardless of surface tiling.
+- **Previews** (`core/preview.py`, SS18-19), off by default, PREVIEW-ONLY
+  (no preview step may alter a canonical PNG — regression-tested):
+  - Mip chains: linear-space 2x box downsample, per-level normal
+    renormalization, mip strips under `<asset>/previews/`, recommended
+    mip at `preview_distance_meters` in the report, and a shimmer warning
+    when high-frequency normal detail averages short at distance (with a
+    pointer to Godot roughness filtering via the source normal).
+  - Deterministic 4x4 block-compression previews: BC1-style color
+    (RGB565 endpoints, 4-entry palette), BC5-style two-channel normals
+    (independent 8-level ramps, Z reconstructed + renormalized),
+    BC4-style single-channel masks, BC3-style color+alpha when alpha
+    varies. Per-map suggested family + mean-abs-error in the report.
+    Non-multiple-of-four dimensions are edge-padded for the preview only.
+  - 3x3 repetition grid preview for tiled surfaces (SS17).
+  - Unique-landmark warnings on tiled builds via robust median/MAD block
+    statistics (a landmark cannot inflate its own yardstick).
+- **CLI**: `pixelcoat preview-compression <pack.json> --profile legacy_bc
+  [--output DIR]` — previews from an existing pack's canonical PNGs;
+  reads only, writes only under the preview directory.
+- Pack import_hints now always include `albedo_compression`,
+  `normal_compression`, `mask_compression` suggestions.
+- 9 new tests (51 total): slice-4 validation, detail tiles + mask +
+  neutrality + p99 seams, detail-off byte-compatibility, previews-do-not-
+  change-canonical-outputs, BC1 4-colors-per-block, BC5 unit-normal
+  reconstruction, mip renormalization + shimmer flag, procedural/imported
+  detail sources, landmark warning, preview-compression CLI.
+
+### Deferred
+- One-recipe variation exports (darker/dirtier/damaged) — all masks ship,
+  importers can compose variants today; revisit with Slice 5.
+- Material-preset detail library — procedural source covers it for now.
+
 ## [0.3.0] - 2026-07-13
 
 ### Added

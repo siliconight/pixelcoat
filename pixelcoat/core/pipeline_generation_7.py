@@ -27,9 +27,9 @@ from PIL import Image
 
 from ..recipe import Recipe
 from ..version import __version__
-from . import (color_space as cs, frequency, image_io, lighting_flatten,
-               maps, material_response as mr, quantization, tiling,
-               transforms, weathering)
+from . import (color_space as cs, detail_texture as dtex, frequency,
+               image_io, lighting_flatten, maps, material_response as mr,
+               preview as pv, quantization, tiling, transforms, weathering)
 
 _RESAMPLE = {"lanczos": Image.LANCZOS, "bicubic": Image.BICUBIC,
              "box": Image.BOX}
@@ -90,10 +90,20 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
         wrap_x, wrap_y)
 
     # ------------------------------------------------------- normals
+    # With a repeating detail tile enabled the Gen7-authentic split
+    # applies: the BASE normal absorbs unique micro features (combined
+    # height) and the detail slot carries the small repeating tile.
+    # Without it, v0.3 behavior byte-for-byte: base=macro, detail=micro.
+    detail_on = g.detail_texture.enabled
+    tile_albedo = tile_normal = detail_mask = None
+    if detail_on:
+        tile_albedo, tile_normal, detail_mask = dtex.build(
+            g, lin, micro_detail, preset, warnings, wrap_x, wrap_y)
+    base_h_src = combined_h if detail_on else macro_h
     base_normal = maps.normal_from_height(
-        macro_h, g.normal.base_strength * preset.base_normal * 4.0,
+        base_h_src, g.normal.base_strength * preset.base_normal * 4.0,
         wrap_x, wrap_y, g.normal.flip_green)
-    detail_normal = maps.normal_from_height(
+    detail_normal = tile_normal if detail_on else maps.normal_from_height(
         micro_h, g.normal.detail_strength * preset.detail_normal * 4.0,
         wrap_x, wrap_y, g.normal.flip_green)
 
@@ -156,11 +166,15 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
         wet_gloss = np.clip(
             gloss + preset.wet_gloss_boost * wmask, 0.0, 1.0)
         wet["wet_roughness"] = mr.roughness_from_gloss(wet_gloss)
-        # Micro-normal response softens only inside the wetness mask.
-        wet["wet_detail_normal"] = maps.normal_from_height(
-            np.clip(0.5 + (micro_h - 0.5) * (1.0 - 0.7 * wmask), 0, 1),
-            g.normal.detail_strength * preset.detail_normal * 4.0,
-            wrap_x, wrap_y, g.normal.flip_green)
+        if not detail_on:
+            # Micro-normal response softens only inside the wetness mask.
+            # With a repeating detail tile the importer applies the same
+            # softening by scaling detail strength with wetness x mask
+            # (wet_detail_strength_scale in import_hints).
+            wet["wet_detail_normal"] = maps.normal_from_height(
+                np.clip(0.5 + (micro_h - 0.5) * (1.0 - 0.7 * wmask), 0, 1),
+                g.normal.detail_strength * preset.detail_normal * 4.0,
+                wrap_x, wrap_y, g.normal.flip_green)
 
     # -------------------------------------------------------- assemble
     out_maps: dict[str, tuple[np.ndarray, bool]] = {  # name -> (arr, srgb)
@@ -195,7 +209,20 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
         else:
             out_maps[name] = (maps.to_rgb(arr_), False)
 
+    # Detail tiles are their own repeat unit: exported unpadded, always
+    # wrap-continuous on both axes, and validated as such.
+    tile_maps: dict[str, tuple[np.ndarray, bool]] = {}
+    if detail_on:
+        out_maps.pop("detail_normal")            # moves to the tile set
+        tile_maps["detail_albedo"] = (cs.linear_to_srgb(tile_albedo), True)
+        tile_maps["detail_normal"] = (tile_normal, False)
+        out_maps["detail_mask"] = (maps.to_rgb(detail_mask), False)
+
     _validate_seams(out_maps, wrap_x, wrap_y, warnings)
+    if tile_maps:
+        _validate_seams(tile_maps, True, True, warnings)
+    if recipe.tiling.enabled:
+        pv.landmark_warnings(cs.luminance(albedo), warnings)
 
     # ---------------------------------------------------------- export
     pad = recipe.export.padding
@@ -209,7 +236,14 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
         p = os.path.join(asset_dir, f"{recipe.asset_id}_{name}.png")
         image_io.save_png(arr_, p)
         map_files[name] = os.path.basename(p)
+    for name, (arr_, _srgb) in tile_maps.items():   # repeat units: no pad
+        p = os.path.join(asset_dir, f"{recipe.asset_id}_{name}.png")
+        image_io.save_png(arr_, p)
+        map_files[name] = os.path.basename(p)
     recipe.save(os.path.join(asset_dir, f"{recipe.asset_id}.pixelcoat.json"))
+
+    preview_report = _previews(recipe, g, out_maps, tile_maps, asset_dir,
+                               warnings)
 
     pack = _pack_manifest(recipe, g, preset, map_files, sha)
     with open(os.path.join(asset_dir, f"{recipe.asset_id}.pack.json"),
@@ -231,6 +265,8 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
         "warnings": warnings,
         "duration_seconds": round(time.perf_counter() - t0, 4),
     }
+    if preview_report:
+        report["preview"] = preview_report
     with open(os.path.join(asset_dir, "build_report.json"), "w",
               encoding="utf-8") as f:
         json.dump(report, f, indent=2)
@@ -238,6 +274,68 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
 
 
 # ---------------------------------------------------------------- stages
+
+def _previews(recipe: Recipe, g, out_maps: dict, tile_maps: dict,
+              asset_dir: str, warnings: list[str]) -> dict | None:
+    """Roadmap §18–19: preview-only outputs under <asset>/previews/.
+    Never touches a canonical export."""
+    want_mips = g.preview.generate_mipmaps
+    want_bc = g.preview.compression_preview == "legacy_bc"
+    if not (want_mips or want_bc):
+        return None
+
+    pdir = os.path.join(asset_dir, "previews")
+    os.makedirs(pdir, exist_ok=True)
+    all_maps = {**out_maps, **tile_maps}
+    rep: dict = {"directory": "previews"}
+
+    if want_mips:
+        rep["mip_strips"] = {}
+        for name in ("albedo", "normal", "detail_normal", "roughness"):
+            if name not in all_maps:
+                continue
+            arr, _srgb = all_maps[name]
+            levels, lengths = pv.mip_chain(arr, name.endswith("normal"))
+            strip = pv.mip_strip(levels)
+            fname = f"{recipe.asset_id}_{name}_mipstrip.png"
+            image_io.save_png(strip, os.path.join(pdir, fname))
+            rep["mip_strips"][name] = fname
+            if name.endswith("normal") and len(lengths) > 3                     and lengths[3] < 0.82:
+                warnings.append(
+                    f"{name}: high-frequency detail averages to short "
+                    f"normals at distance (mip3 mean length "
+                    f"{lengths[3]:.2f}) and will shimmer; use roughness "
+                    "filtering with the source normal in Godot")
+        n_levels = max(2, int(np.log2(
+            max(8, min(a.shape[0] for a, _ in out_maps.values()) // 8)))
+        )
+        rep["recommended_mip_at_preview_distance"] = pv.recommended_mip(
+            g.preview.preview_distance_meters,
+            recipe.export.meters_per_tile or 1.0,
+            next(iter(out_maps.values()))[0].shape[1], n_levels)
+
+    if want_bc:
+        rep["compression"] = {}
+        for name, (arr, _srgb) in all_maps.items():
+            fam = pv.suggest_family(
+                name, has_varying_alpha=(
+                    arr.shape[-1] > 3 and float(arr[..., 3].std()) > 1e-4))
+            bc = pv.preview_block_compression(arr, fam)
+            fname = f"{recipe.asset_id}_{name}_bc.png"
+            image_io.save_png(bc, os.path.join(pdir, fname))
+            rep["compression"][name] = {
+                "family": fam, "file": fname,
+                "mean_abs_error": round(
+                    float(np.abs(bc[..., :3] - arr[..., :3]).mean()), 5)}
+
+    if recipe.tiling.enabled and "albedo" in out_maps:
+        grid = pv.tile_grid(out_maps["albedo"][0])
+        fname = f"{recipe.asset_id}_tile3x3.png"
+        image_io.save_png(grid, os.path.join(pdir, fname))
+        rep["tile_grid"] = fname
+    return rep
+
+
 
 def _stylize(lin: np.ndarray, g, preset, wrap_x: bool,
              wrap_y: bool) -> np.ndarray:
@@ -411,7 +509,7 @@ def _pack_manifest(recipe: Recipe, g, preset, map_files: dict,
     color_space_hints = {
         name: ("srgb" if name in ("albedo", "wet_albedo") else "linear")
         for name in map_files}
-    return {
+    pack = {
         "schema": "pixelcoat-pack/2",
         "tool_version": __version__,
         "asset_id": recipe.asset_id,
@@ -427,5 +525,20 @@ def _pack_manifest(recipe: Recipe, g, preset, map_files: dict,
             "normal_format": "directx" if g.normal.flip_green else "opengl",
             "generate_mipmaps": True,
             "roughness_source_normal": map_files.get("normal"),
+            "albedo_compression": "color_block",
+            "normal_compression": "two_channel",
+            "mask_compression": "single_channel",
         },
     }
+    if g.detail_texture.enabled:
+        dt = g.detail_texture
+        pack["detail"] = {
+            "repeats_per_meter": dt.repeats_per_meter,
+            "blend_mode": dt.blend_mode,
+            "strength": dt.strength,
+            "tile_size": dt.size,
+            "uv": "uv1_scaled_or_triplanar",
+            "distance_fade_meters": [4.0, 12.0],
+        }
+        pack["import_hints"]["wet_detail_strength_scale"] = 0.3
+    return pack

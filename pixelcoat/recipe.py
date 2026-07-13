@@ -177,13 +177,26 @@ class Gen7Wetness:
 
 @dataclass
 class Gen7DetailTexture:
-    enabled: bool = False                         # arrives in v0.4
+    """Repeating close-range detail tile (roadmap SS16). When enabled, the
+    pack's detail_normal becomes the small repeating tile, unique micro
+    features merge into the base normal (built from combined height), and
+    detail_albedo + detail_mask join the pack."""
+    enabled: bool = False
+    source: str = "extracted"        # extracted | procedural | imported
+    import_path: str | None = None
+    size: int = 128                  # tile edge, 32..512
+    repeats_per_meter: float = 8.0
+    blend_mode: str = "overlay"      # overlay | multiply | linear
+    strength: float = 0.65
 
 
 @dataclass
 class Gen7Preview:
-    generate_mipmaps: bool = False                # arrives in v0.4
-    compression_preview: str = "none"             # arrives in v0.4
+    """Preview generation (roadmap SS18-19). Never alters canonical maps;
+    everything lands under <asset>/previews/."""
+    generate_mipmaps: bool = False
+    compression_preview: str = "none"             # none | legacy_bc
+    preview_distance_meters: float = 5.0
 
 
 @dataclass
@@ -415,12 +428,31 @@ class Recipe:
             bad("generation_7 streak_decay must be within 0..1 (exclusive)")
         if not 0.0 <= g.wetness.amount <= 1.0:
             bad("generation_7 wetness amount must be within 0..1")
-        if g.detail_texture.enabled:
-            bad("generation_7 detail_texture is not implemented yet "
-                "(arrives in v0.4 with the detail/mipmap slice)")
-        if g.preview.generate_mipmaps or g.preview.compression_preview != "none":
-            bad("generation_7 preview (mipmaps / compression) is not "
-                "implemented yet (arrives in v0.4)")
+        dt = g.detail_texture
+        if dt.enabled:
+            if dt.source not in ("extracted", "procedural", "imported"):
+                bad(f"detail_texture.source '{dt.source}' is not one of "
+                    "extracted, procedural, imported")
+            if dt.source == "imported" and not dt.import_path:
+                bad("detail_texture.source 'imported' requires "
+                    "detail_texture.import_path")
+            if not 32 <= dt.size <= 512:
+                bad(f"detail_texture.size {dt.size} outside 32..512")
+            if dt.blend_mode not in ("overlay", "multiply", "linear"):
+                bad(f"detail_texture.blend_mode '{dt.blend_mode}' is not "
+                    "one of overlay, multiply, linear")
+            if not 0.5 <= dt.repeats_per_meter <= 64.0:
+                bad(f"detail_texture.repeats_per_meter "
+                    f"{dt.repeats_per_meter} outside 0.5..64")
+            if not 0.0 <= dt.strength <= 1.0:
+                bad(f"detail_texture.strength {dt.strength} outside 0..1")
+        pv = g.preview
+        if pv.compression_preview not in ("none", "legacy_bc"):
+            bad(f"preview.compression_preview '{pv.compression_preview}' "
+                "is not one of none, legacy_bc")
+        if not 0.5 <= pv.preview_distance_meters <= 100.0:
+            bad(f"preview.preview_distance_meters "
+                f"{pv.preview_distance_meters} outside 0.5..100")
 
 
 def _fill(target, raw: dict | None) -> None:
