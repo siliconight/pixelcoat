@@ -176,6 +176,34 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
                 g.normal.detail_strength * preset.detail_normal * 4.0,
                 wrap_x, wrap_y, g.normal.flip_green)
 
+    # ------------------------------------------------------ variations
+    # One-recipe variants (§17): same UV boundaries, driven by the same
+    # masks the pack already exports. Albedo always; roughness only where
+    # the variant shifts gloss.
+    variants: dict[str, tuple[np.ndarray, bool]] = {}
+    for v in g.variations:
+        if v == "darker":
+            variants["albedo_darker"] = (np.clip(albedo * 0.72, 0, 1), True)
+        elif v == "lighter":
+            variants["albedo_lighter"] = (
+                np.clip(1.0 - (1.0 - albedo) * 0.75, 0, 1), True)
+        elif v == "dirtier":
+            a2, gl2 = _apply_weathering(
+                albedo, gloss, preset,
+                wear * 0.0, np.clip(grime * 1.6, 0, 1),
+                np.clip(streak * 1.6, 0, 1), rust * 0.0)
+            variants["albedo_dirtier"] = (a2, True)
+            variants["roughness_dirtier"] = (
+                mr.roughness_from_gloss(gl2), False)
+        elif v == "damaged":
+            a2, gl2 = _apply_weathering(
+                albedo, gloss, preset,
+                np.clip(wear * 2.2 + cavity_recess * 0.3, 0, 1),
+                grime * 0.0, streak * 0.0, rust * 0.0)
+            variants["albedo_damaged"] = (a2, True)
+            variants["roughness_damaged"] = (
+                mr.roughness_from_gloss(gl2), False)
+
     # -------------------------------------------------------- assemble
     out_maps: dict[str, tuple[np.ndarray, bool]] = {  # name -> (arr, srgb)
         "albedo": (np.concatenate(
@@ -206,6 +234,13 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
                 [cs.linear_to_srgb(arr_), alpha], axis=-1), True)
         elif name.endswith("normal"):
             out_maps[name] = (arr_, False)
+        else:
+            out_maps[name] = (maps.to_rgb(arr_), False)
+
+    for name, (arr_, is_color) in variants.items():
+        if is_color:
+            out_maps[name] = (np.concatenate(
+                [cs.linear_to_srgb(arr_), alpha], axis=-1), True)
         else:
             out_maps[name] = (maps.to_rgb(arr_), False)
 
@@ -530,6 +565,8 @@ def _pack_manifest(recipe: Recipe, g, preset, map_files: dict,
             "mask_compression": "single_channel",
         },
     }
+    if g.variations:
+        pack["variants"] = sorted(g.variations)
     if g.detail_texture.enabled:
         dt = g.detail_texture
         pack["detail"] = {

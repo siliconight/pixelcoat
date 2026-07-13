@@ -4,6 +4,48 @@ All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).
 
+## [0.5.0] - 2026-07-13
+
+### Added
+- **Generation 7 Slice 5** — pack-metadata-driven delivery. This closes
+  the Generation 7 epic (docs/ROADMAP_generation_7.md, Slices 1-5).
+  Schema 0.5; earlier recipes load unchanged; both processing paths
+  verified byte-identical with new features off (pixel vs v0.2 baseline,
+  gen7 vs v0.4 baseline).
+- **Godot 4.7 importer**
+  (`integrations/godot/addons/pixelcoat_importer/`): editor plugin with
+  a Tools menu action that imports a `.pack.json` (pack/1 or pack/2) —
+  fixes each texture's `.import` from import_hints (normal maps enabled,
+  green flipped for directx packs, `roughness/src_normal` mip filtering,
+  mipmap generation), reimports, then writes `<asset>_material.tres`
+  StandardMaterial3D wiring albedo / normal / roughness (R, drops in as
+  authored `1 - gloss`) / metallic / surface_occlusion (AO slot) and the
+  detail slots: pack/2 tiles ride UV2 with `uv2_scale =
+  repeats_per_meter x meters_per_tile`; packs without tiles wire the
+  full-res micro normal on UV1. Wet maps produce a second
+  `<asset>_material_wet.tres`. `pack_importer.gd` is pure logic,
+  callable headless. Parallax off by default; specular map noted as
+  ShaderMaterial territory (no per-pixel StandardMaterial3D slot).
+- **Blender 4.x importer** (`integrations/blender/pixelcoat_import.py`):
+  File > Import add-on building the matching Principled BSDF materials —
+  albedo sRGB, all data maps Non-Color, AO multiplied into base color,
+  normals through a Normal Map node with directx green flip, detail
+  tiles via Mapping-node repetition blended through the detail mask,
+  detail normals mixed by mask (documented linear approximation), wet
+  material variant honoring `wet_detail_strength_scale`.
+- **Variation exports** (SS17): `generation_7.variations` — any of
+  darker / lighter / dirtier / damaged. One recipe, identical UV
+  boundaries; dirtier and damaged re-run the weathering composite with
+  amplified grime/wear masks so variants stay preset-consistent
+  (painted metal "damaged" brightens toward bare steel), and export a
+  shifted roughness alongside. Pack gains a `variants` list.
+- `integrations/README.md` — install, usage, and the Godot/Blender
+  mapping notes.
+- 6 new tests (57 total): variation validation / exports / off-is-
+  byte-identical / recipe round trip, Godot addon file sanity
+  (metadata-driven, required import params present), Blender add-on
+  AST parse + map coverage.
+
 ## [0.4.0] - 2026-07-13
 
 ### Added

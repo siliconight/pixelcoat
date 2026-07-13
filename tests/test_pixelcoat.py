@@ -684,3 +684,85 @@ def test_cli_preview_compression(tmp_path, g7_source):
     assert (pdir / "g_normal_bc.png").exists()
     # canonical pack untouched
     assert json.loads(pack.read_text())["schema"] == "pixelcoat-pack/2"
+
+
+# ------------------------------------------------------ v0.5 slice 5
+
+def test_variations_validation(g7_source):
+    r = _g7_recipe(g7_source)
+    r.generation_7.variations = ["darker", "sparkly"]
+    with pytest.raises(ValueError, match="variation"):
+        r.validate()
+
+
+def test_variation_exports(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, preset="painted_metal", size=64,
+                   weathering__edge_wear=0.3,
+                   weathering__cavity_grime=0.3, weathering__streaks=0.2)
+    r.generation_7.variations = ["darker", "lighter", "dirtier", "damaged"]
+    pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "g"
+    pack = json.loads((out / "g.pack.json").read_text())
+    assert pack["variants"] == ["damaged", "darker", "dirtier", "lighter"]
+    base = np.asarray(Image.open(out / "g_albedo.png"),
+                      np.float32)[..., :3]
+    dark = np.asarray(Image.open(out / "g_albedo_darker.png"),
+                      np.float32)[..., :3]
+    light = np.asarray(Image.open(out / "g_albedo_lighter.png"),
+                       np.float32)[..., :3]
+    assert dark.mean() < base.mean() < light.mean()
+    assert dark.shape == base.shape            # same UV boundaries
+    for v in ("dirtier", "damaged"):           # gloss shifted -> roughness
+        assert (out / f"g_roughness_{v}.png").exists()
+
+
+def test_variations_off_keeps_outputs(tmp_path, g7_source):
+    r1 = _g7_recipe(g7_source, size=64, weathering__edge_wear=0.3)
+    pipeline.build(r1, str(tmp_path / "a"))
+    r2 = _g7_recipe(g7_source, size=64, weathering__edge_wear=0.3)
+    r2.generation_7.variations = ["darker"]
+    pipeline.build(r2, str(tmp_path / "b"))
+    for f in sorted((tmp_path / "a" / "g").glob("*.png")):
+        assert f.read_bytes() == \
+            (tmp_path / "b" / "g" / f.name).read_bytes(), f.name
+
+
+def test_variation_recipe_roundtrip(tmp_path, g7_source):
+    r = _g7_recipe(g7_source)
+    r.generation_7.variations = ["dirtier"]
+    p = tmp_path / "r.json"
+    r.save(str(p))
+    assert Recipe.load(str(p)).generation_7.variations == ["dirtier"]
+
+
+def test_godot_addon_files_sane():
+    base = "integrations/godot/addons/pixelcoat_importer"
+    cfg = open(f"{base}/plugin.cfg").read()
+    assert 'script="pixelcoat_importer.gd"' in cfg
+    plugin = open(f"{base}/pixelcoat_importer.gd").read()
+    assert plugin.startswith("@tool")
+    assert "add_tool_menu_item" in plugin and \
+        "remove_tool_menu_item" in plugin
+    imp = open(f"{base}/pack_importer.gd").read()
+    assert imp.startswith("@tool")
+    for needle in ("import_pack", "roughness/src_normal",
+                   "compress/normal_map", "normal_map_invert_y",
+                   "DETAIL_UV_2", "uv2_scale", "wet_albedo",
+                   "surface_occlusion"):
+        assert needle in imp, needle
+    # metadata-driven, never filename guessing
+    assert 'maps[' in imp and ".png\"" not in imp
+
+
+def test_blender_addon_parses_and_covers_maps():
+    import ast
+    src = open("integrations/blender/pixelcoat_import.py").read()
+    tree = ast.parse(src)                      # syntax-valid python
+    names = {n.name for n in ast.walk(tree)
+             if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+    assert {"build_material", "register", "unregister",
+            "IMPORT_OT_pixelcoat_pack"} <= names
+    for needle in ("Non-Color", "wet_albedo", "normal_format",
+                   "repeats_per_meter", "detail_mask",
+                   "wet_detail_strength_scale"):
+        assert needle in src, needle

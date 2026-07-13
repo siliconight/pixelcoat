@@ -26,6 +26,7 @@ _G7_RESAMPLE = ("lanczos", "bicubic", "box")
 _G7_HEIGHT_SOURCES = ("inferred", "imported", "combined")
 _G7_WORKFLOWS = ("specular_gloss",)
 _G7_STREAK_DIRECTIONS = ("down", "up", "left", "right")
+_G7_VARIATIONS = ("darker", "lighter", "dirtier", "damaged")
 
 
 @dataclass
@@ -210,6 +211,7 @@ class Generation7:
     material: Gen7Material = field(default_factory=Gen7Material)
     weathering: Gen7Weathering = field(default_factory=Gen7Weathering)
     wetness: Gen7Wetness = field(default_factory=Gen7Wetness)
+    variations: list = field(default_factory=list)
     detail_texture: Gen7DetailTexture = field(
         default_factory=Gen7DetailTexture)
     preview: Gen7Preview = field(default_factory=Gen7Preview)
@@ -223,10 +225,15 @@ class Generation7:
             return
         for name in self._GROUPS:
             _fill(getattr(self, name), raw.get(name))
+        if "variations" in raw:
+            self.variations = list(raw["variations"])
 
     def to_dict(self) -> dict:
-        return {name: dataclasses.asdict(getattr(self, name))
-                for name in self._GROUPS}
+        d = {name: dataclasses.asdict(getattr(self, name))
+             for name in self._GROUPS}
+        if self.variations:
+            d["variations"] = list(self.variations)
+        return d
 
 
 @dataclass
@@ -446,6 +453,10 @@ class Recipe:
                     f"{dt.repeats_per_meter} outside 0.5..64")
             if not 0.0 <= dt.strength <= 1.0:
                 bad(f"detail_texture.strength {dt.strength} outside 0..1")
+        for v in g.variations:
+            if v not in _G7_VARIATIONS:
+                bad(f"generation_7 variation '{v}' is not one of "
+                    f"{_G7_VARIATIONS}")
         pv = g.preview
         if pv.compression_preview not in ("none", "legacy_bc"):
             bad(f"preview.compression_preview '{pv.compression_preview}' "

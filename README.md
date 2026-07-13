@@ -11,7 +11,7 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.4.x — two processing modes
+## Status: v0.5.x — two processing modes
 
 `processing_mode` selects the graph; recipes without one are `pixel`.
 
@@ -115,10 +115,26 @@ pixelcoat validate recipes/
 starting points per material); everything they set can be overridden in
 the saved recipe. On PowerShell, keep commands single-line.
 
+## Integrations
+
+`integrations/godot/addons/pixelcoat_importer/` — Godot 4.7 editor
+plugin: **Project > Tools > Pixelcoat: Import Pack...** fixes texture
+import settings from pack metadata (normal maps, directx green flip,
+roughness mip filtering via the source normal, mipmaps), then writes
+`<asset>_material.tres` — and `<asset>_material_wet.tres` when wet maps
+ship. Detail tiles ride UV2 scaled to repeats_per_meter x
+meters_per_tile. `integrations/blender/pixelcoat_import.py` — Blender
+4.x add-on building the matching Principled BSDF materials. Both are
+driven by the pack manifest, never filename guessing. Details:
+`integrations/README.md`.
+
+**Variations**: `generation_7.variations` accepts any of `darker`,
+`lighter`, `dirtier`, `damaged` — one-recipe albedo variants (plus
+roughness where gloss shifts), identical UV boundaries, listed under
+`pack.variants`. Wet remains its own toggle.
+
 ## Roadmap
 
-Gen7 Slice 5 (Godot 4.7 / Blender importers driven by pack metadata) and
-one-recipe variation exports (darker/dirtier/damaged — the masks already
-ship, so importers can build these today) arrive next. Pixel-path items
+The Generation 7 epic (Slices 1-5) is complete. Pixel-path items
 (edge-aware downsampling, masks, decals, atlases, batch, GUI) continue on
 the TDD order.
