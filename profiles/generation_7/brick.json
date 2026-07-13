@@ -1,0 +1,23 @@
+{
+  "material": {
+    "preset": "brick"
+  },
+  "color": {
+    "lighting_flatten_strength": 0.35,
+    "saturation_scale": 0.95,
+    "local_contrast": 0.15,
+    "maximum_colors": 128
+  },
+  "frequency": {
+    "macro_radius": 10,
+    "micro_radius": 2
+  },
+  "height": {
+    "macro_strength": 1.0,
+    "micro_strength": 0.35
+  },
+  "weathering": {
+    "edge_wear": 0.15,
+    "cavity_grime": 0.3
+  }
+}

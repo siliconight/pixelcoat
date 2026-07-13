@@ -207,3 +207,320 @@ def test_v01_recipe_still_builds(tmp_path, source):
     report = pipeline.build(r, str(tmp_path / "build"))
     assert "normal" in report["maps"]          # 0.2 defaults apply
     assert (tmp_path / "build" / "old" / "old.pack.json").exists()
+
+
+# ------------------------------------------------------ v0.3 generation 7
+
+from pixelcoat.core import (color_space as cs, frequency, material_response
+                            as mr, tiling as tiling_mod, weathering)
+
+
+@pytest.fixture
+def g7_source(tmp_path):
+    """Brick-ish synthetic: mortar grid + noise + a lighting gradient."""
+    rng = np.random.default_rng(11)
+    img = np.full((128, 128, 3), (0.55, 0.28, 0.20), np.float32)
+    img += rng.normal(0, 0.04, (128, 128, 3))
+    img[::32] = (0.62, 0.60, 0.55)
+    img[:, ::32] = (0.62, 0.60, 0.55)
+    grad = np.linspace(0.7, 1.2, 128, dtype=np.float32)[None, :, None]
+    img = np.clip(img * grad, 0, 1)
+    p = tmp_path / "g7src.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    return str(p)
+
+
+def _g7_recipe(source, preset="brick", size=128, **kw):
+    r = Recipe(asset_id="g", source_path=source)
+    r.processing_mode = "generation_7"
+    r.generation_7.resolution.working_width = size
+    r.generation_7.resolution.working_height = size
+    r.generation_7.material.preset = preset
+    for k, v in kw.items():
+        group, attr = k.split("__")
+        setattr(getattr(r.generation_7, group), attr, v)
+    return r
+
+
+# ----------------------------------------------------------- unit: math
+
+def test_linear_srgb_roundtrip():
+    rng = np.random.default_rng(2)
+    c = rng.random((32, 32, 3)).astype(np.float32)
+    assert np.allclose(cs.srgb_to_linear(cs.linear_to_srgb(c)), c, atol=2e-4)
+    assert np.allclose(cs.linear_to_srgb(cs.srgb_to_linear(c)), c, atol=2e-4)
+
+
+def test_wrap_blur_roll_invariant():
+    rng = np.random.default_rng(3)
+    a = rng.random((48, 48)).astype(np.float32)
+    b1 = frequency.smooth_blur(a, 5, wrap_x=True, wrap_y=True)
+    b2 = frequency.smooth_blur(np.roll(a, 13, axis=1), 5,
+                               wrap_x=True, wrap_y=True)
+    assert np.allclose(np.roll(b1, 13, axis=1), b2, atol=1e-4)
+
+
+def test_frequency_band_reconstruction():
+    rng = np.random.default_rng(4)
+    luma = rng.random((64, 64)).astype(np.float32)
+    _, micro = frequency.separate(luma, 12, 2, noise_threshold=0.0,
+                                  detail_gain=1.0, wrap_x=False,
+                                  wrap_y=False)
+    micro_base = frequency.smooth_blur(luma, 2, False, False)
+    assert np.allclose(micro + micro_base, luma, atol=1e-4)
+
+
+def test_soft_threshold_kills_small_amplitudes():
+    band = np.array([-0.05, -0.01, 0.0, 0.01, 0.05], np.float32)
+    out = frequency.soft_threshold(band, 0.02)
+    assert np.allclose(out, [-0.03, 0.0, 0.0, 0.0, 0.03], atol=1e-6)
+
+
+def test_make_tileable_wrap_guarantees_continuity():
+    rng = np.random.default_rng(0)
+    base = np.linspace(0, 1, 64, np.float32)[:, None].repeat(64, axis=1)
+    a = (base + 0.1 * rng.random((64, 64)).astype(np.float32)
+         )[..., None].repeat(3, -1)
+    out = tiling_mod.make_tileable_wrap(a, "both")
+    interior_y = np.abs(np.diff(out, axis=0)).mean()
+    interior_x = np.abs(np.diff(out, axis=1)).mean()
+    assert np.abs(out[0] - out[-1]).mean() <= interior_y * 1.5
+    assert np.abs(out[:, 0] - out[:, -1]).mean() <= interior_x * 1.5
+
+
+# ------------------------------------------------------- unit: material
+
+def test_gloss_roughness_relationship(tmp_path, g7_source):
+    r = _g7_recipe(g7_source)
+    pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "g"
+    gl = np.asarray(Image.open(out / "g_gloss.png"), np.int32)[..., 0]
+    ro = np.asarray(Image.open(out / "g_roughness.png"), np.int32)[..., 0]
+    assert np.abs((gl + ro) - 255).max() <= 1  # within one 8-bit value
+
+
+def test_cavity_responds_to_synthetic_recess(tmp_path):
+    img = np.full((64, 64, 3), 0.7, np.float32)
+    img[28:36, :] = 0.15                       # a dark recessed channel
+    p = tmp_path / "recess.png"
+    Image.fromarray((img * 255).astype(np.uint8)).save(p)
+    r = _g7_recipe(str(p), preset="brick", size=64,
+                   color__lighting_flatten_strength=0.0,
+                   cleanup__strength=0.0)
+    pipeline.build(r, str(tmp_path / "b"))
+    cav = np.asarray(Image.open(tmp_path / "b" / "g" / "g_cavity.png"),
+                     np.float32)[..., 0] / 255
+    assert cav[28:36].mean() < cav[:20].mean() - 0.05  # crevice darker
+
+
+def test_wear_favors_raised_edges():
+    h = np.full((64, 64), 0.3, np.float32)
+    h[24:40, 24:40] = 0.9                      # raised plateau
+    wear = weathering.edge_wear_mask(h, 0.5, 1999, False, False)
+    edge_band = wear[22:26, 20:44].mean()      # plateau rim
+    flat = wear[4:12, 4:12].mean()
+    center = wear[30:34, 30:34].mean()         # raised but not an edge
+    assert edge_band > flat + 0.05
+    assert edge_band > center + 0.05
+
+
+def test_grime_favors_cavities():
+    recess = np.zeros((64, 64), np.float32)
+    recess[30:34, :] = 1.0
+    g = weathering.grime_mask(recess, 0.5, 1999, False, False)
+    assert g[30:34].mean() > g[:20].mean() + 0.1
+
+
+def test_streaks_decay_along_direction():
+    src = np.zeros((64, 64), np.float32)
+    src[8, 20:44] = 1.0
+    s = weathering.streaks(src, 0.8, 0.9, "down", 1999, wrap=False)
+    col = s[:, 32]
+    assert col[9] > 0.1 and col[20] > 0.0
+    assert col[9] > col[20] > col[40]          # decays downward
+    assert s[:8, 32].max() == 0.0              # nothing above the source
+
+
+def test_streaks_deterministic_by_seed():
+    src = np.zeros((32, 32), np.float32)
+    src[4] = 1.0
+    a = weathering.streaks(src, 0.5, 0.9, "down", 7, wrap=False)
+    b = weathering.streaks(src, 0.5, 0.9, "down", 7, wrap=False)
+    c = weathering.streaks(src, 0.5, 0.9, "down", 8, wrap=False)
+    assert np.array_equal(a, b) and not np.array_equal(a, c)
+
+
+def test_metallic_only_from_preset_rule(tmp_path, g7_source):
+    for preset, expected in (("painted_metal", True), ("concrete", False)):
+        r = _g7_recipe(g7_source, preset=preset, size=64,
+                       weathering__edge_wear=0.4)
+        r.asset_id = preset
+        report = pipeline.build(r, str(tmp_path / "b"))
+        assert ("metallic" in report["maps"]) is expected
+
+
+def test_wetness_isolated_to_mask(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, size=64, wetness__enabled=True,
+                   wetness__amount=0.8)
+    pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "g"
+    mask = np.asarray(Image.open(out / "g_wetness.png"),
+                      np.float32)[..., 0] / 255
+    dry = np.asarray(Image.open(out / "g_albedo.png"), np.int32)[..., :3]
+    wet = np.asarray(Image.open(out / "g_wet_albedo.png"),
+                     np.int32)[..., :3]
+    dry_zone = mask < 1e-3
+    if dry_zone.any():
+        assert np.abs(dry[dry_zone] - wet[dry_zone]).max() <= 1
+    wet_zone = mask > 0.5
+    assert (wet[wet_zone].mean() < dry[wet_zone].mean())  # wet darkens
+    dro = np.asarray(Image.open(out / "g_roughness.png"),
+                     np.int32)[..., 0]
+    wro = np.asarray(Image.open(out / "g_wet_roughness.png"),
+                     np.int32)[..., 0]
+    assert wro[wet_zone].mean() < dro[wet_zone].mean()    # wet smoother
+
+
+# -------------------------------------------------- integration: builds
+
+def test_dispatch_default_and_unknown_mode(g7_source):
+    r = Recipe(asset_id="d", source_path=g7_source)
+    assert r.processing_mode == "pixel"
+    r.processing_mode = "voxel"
+    with pytest.raises(ValueError):
+        pipeline.build(r, "/tmp/nope")
+
+
+def test_g7_pack_manifest_and_alignment(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, weathering__edge_wear=0.3,
+                   weathering__cavity_grime=0.3, weathering__streaks=0.2)
+    r.tiling.enabled = True
+    r.export.meters_per_tile = 2.0
+    report = pipeline.build(r, str(tmp_path / "b"))
+    out = tmp_path / "b" / "g"
+    pack = json.loads((out / "g.pack.json").read_text())
+    assert pack["schema"] == "pixelcoat-pack/2"
+    assert pack["processing_mode"] == "generation_7"
+    assert pack["material_profile"] == "brick"
+    assert pack["meters_per_tile"] == 2.0
+    assert pack["import_hints"]["normal_format"] == "opengl"
+    assert pack["import_hints"]["color_space"]["albedo"] == "srgb"
+    assert pack["import_hints"]["color_space"]["normal"] == "linear"
+    sizes = set()
+    for fname in pack["maps"].values():
+        assert (out / fname).exists()
+        sizes.add(Image.open(out / fname).size)
+    assert len(sizes) == 1                      # every map aligned
+    assert report["warnings"] == []             # tiled build seam-clean
+    for name in ("albedo", "normal", "detail_normal", "specular", "gloss",
+                 "roughness", "height", "cavity", "surface_occlusion",
+                 "wear", "grime"):
+        assert name in pack["maps"]
+
+
+def test_g7_deterministic(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, size=64, weathering__edge_wear=0.3,
+                   weathering__streaks=0.2, color__maximum_colors=32)
+    pipeline.build(r, str(tmp_path / "a"))
+    pipeline.build(r, str(tmp_path / "b"))
+    for f in sorted((tmp_path / "a" / "g").glob("*.png")):
+        assert f.read_bytes() == \
+            (tmp_path / "b" / "g" / f.name).read_bytes(), f.name
+
+
+def test_g7_recipe_roundtrip(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, preset="wood",
+                   weathering__cavity_grime=0.4, normal__flip_green=True)
+    p = tmp_path / "r.json"
+    r.save(str(p))
+    r2 = Recipe.load(str(p))
+    assert r2.processing_mode == "generation_7"
+    assert r2.generation_7.material.preset == "wood"
+    assert r2.generation_7.weathering.cavity_grime == 0.4
+    assert r2.generation_7.normal.flip_green is True
+
+
+def test_presets_differ_meaningfully(tmp_path, g7_source):
+    means = {}
+    for preset in ("concrete", "brick", "wood", "painted_metal"):
+        r = _g7_recipe(g7_source, preset=preset, size=64)
+        r.asset_id = preset
+        pipeline.build(r, str(tmp_path / "b"))
+        ro = np.asarray(Image.open(
+            tmp_path / "b" / preset / f"{preset}_roughness.png"),
+            np.float32)[..., 0].mean()
+        means[preset] = ro
+    vals = sorted(means.values())
+    assert all(b - a > 5 for a, b in zip(vals, vals[1:])), means
+
+
+def test_pixel_pack_gains_mode_field(tmp_path, source):
+    r = _recipe(source)
+    pipeline.build(r, str(tmp_path / "b"))
+    pack = json.loads((tmp_path / "b" / "t" / "t.pack.json").read_text())
+    assert pack["schema"] == "pixelcoat-pack/1"   # unchanged for pixel
+    assert pack["processing_mode"] == "pixel"     # additive
+
+
+def test_v02_recipe_defaults_to_pixel(tmp_path, source):
+    raw = {"schema_version": "0.2", "asset_id": "old",
+           "source": {"path": source},
+           "pixel": {"working_width": 32, "working_height": 32}}
+    r = Recipe.from_dict(raw)
+    assert r.processing_mode == "pixel"
+    report = pipeline.build(r, str(tmp_path / "b"))
+    assert report["processing_mode"] == "pixel"
+
+
+def test_g7_slice4_features_rejected(g7_source):
+    r = _g7_recipe(g7_source)
+    r.generation_7.detail_texture.enabled = True
+    with pytest.raises(ValueError, match="v0.4"):
+        r.validate()
+    r = _g7_recipe(g7_source)
+    r.generation_7.preview.generate_mipmaps = True
+    with pytest.raises(ValueError, match="v0.4"):
+        r.validate()
+
+
+def test_g7_imported_height(tmp_path, g7_source):
+    hmap = np.zeros((128, 128), np.float32)
+    hmap[:, 64:] = 1.0
+    p = tmp_path / "h.png"
+    Image.fromarray((hmap * 255).astype(np.uint8)).save(p)
+    r = _g7_recipe(g7_source, height__source="imported",
+                   height__import_path=str(p), size=128)
+    pipeline.build(r, str(tmp_path / "b"))
+    out = np.asarray(Image.open(tmp_path / "b" / "g" / "g_height.png"),
+                     np.float32)[..., 0]
+    assert out[:, 80:].mean() > out[:, :48].mean() + 30
+
+
+def test_g7_resolution_warnings(tmp_path, g7_source):
+    r = _g7_recipe(g7_source, size=98)          # not pow2, not mult of 4
+    report = pipeline.build(r, str(tmp_path / "b"))
+    joined = " ".join(report["warnings"])
+    assert "power of two" in joined
+    assert "multiple of four" in joined
+
+
+def test_cli_g7_process_with_profile(tmp_path, g7_source):
+    env = dict(os.environ, PYTHONPATH=os.getcwd())
+    out = tmp_path / "cli_g7"
+    res = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "process", g7_source,
+         "--mode", "generation_7",
+         "--profile", "profiles/generation_7/concrete.json",
+         "--width", "64", "--height", "64", "--tile", "both",
+         "--output", str(out), "--json"],
+        capture_output=True, text=True, env=env)
+    assert res.returncode == 0, res.stderr
+    report = json.loads(res.stdout)
+    assert report["processing_mode"] == "generation_7"
+    assert report["material_profile"] == "concrete"
+    recipe_path = out / report["asset_id"] / \
+        f"{report['asset_id']}.pixelcoat.json"
+    res2 = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "validate",
+         str(recipe_path)], capture_output=True, text=True, env=env)
+    assert res2.returncode == 0, res2.stdout + res2.stderr

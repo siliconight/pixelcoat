@@ -1,0 +1,24 @@
+{
+  "material": {
+    "preset": "wood"
+  },
+  "color": {
+    "lighting_flatten_strength": 0.3,
+    "saturation_scale": 1.0,
+    "local_contrast": 0.18,
+    "maximum_colors": 128
+  },
+  "frequency": {
+    "macro_radius": 12,
+    "micro_radius": 1,
+    "detail_gain": 1.4
+  },
+  "height": {
+    "macro_strength": 0.7,
+    "micro_strength": 0.45
+  },
+  "weathering": {
+    "edge_wear": 0.2,
+    "cavity_grime": 0.2
+  }
+}

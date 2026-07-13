@@ -21,6 +21,11 @@ _PALETTE_METHODS = ("oklab_kmeans", "fixed")
 _DITHER = ("none", "bayer", "floyd_steinberg")
 _EXPORT_TYPES = ("surface_texture", "decal", "sign")
 _EMISSIVE_MODES = ("none", "indices", "threshold")
+_PROCESSING_MODES = ("pixel", "generation_7")
+_G7_RESAMPLE = ("lanczos", "bicubic", "box")
+_G7_HEIGHT_SOURCES = ("inferred", "imported", "combined")
+_G7_WORKFLOWS = ("specular_gloss",)
+_G7_STREAK_DIRECTIONS = ("down", "up", "left", "right")
 
 
 @dataclass
@@ -85,6 +90,132 @@ class Maps:
     emissive_threshold: float = 0.85
 
 
+
+# ----------------------------------------------------------- generation 7
+# Roadmap "Generation 7 Surface Skin": a separate layered-material graph.
+# All settings live under this one section so pixel recipes never collide
+# with it, and gen7 recipes ignore pixel-specific sections (pixel, palette,
+# dither, simplification, maps) without erroring.
+
+@dataclass
+class Gen7Resolution:
+    working_width: int = 1024
+    working_height: int = 1024
+    resample_method: str = "lanczos"
+
+
+@dataclass
+class Gen7Color:
+    lighting_flatten_strength: float = 0.35
+    illumination_radius: int = 48
+    shadow_recovery: float = 0.15
+    highlight_compression: float = 0.25
+    saturation_scale: float = 1.0                 # 1.0 = preset default
+    local_contrast: float = 0.15
+    maximum_colors: int = 0                       # 0 = off; else 8..256
+
+
+@dataclass
+class Gen7Cleanup:
+    strength: float = 0.35                        # edge-preserving smooth
+    chroma_strength: float = 0.7                  # chroma smoothed harder
+
+
+@dataclass
+class Gen7Frequency:
+    macro_radius: int = 12
+    micro_radius: int = 2
+    noise_threshold: float = 0.02
+    detail_gain: float = 1.0
+
+
+@dataclass
+class Gen7Height:
+    source: str = "inferred"                      # inferred|imported|combined
+    import_path: str | None = None
+    macro_strength: float = 0.8
+    micro_strength: float = 0.35
+    invert: bool = False
+
+
+@dataclass
+class Gen7Normal:
+    base_strength: float = 1.0
+    detail_strength: float = 0.45
+    flip_green: bool = False
+
+
+@dataclass
+class Gen7Material:
+    preset: str = "concrete"
+    workflow: str = "specular_gloss"
+    specular_level: float | None = None           # None -> preset value
+    gloss: float | None = None
+    roughness_variation: float | None = None
+    emit_roughness: bool = True
+    emit_metallic: bool = True                    # only fires on preset rule
+
+
+@dataclass
+class Gen7Weathering:
+    edge_wear: float = 0.0
+    cavity_grime: float = 0.0
+    streaks: float = 0.0
+    streak_direction: str = "down"
+    streak_decay: float = 0.92
+    rust_bleed: float = 0.0
+    seed: int = DEFAULT_SEED
+
+
+@dataclass
+class Gen7Wetness:
+    enabled: bool = False
+    amount: float = 0.5
+    cavity_bias: float = 0.65
+    bottom_bias: float = 0.25
+
+
+@dataclass
+class Gen7DetailTexture:
+    enabled: bool = False                         # arrives in v0.4
+
+
+@dataclass
+class Gen7Preview:
+    generate_mipmaps: bool = False                # arrives in v0.4
+    compression_preview: str = "none"             # arrives in v0.4
+
+
+@dataclass
+class Generation7:
+    resolution: Gen7Resolution = field(default_factory=Gen7Resolution)
+    color: Gen7Color = field(default_factory=Gen7Color)
+    cleanup: Gen7Cleanup = field(default_factory=Gen7Cleanup)
+    frequency: Gen7Frequency = field(default_factory=Gen7Frequency)
+    height: Gen7Height = field(default_factory=Gen7Height)
+    normal: Gen7Normal = field(default_factory=Gen7Normal)
+    material: Gen7Material = field(default_factory=Gen7Material)
+    weathering: Gen7Weathering = field(default_factory=Gen7Weathering)
+    wetness: Gen7Wetness = field(default_factory=Gen7Wetness)
+    detail_texture: Gen7DetailTexture = field(
+        default_factory=Gen7DetailTexture)
+    preview: Gen7Preview = field(default_factory=Gen7Preview)
+
+    _GROUPS = ("resolution", "color", "cleanup", "frequency", "height",
+               "normal", "material", "weathering", "wetness",
+               "detail_texture", "preview")
+
+    def fill(self, raw: dict | None) -> None:
+        if not raw:
+            return
+        for name in self._GROUPS:
+            _fill(getattr(self, name), raw.get(name))
+
+    def to_dict(self) -> dict:
+        return {name: dataclasses.asdict(getattr(self, name))
+                for name in self._GROUPS}
+
+
 @dataclass
 class Export:
     type: str = "surface_texture"
@@ -100,6 +231,7 @@ class Recipe:
     source_path: str
     schema_version: str = RECIPE_SCHEMA_VERSION
     tool_version: str = __version__
+    processing_mode: str = "pixel"                # pixel | generation_7
     transform: Transform = field(default_factory=Transform)
     pixel: Pixel = field(default_factory=Pixel)
     simplification: Simplification = field(default_factory=Simplification)
@@ -107,6 +239,7 @@ class Recipe:
     dither: Dither = field(default_factory=Dither)
     tiling: Tiling = field(default_factory=Tiling)
     maps: Maps = field(default_factory=Maps)
+    generation_7: Generation7 = field(default_factory=Generation7)
     export: Export = field(default_factory=Export)
 
     # ---------------------------------------------------------------- io
@@ -118,6 +251,7 @@ class Recipe:
         except KeyError as e:
             raise ValueError(f"{where}: missing required field {e}") from e
         r = cls(asset_id=asset_id, source_path=src)
+        r.processing_mode = raw.get("processing_mode", "pixel")
         _fill(r.transform, raw.get("transform"))
         _fill(r.pixel, raw.get("pixel"))
         _fill(r.simplification, raw.get("simplification"))
@@ -125,6 +259,7 @@ class Recipe:
         _fill(r.dither, raw.get("dither"))
         _fill(r.tiling, raw.get("tiling"))
         _fill(r.maps, raw.get("maps"))               # absent in 0.1 recipes
+        r.generation_7.fill(raw.get("generation_7"))  # absent pre-0.3
         _fill(r.export, raw.get("export"))
         r.validate(where)
         return r
@@ -141,10 +276,11 @@ class Recipe:
         return r
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "schema_version": self.schema_version,
             "tool_version": self.tool_version,
             "asset_id": self.asset_id,
+            "processing_mode": self.processing_mode,
             "source": {"path": self.source_path},
             "transform": dataclasses.asdict(self.transform),
             "pixel": dataclasses.asdict(self.pixel),
@@ -155,6 +291,9 @@ class Recipe:
             "maps": dataclasses.asdict(self.maps),
             "export": dataclasses.asdict(self.export),
         }
+        if self.processing_mode == "generation_7":
+            d["generation_7"] = self.generation_7.to_dict()
+        return d
 
     def save(self, path: str) -> None:
         with open(path, "w", encoding="utf-8") as f:
@@ -207,6 +346,81 @@ class Recipe:
             bad("maps emissive_threshold must be within 0..1")
         if self.export.meters_per_tile <= 0.0:
             bad("export meters_per_tile must be > 0")
+        if self.processing_mode not in _PROCESSING_MODES:
+            bad(f"processing_mode must be one of {_PROCESSING_MODES}")
+        if self.processing_mode == "generation_7":
+            self._validate_generation_7(bad)
+
+    def _validate_generation_7(self, bad) -> None:
+        from .core.material_response import PRESET_NAMES
+        g = self.generation_7
+        if g.resolution.working_width < 16 or g.resolution.working_height < 16:
+            bad("generation_7 working resolution must be at least 16x16")
+        if g.resolution.resample_method not in _G7_RESAMPLE:
+            bad(f"generation_7 resample_method must be one of {_G7_RESAMPLE}")
+        for name, v in (("lighting_flatten_strength",
+                         g.color.lighting_flatten_strength),
+                        ("shadow_recovery", g.color.shadow_recovery),
+                        ("highlight_compression",
+                         g.color.highlight_compression),
+                        ("local_contrast", g.color.local_contrast)):
+            if not 0.0 <= v <= 1.0:
+                bad(f"generation_7 color {name} must be within 0..1")
+        if g.color.illumination_radius < 2:
+            bad("generation_7 illumination_radius must be >= 2")
+        if g.color.maximum_colors != 0 and not 8 <= g.color.maximum_colors <= 256:
+            bad("generation_7 maximum_colors must be 0 (off) or 8..256")
+        if not 0.0 <= g.cleanup.strength <= 1.0 \
+                or not 0.0 <= g.cleanup.chroma_strength <= 1.0:
+            bad("generation_7 cleanup strengths must be within 0..1")
+        if g.frequency.macro_radius < 1 or g.frequency.micro_radius < 1:
+            bad("generation_7 frequency radii must be >= 1")
+        if g.frequency.micro_radius >= g.frequency.macro_radius:
+            bad("generation_7 micro_radius must be smaller than macro_radius")
+        if g.height.source not in _G7_HEIGHT_SOURCES:
+            bad(f"generation_7 height source must be one of "
+                f"{_G7_HEIGHT_SOURCES}")
+        if g.height.source in ("imported", "combined") \
+                and not g.height.import_path:
+            bad(f"generation_7 height source '{g.height.source}' requires "
+                f"import_path")
+        if not 0.0 <= g.height.macro_strength <= 2.0 \
+                or not 0.0 <= g.height.micro_strength <= 2.0:
+            bad("generation_7 height strengths must be within 0..2")
+        if not 0.0 <= g.normal.base_strength <= 8.0 \
+                or not 0.0 <= g.normal.detail_strength <= 8.0:
+            bad("generation_7 normal strengths must be within 0..8")
+        if g.material.preset not in PRESET_NAMES:
+            bad(f"generation_7 material preset must be one of {PRESET_NAMES}")
+        if g.material.workflow not in _G7_WORKFLOWS:
+            bad(f"generation_7 material workflow must be one of "
+                f"{_G7_WORKFLOWS}")
+        for name, v in (("specular_level", g.material.specular_level),
+                        ("gloss", g.material.gloss),
+                        ("roughness_variation",
+                         g.material.roughness_variation)):
+            if v is not None and not 0.0 <= v <= 1.0:
+                bad(f"generation_7 material {name} must be within 0..1")
+        w = g.weathering
+        for name, v in (("edge_wear", w.edge_wear),
+                        ("cavity_grime", w.cavity_grime),
+                        ("streaks", w.streaks),
+                        ("rust_bleed", w.rust_bleed)):
+            if not 0.0 <= v <= 1.0:
+                bad(f"generation_7 weathering {name} must be within 0..1")
+        if w.streak_direction not in _G7_STREAK_DIRECTIONS:
+            bad(f"generation_7 streak_direction must be one of "
+                f"{_G7_STREAK_DIRECTIONS}")
+        if not 0.0 <= w.streak_decay < 1.0:
+            bad("generation_7 streak_decay must be within 0..1 (exclusive)")
+        if not 0.0 <= g.wetness.amount <= 1.0:
+            bad("generation_7 wetness amount must be within 0..1")
+        if g.detail_texture.enabled:
+            bad("generation_7 detail_texture is not implemented yet "
+                "(arrives in v0.4 with the detail/mipmap slice)")
+        if g.preview.generate_mipmaps or g.preview.compression_preview != "none":
+            bad("generation_7 preview (mipmaps / compression) is not "
+                "implemented yet (arrives in v0.4)")
 
 
 def _fill(target, raw: dict | None) -> None:

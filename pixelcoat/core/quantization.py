@@ -79,6 +79,38 @@ def _kpp_init(data: np.ndarray, k: int, rng) -> np.ndarray:
     return np.array(centers, np.float64)
 
 
+
+def extract_palette_large(rgb_pixels: np.ndarray, k: int, seed: int,
+                          sample: int = 16384) -> np.ndarray:
+    """K-means in OKLab tuned for Generation 7's moderate palettes
+    (32..256 colors): deterministic strided subsample, k-means++ seeding on
+    a smaller subset, fully vectorized Lloyd updates. Same contract as
+    extract_palette (sorted dark to light, sRGB floats); the pixel path
+    keeps its original exhaustive clustering untouched."""
+    flat = rgb_pixels.reshape(-1, 3)
+    step = max(1, len(flat) // sample)
+    lab = srgb_to_oklab(flat[::step])
+    k = int(min(k, len(np.unique(lab, axis=0))))
+    rng = np.random.default_rng(seed)
+    init_step = max(1, len(lab) // 4096)
+    centers = _kpp_init(lab[::init_step], k, rng)
+    for _ in range(16):
+        d = np.linalg.norm(lab[:, None, :] - centers[None, :, :], axis=2)
+        assign = d.argmin(axis=1)
+        sums = np.zeros_like(centers)
+        np.add.at(sums, assign, lab)
+        counts = np.bincount(assign, minlength=k).astype(np.float64)
+        occupied = counts > 0
+        new = centers.copy()
+        new[occupied] = sums[occupied] / counts[occupied, None]
+        if float(np.linalg.norm(new - centers)) < 1e-6:
+            centers = new
+            break
+        centers = new
+    order = np.argsort(centers[:, 0], kind="stable")
+    return np.clip(oklab_to_srgb(centers[order]), 0.0, 1.0).astype(np.float32)
+
+
 def load_fixed(path: str) -> np.ndarray:
     """Load a JSON palette: ``["#a1b2c3", ...]`` or ``{"colors": [...]}``."""
     with open(path, encoding="utf-8") as f:

@@ -1,0 +1,26 @@
+{
+  "material": {
+    "preset": "painted_metal"
+  },
+  "color": {
+    "lighting_flatten_strength": 0.35,
+    "saturation_scale": 0.9,
+    "highlight_compression": 0.35,
+    "maximum_colors": 96
+  },
+  "frequency": {
+    "macro_radius": 14,
+    "micro_radius": 2,
+    "noise_threshold": 0.03
+  },
+  "height": {
+    "macro_strength": 0.4,
+    "micro_strength": 0.3
+  },
+  "weathering": {
+    "edge_wear": 0.3,
+    "cavity_grime": 0.2,
+    "streaks": 0.2,
+    "rust_bleed": 0.15
+  }
+}

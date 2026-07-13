@@ -28,8 +28,17 @@ def main(argv: list[str] | None = None) -> int:
     pr = sub.add_parser("process", help="process a source image directly")
     pr.add_argument("input")
     pr.add_argument("--asset-id", default=None)
-    pr.add_argument("--width", type=int, default=128)
-    pr.add_argument("--height", type=int, default=128)
+    pr.add_argument("--mode", default="pixel",
+                    choices=["pixel", "generation_7"])
+    pr.add_argument("--profile", default=None,
+                    help="generation_7 profile JSON (a generation_7 "
+                         "recipe-section fragment, e.g. "
+                         "profiles/generation_7/concrete.json)")
+    pr.add_argument("--meters-per-tile", type=float, default=None)
+    pr.add_argument("--width", type=int, default=None,
+                    help="working width (default: 128 pixel / 1024 gen7)")
+    pr.add_argument("--height", type=int, default=None,
+                    help="working height (default: 128 pixel / 1024 gen7)")
     pr.add_argument("--colors", type=int, default=24)
     pr.add_argument("--dither", default="none",
                     choices=["none", "bayer", "floyd_steinberg"])
@@ -71,8 +80,14 @@ def _process(args) -> int:
     asset_id = args.asset_id or \
         os.path.splitext(os.path.basename(args.input))[0]
     r = Recipe(asset_id=asset_id, source_path=os.path.abspath(args.input))
-    r.pixel.working_width = args.width
-    r.pixel.working_height = args.height
+    r.processing_mode = args.mode
+    if args.mode == "generation_7":
+        return _process_generation_7(r, args)
+    if args.profile:
+        raise ValueError("--profile is a generation_7 option "
+                         "(use --mode generation_7)")
+    r.pixel.working_width = args.width if args.width else 128
+    r.pixel.working_height = args.height if args.height else 128
     r.pixel.display_scale = args.scale
     r.palette.max_colors = args.colors
     r.palette.seed = args.seed
@@ -90,6 +105,25 @@ def _process(args) -> int:
     return _run(r, args)
 
 
+def _process_generation_7(r: Recipe, args) -> int:
+    g = r.generation_7
+    if args.profile:
+        with open(args.profile, encoding="utf-8") as f:
+            g.fill(json.load(f))
+    if args.width:
+        g.resolution.working_width = args.width
+    if args.height:
+        g.resolution.working_height = args.height
+    if args.tile:
+        r.tiling.enabled = True
+        r.tiling.axes = args.tile
+    if args.meters_per_tile:
+        r.export.meters_per_tile = args.meters_per_tile
+    g.weathering.seed = args.seed
+    r.validate()
+    return _run(r, args)
+
+
 def _build_from(args) -> int:
     return _run(Recipe.load(args.recipe), args)
 
@@ -101,6 +135,15 @@ def _run(recipe: Recipe, args) -> int:
     report = pipeline.build(recipe, args.output)
     if args.json_log:
         print(json.dumps(report))
+    elif report["processing_mode"] == "generation_7":
+        print(f"pixelcoat: {report['asset_id']} [generation_7/"
+              f"{report['material_profile']}] -> "
+              f"{report['output_resolution'][0]}x"
+              f"{report['output_resolution'][1]}, "
+              f"{len(report['maps'])} maps, "
+              f"{report['duration_seconds']}s")
+        for w in report.get("warnings", []):
+            print(f"pixelcoat: warning: {w}", file=sys.stderr)
     else:
         print(f"pixelcoat: {report['asset_id']} -> "
               f"{report['output_resolution'][0]}x"
