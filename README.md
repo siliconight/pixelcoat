@@ -11,7 +11,7 @@ Deterministic, offline, batchable, art-directable. Same source bytes + same
 recipe + same version = same output hash, always. Full design:
 [docs/TDD_v0_1.md](docs/TDD_v0_1.md).
 
-## Status: v0.8.x — two processing modes
+## Status: v0.9.x — two processing modes
 
 `processing_mode` selects the graph; recipes without one are `pixel`.
 
@@ -172,9 +172,20 @@ in gutters for decal atlases). Manifest `<atlas>_atlas.json`
 / source_pack per entry, plus `<atlas>_preview.png` with outlined rects
 (TDD 8.3).
 
+**Batch folders (v0.9, TDD 6.2)**: `pixelcoat batch photos/ --recipe
+style.json --atlas sheet01` processes every image in a folder
+deterministically with one style template (`--map 'poster_*=p.json'`
+overrides by filename pattern, first match wins). A failed file is
+recorded in `batch_report.json` and the batch keeps going; asset ids
+come from file stems, with parent-folder prefixes on collision under
+`--recursive`; `--atlas` combines the compatible outputs at the end.
+Templates are ordinary recipe JSON — gen7 templates work too (a folder
+of photos to a folder of material packs in one command).
+
 ## Roadmap
 
 The Generation 7 epic (Slices 1-5) is complete. TDD 7.4 simplification
 (edge-aware downsampling, island removal, protected masks) shipped in
-v0.6. Decals (7.11) shipped in v0.7, atlases (7.15) in v0.8. Remaining
-pixel-path items in TDD order: batch folders (6.2), desktop app.
+v0.6. Decals (7.11) shipped in v0.7, atlases (7.15) in v0.8, batch folders
+(6.2) in v0.9. The CLI-era TDD backlog is complete; what remains is the
+desktop app (GUI art direction, 3D preview) — its own epic.

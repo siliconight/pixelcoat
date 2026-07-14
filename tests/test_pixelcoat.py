@@ -1210,3 +1210,107 @@ def test_cli_atlas(tmp_path, three_packs):
     report = json.loads(res.stdout)
     assert report["entries"] == 3
     assert (tmp_path / "o" / "cli01" / "cli01_atlas.json").exists()
+
+
+# ---------------------------------------------------------- v0.9 batch
+
+from pixelcoat.core import batch as batch_mod
+
+
+@pytest.fixture
+def image_folder(tmp_path):
+    rng = np.random.default_rng(21)
+    src_dir = tmp_path / "srcs"
+    (src_dir / "sub").mkdir(parents=True)
+    for name, folder in (("wall.png", src_dir), ("door.png", src_dir),
+                         ("poster_a.png", src_dir),
+                         ("wall.png", src_dir / "sub")):   # stem collision
+        img = (rng.random((96, 96, 3)) * 255).astype(np.uint8)
+        Image.fromarray(img).save(folder / name)
+    (src_dir / "broken.png").write_bytes(b"not a png at all")
+    return str(src_dir)
+
+
+def test_batch_isolates_failures(tmp_path, image_folder):
+    report = batch_mod.run_batch(image_folder, str(tmp_path / "out"),
+                                 recursive=True)
+    assert report["processed"] == 4
+    assert report["failed"] == 1
+    assert report["failures"][0]["file"] == "broken.png"
+    for e in report["entries"]:
+        assert (tmp_path / "out" / e["asset_id"] /
+                f"{e['asset_id']}.pack.json").exists()
+    assert (tmp_path / "out" / "batch_report.json").exists()
+
+
+def test_batch_asset_id_collision_disambiguated(tmp_path, image_folder):
+    report = batch_mod.run_batch(image_folder, str(tmp_path / "out"),
+                                 recursive=True)
+    ids = sorted(e["asset_id"] for e in report["entries"])
+    assert len(set(ids)) == 4
+    assert "wall" in ids and "sub_wall" in ids
+
+
+def test_batch_template_and_pattern_map(tmp_path, image_folder):
+    template = {"pixel": {"working_width": 32, "working_height": 32},
+                "palette": {"max_colors": 6}}
+    poster = {"pixel": {"working_width": 48, "working_height": 48},
+              "palette": {"max_colors": 12}}
+    report = batch_mod.run_batch(
+        image_folder, str(tmp_path / "out"), template=template,
+        pattern_map=[("poster_*", poster)])
+    assert report["failed"] == 1               # broken.png only
+    for e in report["entries"]:
+        alb = Image.open(tmp_path / "out" / e["asset_id"] /
+                         f"{e['asset_id']}_albedo.png")
+        expected = 48 if e["asset_id"].startswith("poster") else 32
+        assert alb.size == (expected, expected), e["asset_id"]
+
+
+def test_batch_deterministic(tmp_path, image_folder):
+    batch_mod.run_batch(image_folder, str(tmp_path / "o1"))
+    batch_mod.run_batch(image_folder, str(tmp_path / "o2"))
+    for f in sorted((tmp_path / "o1").rglob("*.png")):
+        rel = f.relative_to(tmp_path / "o1")
+        assert f.read_bytes() == (tmp_path / "o2" / rel).read_bytes(), rel
+
+
+def test_batch_with_atlas(tmp_path, image_folder):
+    template = {"pixel": {"working_width": 32, "working_height": 32}}
+    report = batch_mod.run_batch(image_folder, str(tmp_path / "out"),
+                                 template=template, atlas_name="sheet01",
+                                 pow2=True)
+    assert "atlas" in report
+    assert report["atlas"]["entries"] == report["processed"]
+    assert (tmp_path / "out" / "sheet01" / "sheet01_atlas.json").exists()
+
+
+def test_batch_gen7_template(tmp_path, image_folder):
+    template = {"processing_mode": "generation_7",
+                "generation_7": {"resolution": {"working_width": 64,
+                                                "working_height": 64},
+                                 "material": {"preset": "concrete"}}}
+    report = batch_mod.run_batch(image_folder, str(tmp_path / "out"),
+                                 template=template, recursive=True)
+    assert report["processed"] == 4
+    e0 = report["entries"][0]
+    pack = json.loads((tmp_path / "out" / e0["asset_id"] /
+                       f"{e0['asset_id']}.pack.json").read_text())
+    assert pack["schema"] == "pixelcoat-pack/2"
+
+
+def test_cli_batch(tmp_path, image_folder):
+    tpl = tmp_path / "style.json"
+    tpl.write_text(json.dumps(
+        {"pixel": {"working_width": 32, "working_height": 32}}))
+    env = dict(os.environ, PYTHONPATH=os.getcwd())
+    res = subprocess.run(
+        [sys.executable, "-m", "pixelcoat.cli.main", "batch", image_folder,
+         "--recipe", str(tpl), "--atlas", "cli_sheet",
+         "--output", str(tmp_path / "o"), "--json"],
+        capture_output=True, text=True, env=env)
+    assert res.returncode == 0, res.stderr
+    report = json.loads(res.stdout)
+    assert report["processed"] == 3            # non-recursive: sub/ skipped
+    assert report["failed"] == 1
+    assert "atlas" in report

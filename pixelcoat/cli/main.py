@@ -90,6 +90,25 @@ def main(argv: list[str] | None = None) -> int:
     va = sub.add_parser("validate", help="validate recipe file(s) or a dir")
     va.add_argument("paths", nargs="+")
 
+    bt = sub.add_parser("batch", help="process a folder with one style "
+                                      "template (TDD 6.2)")
+    bt.add_argument("input", help="folder of images")
+    bt.add_argument("--recipe", default=None,
+                    help="style template recipe JSON applied to every "
+                         "file (asset_id/source injected per file)")
+    bt.add_argument("--map", action="append", default=[],
+                    metavar="PATTERN=RECIPE",
+                    help="filename-pattern preset, e.g. "
+                         "'poster_*=recipes/poster.json'; first match "
+                         "wins, --recipe is the fallback")
+    bt.add_argument("--recursive", action="store_true")
+    bt.add_argument("--output", default="./build")
+    bt.add_argument("--atlas", default=None,
+                    help="also atlas the compatible outputs")
+    bt.add_argument("--gutter", type=int, default=2)
+    bt.add_argument("--pow2", action="store_true")
+    bt.add_argument("--json", action="store_true", dest="json_log")
+
     at = sub.add_parser("atlas", help="pack pixelcoat packs into one "
                                       "atlas + UV manifest (TDD 7.15)")
     at.add_argument("packs", nargs="+",
@@ -123,10 +142,50 @@ def main(argv: list[str] | None = None) -> int:
             return _preview_compression(args)
         if args.cmd == "atlas":
             return _atlas(args)
+        if args.cmd == "batch":
+            return _batch(args)
         return _validate(args)
     except (ValueError, OSError) as e:
         print(f"pixelcoat: error: {e}", file=sys.stderr)
         return 1
+
+
+def _batch(args) -> int:
+    import json as _json
+
+    from ..core import batch as batch_mod
+
+    template = None
+    if args.recipe:
+        with open(args.recipe, encoding="utf-8") as f:
+            template = _json.load(f)
+    pattern_map = []
+    for spec in args.map:
+        pattern, _, rpath = spec.partition("=")
+        if not rpath:
+            raise ValueError(f"--map '{spec}' is not PATTERN=RECIPE")
+        with open(rpath, encoding="utf-8") as f:
+            pattern_map.append((pattern, _json.load(f)))
+
+    report = batch_mod.run_batch(
+        os.path.abspath(args.input), os.path.abspath(args.output),
+        template=template, pattern_map=pattern_map,
+        recursive=args.recursive, atlas_name=args.atlas,
+        gutter=args.gutter, pow2=args.pow2)
+    if args.json_log:
+        print(_json.dumps(report, indent=2))
+    else:
+        print(f"[batch] {report['processed']} processed, "
+              f"{report['failed']} failed "
+              f"({report['duration_seconds']}s)")
+        for f_ in report["failures"]:
+            print(f"  FAILED {f_['file']}: {f_['error']}",
+                  file=sys.stderr)
+        if "atlas" in report:
+            a = report["atlas"]
+            print(f"[atlas] {a['atlas']}: {a['entries']} entries -> "
+                  f"{a['size'][0]}x{a['size'][1]}")
+    return 1 if report["failed"] and not report["processed"] else 0
 
 
 def _atlas(args) -> int:

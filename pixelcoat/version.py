@@ -4,7 +4,7 @@ Baked into every recipe, manifest, and build report so output is traceable
 to the exact tool revision. Fixed per release, never a timestamp.
 """
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 
 RECIPE_SCHEMA_VERSION = "0.7"
 

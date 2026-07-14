@@ -4,6 +4,36 @@ All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).
 
+## [0.9.0] - 2026-07-13
+
+### Added
+- **Folder batch processing** (TDD 6.2): `core/batch.py` +
+  `pixelcoat batch <folder>`. This completes the CLI-era TDD backlog —
+  what remains of the v0.1 TDD is the desktop app epic. No recipe or
+  pipeline changes (schema stays 0.7); additive module + CLI.
+- One style template for the whole folder (`--recipe style.json` —
+  ordinary recipe JSON; asset_id and source.path are injected per file,
+  so a saved recipe works as-is and a template may omit them), or
+  presets mapped by filename pattern (`--map 'poster_*=poster.json'`,
+  fnmatch, first match wins, template as fallback) — 6.2.2 in full.
+- Failure isolation (6.2.4): a bad file lands in the batch report's
+  failures list and the batch continues; exit code is nonzero only when
+  NOTHING processed. Files process in sorted order; two runs of the
+  same folder produce byte-identical outputs.
+- Asset ids from file stems; collisions under `--recursive`
+  disambiguate deterministically by prefixing parent folder names
+  (sub/wall.png -> sub_wall).
+- `--atlas NAME` combines the compatible outputs after the batch
+  (6.2.6); atlas errors (e.g. mixed modes) are recorded in the report
+  instead of failing the batch. `batch_report.json` written at the
+  output root with entries, failures, per-file durations, and the
+  atlas report.
+- Generation 7 templates work unchanged — a folder of photos becomes a
+  folder of gen7 material packs in one command.
+- 7 new tests (87 total): failure isolation, collision disambiguation,
+  template + pattern-map sizing, byte-determinism across runs,
+  batch + atlas, gen7 template, batch CLI.
+
 ## [0.8.0] - 2026-07-13
 
 ### Added
