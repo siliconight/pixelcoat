@@ -1,0 +1,15 @@
+{
+  "id": "rubber_delco",
+  "kind": "rubber",
+  "base_colors": ["#333230", "#3b3a37"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.3, "meso": 0.5, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 2, "octaves": 2},
+  "meso": {"generator": "stripes", "axis": "y", "count": 16, "seam": 0.45, "jitter": 0.05},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "detail_strength": 0.08,
+  "posterize": 10,
+  "roughness": {"base": 0.85, "variation": 0.06},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false}
+}

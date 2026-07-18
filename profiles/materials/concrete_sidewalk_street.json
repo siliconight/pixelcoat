@@ -1,0 +1,19 @@
+{
+  "id": "concrete_sidewalk_street",
+  "kind": "concrete",
+  "base_colors": ["#83817b", "#8d8b85", "#6f6d68"],
+  "cavity": "#2b2a27",
+  "meters_per_tile": 2.5,
+  "bands": {"macro": 0.45, "meso": 0.3, "micro": 0.18},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 11},
+  "micro": {"generator": "fbm", "cells": 140, "octaves": 2},
+  "edges": {"cells": 5, "thr": 0.78, "strength": 0.35},
+  "chips": {"cells": 16, "amount": 0.04},
+  "streaks": {"density": 0.25, "decay": 0.95, "strength": 0.22},
+  "detail_strength": 0.16,
+  "posterize": 16,
+  "roughness": {"base": 0.93, "variation": 0.06},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false}
+}

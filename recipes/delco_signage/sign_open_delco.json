@@ -1,0 +1,41 @@
+{
+  "asset_id": "sign_open_delco",
+  "source": {
+    "path": "../sources/sign_open.png"
+  },
+  "pixel": {
+    "working_width": 128,
+    "working_height": 64,
+    "downsample_method": "edge_aware",
+    "edge_preserve": 0.7
+  },
+  "palette": {
+    "method": "oklab_kmeans",
+    "max_colors": 12,
+    "seed": 1999
+  },
+  "dither": {
+    "method": "bayer",
+    "strength": 0.35,
+    "seed": 1999
+  },
+  "simplification": {
+    "noise_reduction": 0.2,
+    "island_removal": 2
+  },
+  "tiling": {
+    "enabled": false
+  },
+  "maps": {
+    "normal": false,
+    "roughness": true,
+    "roughness_base": 0.3,
+    "roughness_variation": 0.1,
+    "emissive_mode": "threshold",
+    "emissive_threshold": 0.55
+  },
+  "export": {
+    "type": "sign",
+    "meters_per_tile": 1.0
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "wood_delco",
+  "kind": "wood",
+  "base_colors": ["#6b4a2f", "#7a5636", "#5c3f28"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.45, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "stripes", "axis": "x", "count": 5, "seam": 0.4, "jitter": 0.14},
+  "micro": {"generator": "directional_grain", "axis": "y", "cells_along": 6, "cells_across": 90},
+  "detail_strength": 0.13,
+  "posterize": 12,
+  "roughness": {"base": 0.6, "variation": 0.15},
+  "height_strength": 0.5,
+  "emit": {"roughness": true, "normal": true}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "ceiling_tile_delco",
+  "kind": "ceiling_tile",
+  "base_colors": ["#d7d4c9", "#dedbd0", "#cfccc1"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.25, "meso": 0.3, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "worley_f1", "cells": 40},
+  "micro": {"generator": "fbm", "cells": 170, "octaves": 2},
+  "masonry": {"rows": 4, "cols": 4, "offset": 0.0, "mortar": 0.03, "mortar_color": "#b7b4a9", "brick_variation": 0.05},
+  "detail_strength": 0.16,
+  "posterize": 16,
+  "roughness": {"base": 0.92, "variation": 0.05},
+  "height_strength": 0.2,
+  "emit": {"roughness": true, "normal": false}
+}

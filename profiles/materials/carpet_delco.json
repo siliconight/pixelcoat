@@ -1,0 +1,15 @@
+{
+  "id": "carpet_delco",
+  "kind": "carpet",
+  "base_colors": ["#5a2f3a", "#663743", "#4e2833"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.4, "meso": 0.3, "micro": 0.3},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 30},
+  "micro": {"generator": "fbm", "cells": 200, "octaves": 2},
+  "detail_strength": 0.22,
+  "posterize": 14,
+  "roughness": {"base": 0.95, "variation": 0.04},
+  "height_strength": 0.2,
+  "emit": {"roughness": true, "normal": false}
+}

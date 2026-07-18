@@ -1,0 +1,15 @@
+{
+  "id": "drywall_delco",
+  "kind": "drywall",
+  "base_colors": ["#c9c6bd", "#d2cfc6", "#c0bdb4"],
+  "meters_per_tile": 3.0,
+  "bands": {"macro": 0.35, "meso": 0.2, "micro": 0.15},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 24, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 160, "octaves": 2},
+  "detail_strength": 0.05,
+  "posterize": 16,
+  "roughness": {"base": 0.85, "variation": 0.05},
+  "height_strength": 0.15,
+  "emit": {"roughness": true, "normal": false}
+}

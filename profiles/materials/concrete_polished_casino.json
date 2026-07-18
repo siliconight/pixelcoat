@@ -1,0 +1,15 @@
+{
+  "id": "concrete_polished_casino",
+  "kind": "concrete",
+  "base_colors": ["#8a8078", "#948a80", "#7e746c"],
+  "meters_per_tile": 3.0,
+  "bands": {"macro": 0.4, "meso": 0.25, "micro": 0.15},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 10},
+  "micro": {"generator": "fbm", "cells": 130, "octaves": 2},
+  "detail_strength": 0.07,
+  "posterize": 18,
+  "roughness": {"base": 0.4, "variation": 0.1},
+  "height_strength": 0.2,
+  "emit": {"roughness": true, "normal": false}
+}

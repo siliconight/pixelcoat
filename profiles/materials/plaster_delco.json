@@ -1,0 +1,15 @@
+{
+  "id": "plaster_delco",
+  "kind": "plaster",
+  "base_colors": ["#cabfa9", "#d3c9b4", "#bfb49f"],
+  "meters_per_tile": 2.5,
+  "bands": {"macro": 0.3, "meso": 0.28, "micro": 0.22},
+  "macro": {"generator": "fbm", "cells": 6, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 26, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "detail_strength": 0.08,
+  "posterize": 16,
+  "roughness": {"base": 0.85, "variation": 0.06},
+  "height_strength": 0.3,
+  "emit": {"roughness": true, "normal": false}
+}

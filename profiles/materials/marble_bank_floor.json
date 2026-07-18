@@ -1,0 +1,16 @@
+{
+  "id": "marble_bank_floor",
+  "kind": "concrete",
+  "base_colors": ["#d8d3c8", "#e2ddd2", "#cfc9bd"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.2, "meso": 0.2, "micro": 0.12},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 6, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "veins": {"cells": 4, "octaves": 4, "sharpness": 4.0, "strength": 0.45, "color": "#7a7266"},
+  "detail_strength": 0.04,
+  "posterize": 18,
+  "roughness": {"base": 0.2, "variation": 0.05},
+  "height_strength": 0.2,
+  "emit": {"roughness": true, "normal": false}
+}

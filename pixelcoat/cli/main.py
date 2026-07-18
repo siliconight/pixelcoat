@@ -132,6 +132,65 @@ def main(argv: list[str] | None = None) -> int:
                     help="preview dir (default: <pack dir>/previews/"
                          "compression)")
 
+    pp = sub.add_parser("proc-pack",
+                        help="synthesize a source-free procedural material "
+                             "pack from a grammar (T03)")
+    pp.add_argument("grammar", help="material grammar JSON "
+                                    "(see profiles/materials/)")
+    pp.add_argument("--out", default="./build",
+                    help="pack directory to write into")
+    pp.add_argument("--asset-id", default=None)
+    pp.add_argument("--size", type=int, default=512,
+                    help="square texture size in px")
+    pp.add_argument("--seed", type=int, default=1999)
+    pp.add_argument("--force", action="store_true",
+                    help="overwrite an existing pack in --out")
+    pp.add_argument("--json", action="store_true", dest="json_log")
+
+    sl = sub.add_parser("skins-library",
+                        help="build a Zoo --skins library: one "
+                             "<kind>_<theme>/ pack per grammar (T03)")
+    sl.add_argument("grammars", nargs="+",
+                    help="grammar JSON files, or dirs to scan for *.json")
+    sl.add_argument("--out", default="./skins", help="skins library root")
+    sl.add_argument("--theme", default="delco")
+    sl.add_argument("--size", type=int, default=512)
+    sl.add_argument("--seed", type=int, default=1999)
+    sl.add_argument("--force", action="store_true")
+    sl.add_argument("--json", action="store_true", dest="json_log")
+
+    ln = sub.add_parser("signal-lenses",
+                        help="generate the red/yellow/green traffic-signal "
+                             "lens packs (lit + off) as emissive decals")
+    ln.add_argument("--out", default="./build/signal_lenses")
+    ln.add_argument("--size", type=int, default=128)
+    ln.add_argument("--force", action="store_true")
+    ln.add_argument("--json", action="store_true", dest="json_log")
+
+    sg = sub.add_parser("sign",
+                        help="generate an emissive signage/screen/label decal "
+                             "(neon, panel, screen, hazard, arrow)")
+    sg.add_argument("--type", required=True,
+                    choices=["neon", "panel", "screen", "hazard", "arrow"])
+    sg.add_argument("--text", default=None, help="sign text (neon/panel)")
+    sg.add_argument("--mode", default="bars",
+                    choices=["bars", "static", "terminal", "off"],
+                    help="screen content")
+    sg.add_argument("--direction", default="right",
+                    choices=["left", "right", "up", "down"])
+    sg.add_argument("--color", default=None, help="primary hex colour")
+    sg.add_argument("--panel", default=None, help="panel hex (panel type)")
+    sg.add_argument("--text-color", default=None, dest="text_color")
+    sg.add_argument("--border", default=None)
+    sg.add_argument("--unpowered", action="store_true",
+                    help="author the dark, unpowered variant")
+    sg.add_argument("--size", type=int, default=128)
+    sg.add_argument("--seed", type=int, default=1999)
+    sg.add_argument("--asset-id", default=None)
+    sg.add_argument("--out", default="./build/signage")
+    sg.add_argument("--force", action="store_true")
+    sg.add_argument("--json", action="store_true", dest="json_log")
+
     args = p.parse_args(argv)
     try:
         if args.cmd == "process":
@@ -140,6 +199,14 @@ def main(argv: list[str] | None = None) -> int:
             return _build_from(args)
         if args.cmd == "preview-compression":
             return _preview_compression(args)
+        if args.cmd == "proc-pack":
+            return _proc_pack(args)
+        if args.cmd == "skins-library":
+            return _skins_library(args)
+        if args.cmd == "signal-lenses":
+            return _signal_lenses(args)
+        if args.cmd == "sign":
+            return _sign(args)
         if args.cmd == "atlas":
             return _atlas(args)
         if args.cmd == "batch":
@@ -249,6 +316,164 @@ def _preview_compression(args) -> int:
         err = float(np.abs(bc[..., :3] - arr[..., :3]).mean())
         print(f"  {name:<20} {fam:<15} mean_abs_error {err:.5f}")
     print(f"previews -> {out_dir}")
+    return 0
+
+
+# Keep in sync with Zoo zoo_keeper/core/skins.py KNOWN_KINDS. A grammar whose
+# kind is outside this set produces a valid pack that Zoo's find_pack (exact
+# kind match) will never resolve unless a species explicitly requests it.
+_ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
+              "canvas", "carbon", "glass", "paper", "concrete", "plaster",
+              "brick", "tile", "drywall", "ceiling_tile", "carpet", "dirt")
+
+
+def _warn_unknown_kind(kind: str) -> None:
+    if kind not in _ZOO_KINDS:
+        print(f"pixelcoat: warning: material kind '{kind}' is not in Zoo's "
+              f"known vocabulary; Zoo resolves packs by exact kind, so this "
+              f"one won't be picked up unless a species requests '{kind}'.",
+              file=sys.stderr)
+
+
+def _proc_pack(args) -> int:
+    from ..core import material_grammar as mg
+
+    pack_dir = os.path.abspath(args.out)
+    if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
+        raise ValueError(f"{pack_dir} already contains a pack "
+                         f"(use --force to overwrite)")
+    manifest = mg.build_material_pack(
+        os.path.abspath(args.grammar), pack_dir,
+        asset_id=args.asset_id, size=args.size, seed=args.seed)
+    if args.json_log:
+        print(json.dumps(manifest, indent=2, sort_keys=True))
+    else:
+        print(f"pixelcoat: {manifest['asset_id']} "
+              f"[procedural/{manifest['material_kind']}] -> "
+              f"{sorted(manifest['maps'])}, "
+              f"mpt={manifest['meters_per_tile']} -> {pack_dir}")
+        _warn_unknown_kind(manifest["material_kind"])
+    return 0
+
+
+def _skins_library(args) -> int:
+    from ..core import material_grammar as mg
+
+    files: list[str] = []
+    for g in args.grammars:
+        if os.path.isdir(g):
+            files.extend(sorted(glob.glob(os.path.join(g, "*.json"))))
+        else:
+            files.append(g)
+    if not files:
+        raise ValueError("no grammar JSON files found")
+
+    root = os.path.abspath(args.out)
+    resolved: dict[str, dict] = {}
+    seen: dict[str, str] = {}
+    created: set[str] = set()          # pack dirs written in THIS run
+    for path in files:
+        gram = mg.MaterialGrammar.load(path)
+        pack_dir = os.path.join(root, f"{gram.kind}_{args.theme}")
+        if gram.kind in seen:
+            print(f"pixelcoat: warning: kind '{gram.kind}' from "
+                  f"{os.path.basename(path)} overwrites {seen[gram.kind]} "
+                  f"(Zoo resolves one pack per kind+theme; last wins)",
+                  file=sys.stderr)
+        # Refuse to clobber a pre-existing on-disk library, but a same-run
+        # kind collision (warned above) is allowed to overwrite.
+        pre_existing = (pack_dir not in created
+                        and glob.glob(os.path.join(pack_dir, "*.pack.json")))
+        if pre_existing and not args.force:
+            raise ValueError(f"{pack_dir} already contains a pack "
+                             f"(use --force to overwrite)")
+        manifest = mg.build_material_pack(gram, pack_dir, asset_id=gram.id,
+                                          size=args.size, seed=args.seed)
+        created.add(pack_dir)
+        seen[gram.kind] = os.path.basename(path)
+        resolved[gram.kind] = {
+            "pack": manifest["asset_id"], "dir": pack_dir,
+            "maps": sorted(manifest["maps"]),
+            "meters_per_tile": manifest["meters_per_tile"]}
+        _warn_unknown_kind(gram.kind)
+
+    report = {"skins_dir": root, "theme": args.theme, "resolved": resolved}
+    if args.json_log:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(f"pixelcoat: skins library -> {root} "
+              f"(theme={args.theme}, {len(resolved)} kinds)")
+        for kind, info in sorted(resolved.items()):
+            print(f"  {kind:<10} {info['pack']:<26} {info['maps']} "
+                  f"mpt={info['meters_per_tile']}")
+    return 0
+
+
+def _sign(args) -> int:
+    from ..core import signage as sgn
+
+    powered = not args.unpowered
+    t = args.type
+    if t == "neon":
+        text = args.text or "OPEN"
+        arrays = sgn.neon_sign(text, args.size, color=args.color or "#ff2a6d",
+                               powered=powered)
+        aid = args.asset_id or f"sign_neon_{_slug(text)}"
+    elif t == "panel":
+        text = args.text or "EXIT"
+        arrays = sgn.panel_sign(text, args.size, panel=args.panel or "#12351f",
+                                text_color=args.text_color or "#4dff8a",
+                                border=args.border, powered=powered)
+        aid = args.asset_id or f"sign_panel_{_slug(text)}"
+    elif t == "screen":
+        arrays = sgn.screen(args.mode, args.size, seed=args.seed, powered=powered)
+        aid = args.asset_id or f"screen_{args.mode}"
+    elif t == "hazard":
+        arrays = sgn.hazard_stripes(args.size, powered=powered)
+        aid = args.asset_id or "hazard_stripes"
+    else:  # arrow
+        arrays = sgn.arrow(args.size, direction=args.direction,
+                           color=args.color or "#f5f5f5", powered=powered)
+        aid = args.asset_id or f"arrow_{args.direction}"
+    if not powered:
+        aid += "_off"
+
+    pack_dir = os.path.join(os.path.abspath(args.out), aid)
+    if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
+        raise ValueError(f"{pack_dir} already contains a pack "
+                         f"(use --force to overwrite)")
+    manifest = sgn.build_sign_pack(pack_dir, arrays, aid)
+    if args.json_log:
+        print(json.dumps(manifest, indent=2, sort_keys=True))
+    else:
+        print(f"pixelcoat: {aid} [{t}] -> {sorted(manifest['maps'])} -> {pack_dir}")
+    return 0
+
+
+def _slug(s: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in s.lower()).strip("_") or "sign"
+
+
+def _signal_lenses(args) -> int:
+    from ..core import decals
+
+    root = os.path.abspath(args.out)
+    built: list[dict] = []
+    for color in ("red", "yellow", "green"):
+        for state in ("lit", "off"):
+            pack_dir = os.path.join(root, f"lens_{color}_{state}")
+            if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
+                raise ValueError(f"{pack_dir} already contains a pack "
+                                 f"(use --force to overwrite)")
+            built.append(decals.build_lens_pack(pack_dir, color=color,
+                                                state=state, size=args.size))
+    if args.json_log:
+        print(json.dumps({"out": root, "packs": [m["asset_id"] for m in built]},
+                         indent=2))
+    else:
+        print(f"pixelcoat: {len(built)} lens packs -> {root}")
+        for m in built:
+            print(f"  {m['asset_id']:<24} {sorted(m['maps'])}")
     return 0
 
 

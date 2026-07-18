@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.0] - DELCO signage packs: the tool finally fed for its purpose
+
+### Added
+- `recipes/delco_signage/` — six sign recipes (deli, pawn, auto, open-24,
+  cold beer, checks cashed): 128x64 edge-aware crush, 12-color oklab
+  palettes, bayer dither, `export.type: sign`, EMISSIVE THRESHOLD maps so
+  the letterforms are what glows. Sources ship at `recipes/sources/`
+  (procedurally generated period sign faces; `tools/gen_sign_sources.py`
+  included for variants — a recipe plus the source bytes IS the asset).
+- `tools/make_delco_signage.ps1` — builds all six packs into
+  `_runs\skins\delco_signage\signs_delco/<asset_id>/`, the exact layout
+  Zoo v0.31's sign-pack resolver consumes via `--skins`.
+- All six packs validated end-to-end in-container: built through the real
+  CLI, loaded by Zoo's real `skins.load_pack` (albedo+emissive+roughness).
+
+
 All notable changes to Pixelcoat. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/).

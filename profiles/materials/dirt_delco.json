@@ -1,0 +1,17 @@
+{
+  "id": "dirt_delco",
+  "kind": "dirt",
+  "base_colors": ["#5a4632", "#6b543c", "#4e3d2b", "#3f3123"],
+  "undercoat": "#7d7159",
+  "meters_per_tile": 3.0,
+  "bands": {"macro": 0.4, "meso": 0.35, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 16},
+  "micro": {"generator": "fbm", "cells": 180, "octaves": 2},
+  "chips": {"cells": 24, "amount": 0.05},
+  "detail_strength": 0.2,
+  "posterize": 14,
+  "roughness": {"base": 0.95, "variation": 0.05},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false}
+}
