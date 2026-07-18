@@ -1,0 +1,19 @@
+{
+  "id": "painted_metal_industrial",
+  "kind": "metal",
+  "base_colors": ["#29493a", "#365b47", "#476f56"],
+  "undercoat": "#777b7e",
+  "cavity": "#17231d",
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.4, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "x", "cells_along": 4, "cells_across": 40},
+  "micro": {"generator": "fbm", "cells": 96, "octaves": 3},
+  "chips": {"cells": 13, "amount": 0.14},
+  "scratches": {"axis": "x", "density": 0.05, "length_cells": 3, "strength": 0.35, "color": "#8a8f92"},
+  "detail_strength": 0.16,
+  "posterize": 12,
+  "roughness": {"base": 0.55, "variation": 0.18},
+  "height_strength": 0.6,
+  "emit": {"roughness": true, "normal": true}
+}

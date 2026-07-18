@@ -1,0 +1,15 @@
+{
+  "id": "glass_delco",
+  "kind": "glass",
+  "base_colors": ["#2b3a3d", "#334a4a"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.15, "meso": 0.3, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 5, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 80, "octaves": 1},
+  "detail_strength": 0.03,
+  "posterize": 16,
+  "roughness": {"base": 0.1, "variation": 0.04},
+  "height_strength": 0.15,
+  "emit": {"roughness": true, "normal": false}
+}

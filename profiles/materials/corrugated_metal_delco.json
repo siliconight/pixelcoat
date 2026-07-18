@@ -1,0 +1,16 @@
+{
+  "id": "corrugated_metal_delco",
+  "kind": "metal",
+  "base_colors": ["#8a8f92", "#969b9e", "#7e8386"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.3, "meso": 0.5, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "ribs", "count": 10, "axis": "x"},
+  "micro": {"generator": "fbm", "cells": 140, "octaves": 2},
+  "streaks": {"density": 0.3, "decay": 0.96, "strength": 0.22},
+  "detail_strength": 0.1,
+  "posterize": 10,
+  "roughness": {"base": 0.6, "variation": 0.12},
+  "height_strength": 0.6,
+  "emit": {"roughness": true, "normal": true}
+}

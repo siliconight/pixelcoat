@@ -1,0 +1,16 @@
+{
+  "id": "concrete_delco",
+  "kind": "concrete",
+  "base_colors": ["#8f8b83", "#9c988f", "#827e77"],
+  "meters_per_tile": 2.5,
+  "bands": {"macro": 0.45, "meso": 0.35, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 14},
+  "micro": {"generator": "fbm", "cells": 128, "octaves": 3},
+  "edges": {"cells": 9, "thr": 0.7, "strength": 0.35},
+  "detail_strength": 0.15,
+  "posterize": 14,
+  "roughness": {"base": 0.9, "variation": 0.08},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false}
+}

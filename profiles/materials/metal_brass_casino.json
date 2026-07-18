@@ -1,0 +1,16 @@
+{
+  "id": "metal_brass_casino",
+  "kind": "metal",
+  "base_colors": ["#b08d3e", "#c49a45", "#9a7d38"],
+  "meters_per_tile": 1.5,
+  "bands": {"macro": 0.35, "meso": 0.4, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "x", "cells_along": 3, "cells_across": 60},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "scratches": {"axis": "x", "density": 0.04, "length_cells": 3, "strength": 0.25, "color": "#d8c07a"},
+  "detail_strength": 0.08,
+  "posterize": 12,
+  "roughness": {"base": 0.4, "variation": 0.15},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false}
+}

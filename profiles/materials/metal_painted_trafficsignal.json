@@ -1,0 +1,20 @@
+{
+  "id": "metal_painted_trafficsignal",
+  "kind": "metal",
+  "base_colors": ["#1f3a2b", "#264633", "#1a3125"],
+  "undercoat": "#6f7370",
+  "cavity": "#0f1a13",
+  "meters_per_tile": 1.5,
+  "bands": {"macro": 0.35, "meso": 0.4, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "y", "cells_along": 4, "cells_across": 40},
+  "micro": {"generator": "fbm", "cells": 110, "octaves": 3},
+  "chips": {"cells": 14, "amount": 0.1},
+  "scratches": {"axis": "y", "density": 0.04, "length_cells": 3, "strength": 0.25, "color": "#6f7370"},
+  "streaks": {"density": 0.25, "decay": 0.96, "strength": 0.2},
+  "detail_strength": 0.14,
+  "posterize": 12,
+  "roughness": {"base": 0.5, "variation": 0.15},
+  "height_strength": 0.5,
+  "emit": {"roughness": true, "normal": true}
+}

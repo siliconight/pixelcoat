@@ -1,0 +1,16 @@
+{
+  "id": "metal_chrome_casino",
+  "kind": "metal",
+  "base_colors": ["#b9bfc4", "#c9cfd4", "#a7adb2"],
+  "meters_per_tile": 1.5,
+  "bands": {"macro": 0.3, "meso": 0.4, "micro": 0.3},
+  "macro": {"generator": "fbm", "cells": 2, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "x", "cells_along": 3, "cells_across": 80},
+  "micro": {"generator": "fbm", "cells": 140, "octaves": 2},
+  "scratches": {"axis": "x", "density": 0.03, "length_cells": 3, "strength": 0.2, "color": "#e6ebef"},
+  "detail_strength": 0.05,
+  "posterize": 10,
+  "roughness": {"base": 0.2, "variation": 0.1},
+  "height_strength": 0.3,
+  "emit": {"roughness": true, "normal": false}
+}

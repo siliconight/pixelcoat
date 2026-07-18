@@ -1,0 +1,18 @@
+{
+  "id": "metal_rusted_street",
+  "kind": "metal",
+  "base_colors": ["#6b4a35", "#7a5539", "#875f3c"],
+  "cavity": "#3a2416",
+  "meters_per_tile": 1.5,
+  "bands": {"macro": 0.4, "meso": 0.35, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 8},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "chips": {"cells": 10, "amount": 0.16},
+  "streaks": {"density": 0.4, "decay": 0.96, "strength": 0.32},
+  "detail_strength": 0.18,
+  "posterize": 12,
+  "roughness": {"base": 0.9, "variation": 0.08},
+  "height_strength": 0.5,
+  "emit": {"roughness": true, "normal": true}
+}

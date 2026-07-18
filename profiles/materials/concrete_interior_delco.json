@@ -1,0 +1,17 @@
+{
+  "id": "concrete_interior_delco",
+  "kind": "concrete",
+  "base_colors": ["#6f7370", "#787c78", "#666a67"],
+  "meters_per_tile": 3.0,
+  "bands": {"macro": 0.5, "meso": 0.3, "micro": 0.15},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 8},
+  "micro": {"generator": "fbm", "cells": 140, "octaves": 2},
+  "streaks": {"density": 0.35, "decay": 0.96, "strength": 0.3},
+  "form_lines": {"count": 5, "seam": 0.5, "jitter": 0.05, "strength": 0.18},
+  "detail_strength": 0.1,
+  "posterize": 18,
+  "roughness": {"base": 0.92, "variation": 0.06},
+  "height_strength": 0.3,
+  "emit": {"roughness": true, "normal": false}
+}

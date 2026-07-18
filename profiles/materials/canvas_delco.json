@@ -1,0 +1,15 @@
+{
+  "id": "canvas_delco",
+  "kind": "canvas",
+  "base_colors": ["#8a7d5f", "#978a6b"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.3, "meso": 0.5, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "weave", "count": 36},
+  "micro": {"generator": "fbm", "cells": 130, "octaves": 2},
+  "detail_strength": 0.09,
+  "posterize": 12,
+  "roughness": {"base": 0.9, "variation": 0.05},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false}
+}

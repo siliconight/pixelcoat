@@ -1,0 +1,15 @@
+{
+  "id": "plastic_delco",
+  "kind": "plastic",
+  "base_colors": ["#8f2f28", "#a3392f"],
+  "meters_per_tile": 1.5,
+  "bands": {"macro": 0.15, "meso": 0.3, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 8, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "detail_strength": 0.05,
+  "posterize": 14,
+  "roughness": {"base": 0.35, "variation": 0.08},
+  "height_strength": 0.3,
+  "emit": {"roughness": true, "normal": false}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "tile_delco",
+  "kind": "tile",
+  "base_colors": ["#cfd4d1", "#d8ddda", "#c4c9c6"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.25, "meso": 0.1, "micro": 0.15},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 30, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "masonry": {"rows": 8, "cols": 8, "offset": 0.0, "mortar": 0.045, "mortar_color": "#8f8b85", "brick_variation": 0.08},
+  "detail_strength": 0.05,
+  "posterize": 16,
+  "roughness": {"base": 0.3, "variation": 0.06},
+  "height_strength": 0.3,
+  "emit": {"roughness": true, "normal": true}
+}

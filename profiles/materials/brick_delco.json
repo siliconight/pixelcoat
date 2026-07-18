@@ -1,0 +1,16 @@
+{
+  "id": "brick_delco",
+  "kind": "brick",
+  "base_colors": ["#7a3b2e", "#8a4636", "#6e3428", "#934f3d"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.15, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 40, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "masonry": {"rows": 8, "cols": 4, "offset": 0.5, "mortar": 0.045, "mortar_color": "#9a958c", "brick_variation": 0.22},
+  "detail_strength": 0.14,
+  "posterize": 14,
+  "roughness": {"base": 0.9, "variation": 0.08},
+  "height_strength": 0.5,
+  "emit": {"roughness": true, "normal": true}
+}

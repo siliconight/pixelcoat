@@ -1,0 +1,19 @@
+{
+  "id": "concrete_boardform_stadium",
+  "kind": "concrete",
+  "base_colors": ["#7d817f", "#888c8a", "#747876"],
+  "cavity": "#54574f",
+  "meters_per_tile": 3.0,
+  "bands": {"macro": 0.4, "meso": 0.25, "micro": 0.18},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
+  "meso": {"generator": "worley_f1", "cells": 9},
+  "micro": {"generator": "fbm", "cells": 140, "octaves": 2},
+  "form_lines": {"count": 7, "seam": 0.5, "jitter": 0.06, "strength": 0.22},
+  "chips": {"cells": 22, "amount": 0.025},
+  "streaks": {"density": 0.2, "decay": 0.95, "strength": 0.2},
+  "detail_strength": 0.12,
+  "posterize": 16,
+  "roughness": {"base": 0.9, "variation": 0.07},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false}
+}

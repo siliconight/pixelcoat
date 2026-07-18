@@ -1,0 +1,19 @@
+{
+  "id": "metal_painted_stadium",
+  "kind": "metal",
+  "base_colors": ["#2f4c6b", "#375876", "#284460"],
+  "undercoat": "#8a8f92",
+  "cavity": "#20303f",
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.4, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "x", "cells_along": 4, "cells_across": 40},
+  "micro": {"generator": "fbm", "cells": 100, "octaves": 3},
+  "chips": {"cells": 13, "amount": 0.14},
+  "scratches": {"axis": "x", "density": 0.05, "length_cells": 3, "strength": 0.3, "color": "#8a8f92"},
+  "detail_strength": 0.15,
+  "posterize": 12,
+  "roughness": {"base": 0.55, "variation": 0.18},
+  "height_strength": 0.6,
+  "emit": {"roughness": true, "normal": true}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "leather_delco",
+  "kind": "leather",
+  "base_colors": ["#4a2f22", "#573828", "#412a1f"],
+  "meters_per_tile": 1.2,
+  "bands": {"macro": 0.35, "meso": 0.45, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "worley_f1", "cells": 30},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "edges": {"cells": 26, "thr": 0.8, "strength": 0.18},
+  "detail_strength": 0.11,
+  "posterize": 12,
+  "roughness": {"base": 0.6, "variation": 0.1},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false}
+}
