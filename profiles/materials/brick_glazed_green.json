@@ -1,0 +1,50 @@
+{
+  "id": "brick_glazed_green",
+  "kind": "brick",
+  "base_colors": [
+    "#2f5245",
+    "#376050",
+    "#284a3e",
+    "#335a4b"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.35,
+    "meso": 0.15,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 150,
+    "octaves": 2
+  },
+  "masonry": {
+    "rows": 8,
+    "cols": 4,
+    "offset": 0.5,
+    "mortar": 0.045,
+    "mortar_color": "#c9c2b2",
+    "brick_variation": 0.22
+  },
+  "detail_strength": 0.14,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.2,
+    "variation": 0.06
+  },
+  "height_strength": 0.5,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  }
+}

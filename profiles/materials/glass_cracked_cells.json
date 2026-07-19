@@ -1,0 +1,43 @@
+{
+  "id": "glass_cracked_cells",
+  "base_colors": [
+    "#d0d9d7"
+  ],
+  "bands": {
+    "macro": 0.15,
+    "meso": 0.5,
+    "micro": 0.12
+  },
+  "meso": {
+    "generator": "worley_edges",
+    "cells": 22
+  },
+  "roughness": {
+    "base": 0.22,
+    "variation": 0.12
+  },
+  "kind": "glass",
+  "meters_per_tile": 1.0,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 90,
+    "octaves": 2
+  },
+  "detail_strength": 0.03,
+  "albedo_pattern": 0.1,
+  "posterize": 0,
+  "height_strength": 0.9,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  },
+  "transparency": {
+    "opacity": 0.5,
+    "ior": 1.45
+  }
+}

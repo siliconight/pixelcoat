@@ -1,0 +1,40 @@
+{
+  "id": "stucco_warm",
+  "kind": "plaster",
+  "base_colors": [
+    "#d8cdb8",
+    "#e0d6c2",
+    "#cfc4ae"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.25,
+    "meso": 0.3,
+    "micro": 0.25
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 26
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 90,
+    "octaves": 3
+  },
+  "detail_strength": 0.13,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.85,
+    "variation": 0.08
+  },
+  "height_strength": 0.3,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

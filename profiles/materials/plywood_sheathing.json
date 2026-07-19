@@ -1,0 +1,42 @@
+{
+  "id": "plywood_sheathing",
+  "kind": "wood",
+  "base_colors": [
+    "#c9a36a",
+    "#d3ae76",
+    "#bf9860"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.3,
+    "micro": 0.25
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "directional_grain",
+    "axis": "x",
+    "cells_along": 2,
+    "cells_across": 40
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 80,
+    "octaves": 3
+  },
+  "detail_strength": 0.12,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.75,
+    "variation": 0.1
+  },
+  "height_strength": 0.2,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

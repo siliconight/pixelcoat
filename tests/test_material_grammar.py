@@ -128,3 +128,58 @@ def test_pack_write_is_deterministic(tmp_path):
         pa = (tmp_path / "a" / m1["maps"][key]).read_bytes()
         pb = (tmp_path / "b" / m2["maps"][key]).read_bytes()
         assert pa == pb, key           # byte-identical PNGs
+
+
+# --------------------------------------------------------------------------- #
+# Aggregate / emissive / transparency / multi-scale veins / albedo_pattern
+# --------------------------------------------------------------------------- #
+
+def test_aggregate_layer_tiles():
+    # cobblestone uses the voronoi_cells aggregate layer; still tiles.
+    out = mg.synthesize(_grammar("cobblestone"), size=128)
+    assert out["albedo"].shape == (128, 128, 3)
+    assert _seam_ok(out["albedo"])
+
+
+def test_emissive_emitted_only_when_requested():
+    glow = mg.MaterialGrammar.from_dict(
+        {"id": "glow", "kind": "glass", "base_colors": ["#20c040"],
+         "emissive": {"strength": 1.0}})
+    assert "emissive" in mg.synthesize(glow, size=48)
+    dark = mg.MaterialGrammar.from_dict(
+        {"id": "dark", "kind": "glass", "base_colors": ["#20c040"]})
+    assert "emissive" not in mg.synthesize(dark, size=48)
+
+
+def test_transparency_hint_only_on_see_through_glass(tmp_path):
+    win = mg.MaterialGrammar.from_dict(
+        {"id": "win", "kind": "glass", "base_colors": ["#cfd6d4"],
+         "transparency": {"opacity": 0.5, "ior": 1.45},
+         "emit": {"roughness": True, "normal": True}})
+    man = mg.build_material_pack(win, str(tmp_path / "win"), size=48)
+    hint = man["import_hints"].get("transparency")
+    assert hint and hint["opacity"] == 0.5 and hint["alpha_mode"] == "blend"
+    # opaque facade glass ships no transparency hint
+    fac = mg.MaterialGrammar.from_dict(
+        {"id": "fac", "kind": "glass_facade", "base_colors": ["#1b2a34"]})
+    man2 = mg.build_material_pack(fac, str(tmp_path / "fac"), size=48)
+    assert "transparency" not in man2["import_hints"]
+
+
+def test_multiscale_veins_accepts_list_and_tiles():
+    # marble now uses a list of vein passes (broad + hairline); still tiles.
+    out = mg.synthesize(_grammar("marble_bank_floor"), size=128)
+    assert _seam_ok(out["albedo"])
+
+
+def test_albedo_pattern_decouples_albedo_from_normal():
+    base = {"id": "g", "kind": "glass", "base_colors": ["#cfd6d4"],
+            "bands": {"macro": 0.15, "meso": 0.5, "micro": 0.1},
+            "meso": {"generator": "ribs", "count": 20},
+            "emit": {"roughness": True, "normal": True}}
+    strong = mg.synthesize(mg.MaterialGrammar.from_dict({**base, "albedo_pattern": 1.0}), size=96)
+    flat = mg.synthesize(mg.MaterialGrammar.from_dict({**base, "albedo_pattern": 0.1}), size=96)
+    # low albedo_pattern flattens the albedo's response to the pattern...
+    assert flat["albedo"].astype(np.float32).std() < strong["albedo"].astype(np.float32).std()
+    # ...but the normal (built from the height field) is unchanged.
+    assert np.array_equal(strong["normal"], flat["normal"])

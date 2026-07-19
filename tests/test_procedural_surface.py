@@ -168,3 +168,35 @@ def test_hex_to_rgb():
     assert np.allclose(ps.hex_to_rgb("#ffffff"), [1, 1, 1])
     assert np.allclose(ps.hex_to_rgb("000000"), [0, 0, 0])
     assert np.allclose(ps.hex_to_rgb("#ff8000"), [1.0, 128 / 255, 0.0])
+
+
+# --------------------------------------------------------------------------- #
+# voronoi_cells (filled aggregate) + wave (reeded/wavy glass)
+# --------------------------------------------------------------------------- #
+
+def test_voronoi_cells_deterministic_range_and_structure():
+    g1, c1 = ps.voronoi_cells(96, 10, 1999)
+    g2, c2 = ps.voronoi_cells(96, 10, 1999)
+    assert np.array_equal(g1, g2) and np.array_equal(c1, c2)    # deterministic
+    assert set(np.unique(g1)).issubset({0.0, 1.0})             # gap mask binary
+    assert 0.0 <= c1.min() and c1.max() <= 1.0                 # cell id unit range
+    assert 0.0 < g1.mean() < 0.5                               # some gap, not all
+    assert len(np.unique(c1)) > 4                              # many distinct cells
+
+
+def test_voronoi_cells_tiles_and_streams():
+    g, _ = ps.voronoi_cells(128, 8, 7)
+    assert _seam_is_continuous(g, factor=1.6)                  # gap mask wraps
+    ga, _ = ps.voronoi_cells(96, 8, 1999, label="a")
+    gb, _ = ps.voronoi_cells(96, 8, 1999, label="b")
+    assert not np.array_equal(ga, gb)                          # independent streams
+
+
+def test_wave_range_tiles_and_warp():
+    w = ps.wave(128, 12, 1999, axis="x")
+    assert 0.0 <= w.min() and w.max() <= 1.0
+    assert _seam_is_continuous(w, factor=1.6)                  # integer count tiles
+    straight = ps.wave(96, 8, 1, axis="x", warp=0.0)
+    assert np.allclose(straight, straight[0][None, :])         # warp 0 -> straight flutes
+    wavy = ps.wave(96, 8, 1, axis="x", warp=0.4)
+    assert not np.allclose(wavy, wavy[0][None, :])             # warp -> undulating

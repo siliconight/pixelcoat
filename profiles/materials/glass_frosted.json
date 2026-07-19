@@ -1,0 +1,45 @@
+{
+  "id": "glass_frosted",
+  "base_colors": [
+    "#dbe2df",
+    "#e2e8e5"
+  ],
+  "bands": {
+    "macro": 0.12,
+    "meso": 0.2,
+    "micro": 0.3
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "roughness": {
+    "base": 0.72,
+    "variation": 0.18
+  },
+  "kind": "glass",
+  "meters_per_tile": 1.0,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 90,
+    "octaves": 2
+  },
+  "detail_strength": 0.05,
+  "albedo_pattern": 0.12,
+  "posterize": 0,
+  "height_strength": 0.25,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  },
+  "transparency": {
+    "opacity": 0.68,
+    "ior": 1.45
+  }
+}

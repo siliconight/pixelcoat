@@ -1,0 +1,17 @@
+{
+  "theme": "casino",
+  "description": "Opulent gaming floor: polished concrete and terrazzo underfoot, brass fittings, bronze curtain-wall glass, patterned carpet, warm plaster.",
+  "materials": {
+    "brick": "brick_delco",
+    "concrete": "concrete_polished_casino",
+    "glass": "glass_circles",
+    "glass_facade": "glass_facade_bronze",
+    "metal": "metal_brass_casino",
+    "tile": "terrazzo",
+    "wood": "hardwood_plank",
+    "carpet": "carpet_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "drywall": "drywall_delco",
+    "plaster": "stucco_warm"
+  }
+}

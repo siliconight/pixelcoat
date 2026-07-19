@@ -1,0 +1,41 @@
+{
+  "id": "glass_facade_bronze",
+  "base_colors": [
+    "#2a2016",
+    "#332818"
+  ],
+  "bands": {
+    "macro": 0.2,
+    "meso": 0.35,
+    "micro": 0.1
+  },
+  "meso": {
+    "generator": "ribs",
+    "count": 18,
+    "axis": "x"
+  },
+  "roughness": {
+    "base": 0.1,
+    "variation": 0.05
+  },
+  "kind": "glass_facade",
+  "meters_per_tile": 2.0,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 90,
+    "octaves": 2
+  },
+  "detail_strength": 0.02,
+  "albedo_pattern": 0.12,
+  "posterize": 0,
+  "height_strength": 0.6,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  }
+}

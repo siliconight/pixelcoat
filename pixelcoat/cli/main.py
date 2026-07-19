@@ -159,6 +159,21 @@ def main(argv: list[str] | None = None) -> int:
     sl.add_argument("--force", action="store_true")
     sl.add_argument("--json", action="store_true", dest="json_log")
 
+    tl = sub.add_parser("theme-library",
+                        help="build a Zoo --skins library from a THEME PROFILE "
+                             "(profiles/themes/<theme>.json): the reproducible "
+                             "one-grammar-per-kind curation a building wears")
+    tl.add_argument("--theme", required=True,
+                    help="theme name; resolves profiles/themes/<theme>.json")
+    tl.add_argument("--profile", default=None,
+                    help="explicit theme profile JSON (overrides --theme lookup)")
+    tl.add_argument("--grammars", default=None,
+                    help="grammar dir (default: the shipped profiles/materials)")
+    tl.add_argument("--out", default="./skins", help="skins library root")
+    tl.add_argument("--size", type=int, default=512)
+    tl.add_argument("--seed", type=int, default=1999)
+    tl.add_argument("--json", action="store_true", dest="json_log")
+
     ln = sub.add_parser("signal-lenses",
                         help="generate the red/yellow/green traffic-signal "
                              "lens packs (lit + off) as emissive decals")
@@ -203,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
             return _proc_pack(args)
         if args.cmd == "skins-library":
             return _skins_library(args)
+        if args.cmd == "theme-library":
+            return _theme_library(args)
         if args.cmd == "signal-lenses":
             return _signal_lenses(args)
         if args.cmd == "sign":
@@ -447,6 +464,28 @@ def _sign(args) -> int:
         print(json.dumps(manifest, indent=2, sort_keys=True))
     else:
         print(f"pixelcoat: {aid} [{t}] -> {sorted(manifest['maps'])} -> {pack_dir}")
+    return 0
+
+
+def _theme_library(args) -> int:
+    """Build a Zoo --skins library from a theme profile — the reproducible
+    curation the Level Factory art pass calls before running Zoo."""
+    from ..core import material_grammar as mg
+    pkg = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pixelcoat/
+    profiles = os.path.normpath(os.path.join(pkg, "..", "profiles"))
+    profile = args.profile or os.path.join(profiles, "themes", f"{args.theme}.json")
+    if not os.path.isfile(profile):
+        raise ValueError(f"no theme profile for '{args.theme}' at {profile}")
+    grammars = args.grammars or os.path.join(profiles, "materials")
+    res = mg.build_theme_library(profile, grammars, os.path.abspath(args.out),
+                                 size=args.size, seed=args.seed)
+    if getattr(args, "json_log", False):
+        print(json.dumps(res, indent=2))
+    else:
+        print(f"pixelcoat: theme '{res['theme']}' -> {res['kind_count']} packs "
+              f"in {res['out_dir']}")
+        for kind, name in sorted(res["packs"].items()):
+            print(f"  {kind:14s} -> {name}/")
     return 0
 
 

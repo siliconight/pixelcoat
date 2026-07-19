@@ -1,0 +1,57 @@
+{
+  "id": "terrazzo",
+  "kind": "tile",
+  "base_colors": [
+    "#e3ded3"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.1,
+    "meso": 0.15,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 120,
+    "octaves": 2
+  },
+  "aggregate": {
+    "cells": 55,
+    "gap": 0.06,
+    "colors": [
+      "#e3ded3",
+      "#e3ded3",
+      "#e3ded3",
+      "#b0a89a",
+      "#8a6f5a",
+      "#7a8a72",
+      "#9a5040",
+      "#5a5550"
+    ],
+    "fill": 0.85,
+    "variation": 0.05,
+    "gap_color": "#d6d0c4",
+    "gap_strength": 0.5
+  },
+  "detail_strength": 0.06,
+  "posterize": 20,
+  "roughness": {
+    "base": 0.3,
+    "variation": 0.05
+  },
+  "height_strength": 0.08,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

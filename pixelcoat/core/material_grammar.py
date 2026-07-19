@@ -34,7 +34,8 @@ from PIL import Image
 from . import maps, procedural_surface as ps
 from ..version import __version__, DEFAULT_SEED
 
-__all__ = ["MaterialGrammar", "synthesize", "build_material_pack"]
+__all__ = ["MaterialGrammar", "synthesize", "build_material_pack",
+           "build_theme_library"]
 
 _DEFAULT_BANDS = {"macro": 0.4, "meso": 0.4, "micro": 0.2}
 
@@ -58,10 +59,14 @@ class MaterialGrammar:
     form_lines: dict = field(default_factory=dict)  # horizontal form-board seams
     veins: dict = field(default_factory=dict)   # flowing veins (marble/stone)
     masonry: dict = field(default_factory=dict)  # brick/tile bond + mortar/grout
+    aggregate: dict = field(default_factory=dict)  # filled Voronoi stones/chips
     detail_strength: float = 0.15               # crisp per-texel grain (anti-smear)
+    albedo_pattern: float = 1.0                 # how much meso/micro/grain tint albedo
     posterize: int = 0                          # albedo value steps (Q2 crispness); 0 = off
     roughness: dict = field(default_factory=lambda: {"base": 0.7, "variation": 0.2})
     height_strength: float = 0.6
+    emissive: dict = field(default_factory=dict)  # backlit glow (stained glass, screens)
+    transparency: dict = field(default_factory=dict)  # see-through glass: {opacity, ior}
     emit: dict = field(default_factory=lambda: {"roughness": True, "normal": False})
 
     @classmethod
@@ -113,6 +118,11 @@ def _generator(spec: dict, size, seed: int, label: str) -> np.ndarray:
     if gen == "ribs":
         return ps.ribs(size, spec.get("count", 12), seed,
                        axis=spec.get("axis", "x"), label=label)
+    if gen == "wave":
+        return ps.wave(size, spec.get("count", 12), seed,
+                       axis=spec.get("axis", "x"),
+                       warp=spec.get("warp", 0.15),
+                       warp_cells=spec.get("warp_cells", 4), label=label)
     raise ValueError(f"unknown generator {gen!r}")
 
 
@@ -167,10 +177,15 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
     grain_s = _centered(ps.hash_grain((h, w), ps.stream_seed(seed, "grain"),
                                       label="grain"))
 
+    # ``albedo_pattern`` scales how much the meso/micro/grain pattern tints the
+    # albedo, independent of the height field (which keeps the full pattern for
+    # the normal map). Glass wants a near-clear albedo (~0.1) with a strong
+    # normal — set it low without flattening the bump.
+    ap = grammar.albedo_pattern
     value_mod = (1.0
-                 + bands["meso"] * 0.30 * meso_s
-                 + bands["micro"] * 0.12 * micro_s
-                 + grammar.detail_strength * grain_s)
+                 + ap * bands["meso"] * 0.30 * meso_s
+                 + ap * bands["micro"] * 0.12 * micro_s
+                 + ap * grammar.detail_strength * grain_s)
     albedo = base * value_mod[..., None]
     height = (bands["meso"] * meso_s + bands["micro"] * 0.4 * micro_s
               + grammar.detail_strength * 0.3 * grain_s)
@@ -197,17 +212,24 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = albedo * (1.0 - m) + col * m
         height = height + sc * 0.15
 
-    # Flowing veins (marble / figured stone) — a coloured vein network.
+    # Flowing veins (marble / figured stone) — one or more coloured vein
+    # networks. ``veins`` may be a single spec (one network) or a list of specs
+    # (multi-scale: broad structural veins + fine hairline threading). Pass 0
+    # keeps the "veins" stream label so single-network grammars stay
+    # byte-identical; later passes draw independent streams.
     if grammar.veins:
-        vn = ps.veins((h, w), ps.stream_seed(seed, "veins"),
-                      base_cells=grammar.veins.get("cells", 4),
-                      octaves=grammar.veins.get("octaves", 4),
-                      sharpness=grammar.veins.get("sharpness", 3.0))
-        st = grammar.veins.get("strength", 0.5)
-        col = ps.hex_to_rgb(grammar.veins.get("color", "#6a635a"))
-        m = (st * vn)[..., None]
-        albedo = albedo * (1.0 - m) + col * m
-        height = height - vn * 0.1
+        passes = grammar.veins if isinstance(grammar.veins, list) else [grammar.veins]
+        for i, vp in enumerate(passes):
+            label = "veins" if i == 0 else f"veins:{i}"
+            vn = ps.veins((h, w), ps.stream_seed(seed, label),
+                          base_cells=vp.get("cells", 4),
+                          octaves=vp.get("octaves", 4),
+                          sharpness=vp.get("sharpness", 3.0))
+            st = vp.get("strength", 0.5)
+            col = ps.hex_to_rgb(vp.get("color", "#6a635a"))
+            m = (st * vn)[..., None]
+            albedo = albedo * (1.0 - m) + col * m
+            height = height - vn * 0.1
 
     # Masonry bond — per-unit tone variation + mortar/grout lines (brick/tile).
     if grammar.masonry:
@@ -222,6 +244,31 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         m = (mort * mm.get("mortar_strength", 1.0))[..., None]
         albedo = albedo * (1.0 - m) + mcol * m
         height = height - mort * 0.5
+
+    # Aggregate — filled irregular Voronoi cells, each poured a palette colour,
+    # with a mortar/matrix line between (cobblestone, flagstone, terrazzo chips,
+    # pebble/gravel, crazy-paving). ``colors`` is the per-cell palette (defaults
+    # to base_colors); ``fill`` how strongly the chip colour replaces the base;
+    # ``variation`` a per-cell tone jitter; ``gap``/``gap_color``/``gap_strength``
+    # the matrix line.
+    if grammar.aggregate:
+        ag = grammar.aggregate
+        gapm, cid = ps.voronoi_cells((h, w), ag.get("cells", 10),
+                                     ps.stream_seed(seed, "aggregate"),
+                                     gap=ag.get("gap", 0.04))
+        chip_cols = [ps.hex_to_rgb(c) for c in (ag.get("colors") or grammar.base_colors)]
+        if chip_cols:
+            sel = np.clip(cid * len(chip_cols), 0, len(chip_cols) - 1e-6).astype(int)
+            chip = np.stack(chip_cols, 0)[sel]
+            fill = ag.get("fill", 1.0)
+            albedo = albedo * (1.0 - fill) + chip * fill
+        var = ag.get("variation", 0.0)
+        if var:
+            albedo = albedo * (1.0 + var * (cid - 0.5))[..., None]
+        mcol = ps.hex_to_rgb(ag.get("gap_color", "#3a3a3a"))
+        gm = (gapm * ag.get("gap_strength", 1.0))[..., None]
+        albedo = albedo * (1.0 - gm) + mcol * gm
+        height = height - gapm * 0.5
 
     # Horizontal form-board seams (concrete formwork lines) — subtle dark bands.
     if grammar.form_lines:
@@ -285,6 +332,22 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
                                       wrap_x=True, wrap_y=True)   # tileable normals
         out["normal"] = _to_u8(np.clip(nrm, 0.0, 1.0))
 
+    # Emissive (backlit glow): stained-glass cells and lit panels. By default
+    # the coloured albedo itself glows (so dark lead cames / grout stay dark);
+    # ``from: "tint"`` glows a flat colour instead. ``gamma`` punches the
+    # saturated cells; ``strength`` scales the whole map.
+    if grammar.emissive:
+        em = grammar.emissive
+        if em.get("from") == "tint":
+            glow = np.broadcast_to(ps.hex_to_rgb(em.get("color", "#ffffff")),
+                                   (h, w, 3)).astype(np.float32).copy()
+        else:
+            glow = np.clip(albedo, 0.0, 1.0).astype(np.float32)
+        g = em.get("gamma")
+        if g:
+            glow = np.clip(glow, 0.0, 1.0) ** float(g)
+        out["emissive"] = _to_u8(np.clip(glow * em.get("strength", 1.0), 0.0, 1.0))
+
     return out
 
 
@@ -336,10 +399,54 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
             "interpolation": "nearest",
         },
     }
+    # See-through glass: the pack asks the consumer (Zoo -> Godot) for a
+    # transparent material. opacity 1.0 = opaque (facade glass you can't see
+    # into); < 1.0 = see-through window glass. ior is advisory for refraction.
+    if grammar.transparency:
+        t = grammar.transparency
+        manifest["import_hints"]["transparency"] = {
+            "opacity": float(t.get("opacity", 0.6)),
+            "ior": float(t.get("ior", 1.45)),
+            "alpha_mode": t.get("alpha_mode", "blend"),
+        }
     with open(os.path.join(pack_dir, f"{asset_id}.pack.json"), "w",
               encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
     return manifest
+
+
+def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
+                        size=512, seed: int = DEFAULT_SEED) -> dict:
+    """Build a Zoo ``--skins`` library from a *theme profile* — the reproducible
+    curation the Level Factory orchestrator needs.
+
+    A theme is a declarative map of one grammar per material kind
+    (``profiles/themes/<theme>.json``: ``{"theme": ..., "materials": {kind:
+    grammar_id}}``). This writes one ``<kind>_<theme>/`` pack per curated
+    material into ``out_dir`` — exactly the layout ``core.skins.find_pack``
+    resolves for ``(kind, theme)``. So a building's art pass just needs
+    ``build_theme_library(<its theme>)`` then Zoo ``--skins out_dir --theme
+    <theme>``; the vocabulary a building wears is entirely the theme profile.
+
+    Raises if a curated grammar's ``kind`` doesn't match the slot it's mapped to
+    (a theme can't put a brick grammar in the ``glass`` slot).
+    """
+    if isinstance(profile, str):
+        with open(profile, encoding="utf-8") as f:
+            profile = json.load(f)
+    theme = profile["theme"]
+    packs: dict[str, str] = {}
+    for kind, gram_id in profile.get("materials", {}).items():
+        g = MaterialGrammar.load(os.path.join(grammars_dir, f"{gram_id}.json"))
+        if g.kind != kind:
+            raise ValueError(
+                f"theme '{theme}': grammar '{gram_id}' is kind '{g.kind}', "
+                f"but the profile maps it to the '{kind}' slot")
+        pack_dir = os.path.join(out_dir, f"{kind}_{theme}")
+        build_material_pack(g, pack_dir, size=size, seed=seed)
+        packs[kind] = f"{kind}_{theme}"
+    return {"theme": theme, "out_dir": os.path.abspath(out_dir),
+            "packs": packs, "kind_count": len(packs)}
 
 
 def _to_u8(arr: np.ndarray) -> np.ndarray:

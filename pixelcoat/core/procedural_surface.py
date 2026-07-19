@@ -31,6 +31,7 @@ __all__ = [
     "directional_grain",
     "worley_f1",
     "worley_edges",
+    "voronoi_cells",
     "hash_grain",
     "scratches",
     "streaks",
@@ -39,6 +40,7 @@ __all__ = [
     "veins",
     "masonry",
     "ribs",
+    "wave",
     "posterize",
     "hex_to_rgb",
 ]
@@ -211,6 +213,49 @@ def worley_edges(size, cells: int, seed: int, *, label: str = "worley_edge") -> 
     return (1.0 - edge / m if m > 1e-9 else edge).astype(np.float32)
 
 
+def voronoi_cells(size, cells: int, seed: int, *, gap: float = 0.04,
+                  label: str = "cells"):
+    """Tileable filled-Voronoi → ``(gap_mask, cell_id)``, both float32 in [0,1].
+
+    Unlike ``masonry`` (a regular grid) or ``worley_f1`` (a smooth distance
+    blob), this floods each irregular Voronoi cell as a solid region and hands
+    back a *stable per-cell random value* (``cell_id``) — so a grammar can pour
+    a palette colour into each cell (cobblestone, flagstone, terrazzo chips,
+    pebble/gravel, crazy-paving, irregular mosaic). ``gap_mask`` is 1 on the
+    thin boundary between cells (the mortar/matrix line); ``gap`` is its width
+    in cell units. Tileable by wrapped 3x3 feature-point search.
+    """
+    h, w = _as_hw(size)
+    cells = max(1, int(cells))
+    pts = rng(seed, label, cells).random((cells, cells, 2)).astype(np.float64)
+    ys = (np.arange(h, dtype=np.float64) / h) * cells
+    xs = (np.arange(w, dtype=np.float64) / w) * cells
+    gy, gx = np.meshgrid(ys, xs, indexing="ij")
+    cy = np.floor(gy).astype(np.int64)
+    cx = np.floor(gx).astype(np.int64)
+    f1 = np.full((h, w), np.inf)
+    f2 = np.full((h, w), np.inf)
+    win_y = np.zeros((h, w), np.int64)
+    win_x = np.zeros((h, w), np.int64)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            ny = (cy + dy) % cells
+            nx = (cx + dx) % cells
+            fpy = np.floor(cy + dy) + pts[ny, nx, 0]
+            fpx = np.floor(cx + dx) + pts[ny, nx, 1]
+            d = (gy - fpy) ** 2 + (gx - fpx) ** 2
+            closer = d < f1
+            f2 = np.where(closer, f1, np.minimum(f2, d))
+            win_y = np.where(closer, ny, win_y)
+            win_x = np.where(closer, nx, win_x)
+            f1 = np.where(closer, d, f1)
+    edge = np.sqrt(f2) - np.sqrt(f1)
+    gap_mask = (edge < float(gap)).astype(np.float32)
+    key = np.sin(win_y * 127.1 + win_x * 311.7 + float(seed % 997)) * 43758.5453
+    cell_id = (key - np.floor(key)).astype(np.float32)
+    return gap_mask, cell_id
+
+
 def hash_grain(size, seed: int, *, label: str = "grain") -> np.ndarray:
     """Per-texel high-frequency value noise in ``[0, 1]`` — crisp, not smoothed.
 
@@ -363,6 +408,31 @@ def ribs(size, count: int, seed: int = 0, *, axis: str = "x",
     prof = (0.5 + 0.5 * np.cos(t * 2.0 * np.pi)).astype(np.float32)
     return np.broadcast_to(prof[None, :] if axis == "x" else prof[:, None],
                            (h, w)).astype(np.float32)
+
+
+def wave(size, count: int, seed: int = 0, *, axis: str = "x", warp: float = 0.15,
+         warp_cells: int = 4, label: str = "wave") -> np.ndarray:
+    """Undulating sinusoidal bands in ``[0, 1]`` — reeded/fluted/wavy glass.
+
+    ``count`` bands across ``axis`` (``"x"`` = vertical flutes), each phase-
+    warped by low-frequency tileable noise so the ribs gently wander instead of
+    ruling dead-straight (``warp=0`` gives perfectly straight reeded glass).
+    Tileable for integer ``count`` (the warp noise wraps; the base cosine wraps
+    when ``count`` is integer).
+    """
+    h, w = _as_hw(size)
+    count = max(1, int(count))
+    if axis == "x":
+        base = np.broadcast_to((np.arange(w, dtype=np.float64) / w * count)[None, :],
+                               (h, w)).copy()
+    elif axis == "y":
+        base = np.broadcast_to((np.arange(h, dtype=np.float64) / h * count)[:, None],
+                               (h, w)).copy()
+    else:
+        raise ValueError("axis must be 'x' or 'y'")
+    warpf = value_noise((h, w), max(1, int(warp_cells)), seed, label=label + "_warp")
+    phase = base + warp * count * (warpf.astype(np.float64) - 0.5) * 2.0
+    return (0.5 + 0.5 * np.cos(phase * 2.0 * np.pi)).astype(np.float32)
 
 
 def posterize(arr: np.ndarray, levels: int) -> np.ndarray:

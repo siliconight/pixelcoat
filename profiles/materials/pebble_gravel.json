@@ -1,0 +1,55 @@
+{
+  "id": "pebble_gravel",
+  "kind": "dirt",
+  "base_colors": [
+    "#8f887c"
+  ],
+  "meters_per_tile": 1.5,
+  "bands": {
+    "macro": 0.2,
+    "meso": 0.2,
+    "micro": 0.25
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 50,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 130,
+    "octaves": 2
+  },
+  "aggregate": {
+    "cells": 40,
+    "gap": 0.03,
+    "colors": [
+      "#8f887c",
+      "#9c9486",
+      "#7a7367",
+      "#a49a8a",
+      "#6e685e",
+      "#877f70"
+    ],
+    "fill": 0.9,
+    "variation": 0.14,
+    "gap_color": "#4a453d",
+    "gap_strength": 0.7
+  },
+  "detail_strength": 0.12,
+  "posterize": 22,
+  "roughness": {
+    "base": 0.9,
+    "variation": 0.08
+  },
+  "height_strength": 0.4,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}
