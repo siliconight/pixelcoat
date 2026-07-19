@@ -1,10 +1,10 @@
 {
-  "id": "marble_bank_floor",
+  "id": "travertine_warm",
   "kind": "concrete",
   "base_colors": [
-    "#d8d3c8",
-    "#e2ddd2",
-    "#cfc9bd"
+    "#e7e0d2",
+    "#efe9dc",
+    "#ddd5c5"
   ],
   "meters_per_tile": 2.0,
   "bands": {
@@ -29,24 +29,24 @@
   },
   "veins": [
     {
-      "cells": 4,
+      "cells": 3,
       "octaves": 4,
-      "sharpness": 7.0,
-      "strength": 0.4,
-      "color": "#6b6357"
+      "sharpness": 6.5,
+      "strength": 0.34,
+      "color": "#8a7d63"
     },
     {
-      "cells": 9,
+      "cells": 10,
       "octaves": 5,
-      "sharpness": 12.0,
-      "strength": 0.22,
-      "color": "#4f4a42"
+      "sharpness": 13.0,
+      "strength": 0.2,
+      "color": "#6e6446"
     }
   ],
   "detail_strength": 0.04,
   "posterize": 18,
   "roughness": {
-    "base": 0.2,
+    "base": 0.35,
     "variation": 0.05
   },
   "height_strength": 0.2,

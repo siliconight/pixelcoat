@@ -1,0 +1,56 @@
+{
+  "id": "granite_speckle",
+  "kind": "concrete",
+  "base_colors": [
+    "#4a4a4e",
+    "#54545a",
+    "#414146"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.2,
+    "meso": 0.25,
+    "micro": 0.3
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 70
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 150,
+    "octaves": 2
+  },
+  "veins": [
+    {
+      "cells": 5,
+      "octaves": 4,
+      "sharpness": 8,
+      "strength": 0.18,
+      "color": "#26262a"
+    },
+    {
+      "cells": 12,
+      "octaves": 5,
+      "sharpness": 12,
+      "strength": 0.12,
+      "color": "#c9c9cf"
+    }
+  ],
+  "detail_strength": 0.16,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.25,
+    "variation": 0.08
+  },
+  "height_strength": 0.15,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

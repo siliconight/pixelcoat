@@ -1,0 +1,44 @@
+{
+  "id": "hardwood_plank",
+  "kind": "wood",
+  "base_colors": [
+    "#7a5230",
+    "#8a5f38",
+    "#6b4728"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.35,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "stripes",
+    "count": 6,
+    "axis": "x",
+    "seam": 0.45,
+    "jitter": 0.18
+  },
+  "micro": {
+    "generator": "directional_grain",
+    "axis": "y",
+    "cells_along": 3,
+    "cells_across": 90
+  },
+  "detail_strength": 0.08,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.4,
+    "variation": 0.1
+  },
+  "height_strength": 0.2,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "theme": "stadium",
+  "description": "Civic concourse: board-formed structural concrete, galvanized rails, frosted utility glass, green spandrel curtain wall, plywood hoardings.",
+  "materials": {
+    "brick": "brick_delco",
+    "concrete": "concrete_boardform_stadium",
+    "glass": "glass_frosted",
+    "glass_facade": "glass_facade_spandrel_green",
+    "metal": "metal_galvanized_stadium",
+    "tile": "tile_delco",
+    "wood": "plywood_sheathing",
+    "carpet": "carpet_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "drywall": "drywall_delco",
+    "plaster": "plaster_delco"
+  }
+}

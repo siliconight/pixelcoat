@@ -1,0 +1,50 @@
+{
+  "id": "brick_painted_white",
+  "kind": "brick",
+  "base_colors": [
+    "#d9d4c8",
+    "#e0dccf",
+    "#cfc9bd",
+    "#d4cec1"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.35,
+    "meso": 0.15,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 150,
+    "octaves": 2
+  },
+  "masonry": {
+    "rows": 8,
+    "cols": 4,
+    "offset": 0.5,
+    "mortar": 0.045,
+    "mortar_color": "#b0a89a",
+    "brick_variation": 0.22
+  },
+  "detail_strength": 0.14,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.7,
+    "variation": 0.08
+  },
+  "height_strength": 0.5,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  }
+}

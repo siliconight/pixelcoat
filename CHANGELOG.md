@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.11.0] - Procedural material library + themed curation + stylized glass
+
+### Added
+- Two surface primitives: `voronoi_cells` (filled Voronoi cells with a
+  per-cell id, for cobblestone/terrazzo/flagstone aggregates) and `wave`
+  (undulating flutes; warp=0 gives straight reeded glass).
+- `MaterialGrammar` gains `aggregate` (per-cell palette + mortar), `emissive`,
+  `transparency` (an import hint, not lighting -- see below), multi-scale
+  `veins` (list of passes), and `albedo_pattern` (albedo-only value mod).
+- ~23 new tiling grammars: cinderblock, cobblestone, flagstone, granite,
+  travertine, marble, subway/terrazzo/vct tile, hardwood/plywood,
+  rusted/brass/galvanized/spandrel metal, stucco, pebble.
+- Six textured glasses (circles, cracked_cells, wavy, blobby, frosted,
+  reeded) + three opaque `glass_facade` variants (bronze, mirror_blue,
+  spandrel_green) for hollow-shell building fronts.
+- Themed curation: `build_theme_library()` + `pixelcoat theme-library
+  --theme <t> --out <dir>` build one `<kind>_<theme>/` pack per curated
+  material from `profiles/themes/<theme>.json`. Profiles shipped:
+  street, delco, casino, stadium, bank.
+
+### Changed
+- Retuned `ceiling_tile_delco` (coarser acoustic grid) and
+  `marble_bank_floor` (sharper veins).
+
+### Notes
+- Transparency is authored as a pack hint
+  (`import_hints.transparency = {opacity, ior, alpha_mode}`); Pixelcoat never
+  sets shader/lighting state itself -- Zoo honors the hint on the material.
+
 ## [0.10.0] - DELCO signage packs: the tool finally fed for its purpose
 
 ### Added

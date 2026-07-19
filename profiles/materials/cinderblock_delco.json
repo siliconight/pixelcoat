@@ -1,0 +1,49 @@
+{
+  "id": "cinderblock_delco",
+  "kind": "concrete",
+  "base_colors": [
+    "#8f8c85",
+    "#999690",
+    "#86837c"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.12,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 30,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 120,
+    "octaves": 2
+  },
+  "masonry": {
+    "rows": 10,
+    "cols": 5,
+    "offset": 0.5,
+    "mortar": 0.025,
+    "mortar_color": "#7d7a73",
+    "brick_variation": 0.1
+  },
+  "detail_strength": 0.1,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.88,
+    "variation": 0.06
+  },
+  "height_strength": 0.4,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

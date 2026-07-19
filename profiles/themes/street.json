@@ -1,0 +1,16 @@
+{
+  "theme": "street",
+  "description": "Street-corner storefront: red brick above a cinderblock bulkhead, see-through display-window glass at street level, opaque bronze glass on the hollow upper floors, subway-tile vestibule, rusted metal, hardwood trim.",
+  "materials": {
+    "brick": "brick_delco",
+    "glass": "glass_circles",
+    "glass_facade": "glass_facade_bronze",
+    "concrete": "cinderblock_delco",
+    "tile": "subway_tile_white",
+    "wood": "hardwood_plank",
+    "metal": "metal_rusted_street",
+    "ceiling_tile": "ceiling_tile_delco",
+    "drywall": "drywall_delco",
+    "plaster": "stucco_warm"
+  }
+}

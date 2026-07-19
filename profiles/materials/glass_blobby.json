@@ -1,0 +1,44 @@
+{
+  "id": "glass_blobby",
+  "base_colors": [
+    "#d2dad6"
+  ],
+  "bands": {
+    "macro": 0.15,
+    "meso": 0.5,
+    "micro": 0.2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 10,
+    "octaves": 3
+  },
+  "roughness": {
+    "base": 0.3,
+    "variation": 0.14
+  },
+  "kind": "glass",
+  "meters_per_tile": 1.0,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 90,
+    "octaves": 2
+  },
+  "detail_strength": 0.03,
+  "albedo_pattern": 0.1,
+  "posterize": 0,
+  "height_strength": 0.9,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  },
+  "transparency": {
+    "opacity": 0.5,
+    "ior": 1.45
+  }
+}
