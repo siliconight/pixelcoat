@@ -1,0 +1,16 @@
+{
+  "description": "Rockay City, back-of-house. Plain red brick over a cinderblock bulkhead, corrugated metal behind the seafront, frosted utility glazing, plywood hoardings, plain tile. The cheap end of the same street -- and it still carries the mirror glass, so it reads as this city rather than another one.",
+  "materials": {
+    "brick": "brick_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "concrete": "cinderblock_delco",
+    "drywall": "drywall_delco",
+    "glass": "glass_frosted",
+    "glass_facade": "glass_facade_mirror_blue",
+    "metal": "corrugated_metal_delco",
+    "plaster": "plaster_delco",
+    "tile": "tile_delco",
+    "wood": "plywood_sheathing"
+  },
+  "theme": "rockay_service"
+}

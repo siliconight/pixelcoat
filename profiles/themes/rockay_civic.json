@@ -1,0 +1,17 @@
+{
+  "description": "Rockay City, the old money. Speckled granite base under the family's teal-glazed brick, reeded cathedral glass, terrazzo underfoot, brass throughout. The heavy neighbour on a deco boulevard -- a courthouse, a museum, a funeral home.",
+  "materials": {
+    "brick": "brick_glazed_green",
+    "carpet": "carpet_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "concrete": "granite_speckle",
+    "drywall": "drywall_delco",
+    "glass": "glass_reeded_cathedral",
+    "glass_facade": "glass_facade_mirror_blue",
+    "metal": "metal_brass_casino",
+    "plaster": "stucco_warm",
+    "tile": "terrazzo",
+    "wood": "hardwood_plank"
+  },
+  "theme": "rockay_civic"
+}
