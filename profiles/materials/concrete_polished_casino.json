@@ -1,7 +1,7 @@
 {
   "id": "concrete_polished_casino",
   "kind": "concrete",
-  "base_colors": ["#8a8078", "#948a80", "#7e746c"],
+  "base_colors": ["#7e8286", "#888c90", "#727679"],
   "meters_per_tile": 3.0,
   "bands": {"macro": 0.4, "meso": 0.25, "micro": 0.15},
   "macro": {"generator": "fbm", "cells": 4, "octaves": 3},

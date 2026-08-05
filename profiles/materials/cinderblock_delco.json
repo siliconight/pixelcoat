@@ -32,8 +32,8 @@
     "cols": 5,
     "offset": 0.5,
     "mortar": 0.025,
-    "mortar_color": "#7d7a73",
-    "brick_variation": 0.1
+    "mortar_color": "#585858",
+    "brick_variation": 0.16
   },
   "detail_strength": 0.1,
   "posterize": 14,
