@@ -170,7 +170,15 @@ def main(argv: list[str] | None = None) -> int:
     tl.add_argument("--grammars", default=None,
                     help="grammar dir (default: the shipped profiles/materials)")
     tl.add_argument("--out", default="./skins", help="skins library root")
-    tl.add_argument("--size", type=int, default=512)
+    tl.add_argument("--size", type=int, default=None,
+                    help="fixed pack size for every kind. Omit to hold TEXEL "
+                         "DENSITY flat instead (--density), which is what a "
+                         "consistent pixel scale requires: on-mesh density is "
+                         "size/meters_per_tile, so one size across a library "
+                         "spanning 1.0-3.0 m tiles ships a 3x density spread")
+    tl.add_argument("--density", type=float, default=128.0,
+                    help="target pixels per world metre (default 128). Ignored "
+                         "when --size is given")
     tl.add_argument("--seed", type=int, default=1999)
     tl.add_argument("--json", action="store_true", dest="json_log")
 
@@ -478,14 +486,19 @@ def _theme_library(args) -> int:
         raise ValueError(f"no theme profile for '{args.theme}' at {profile}")
     grammars = args.grammars or os.path.join(profiles, "materials")
     res = mg.build_theme_library(profile, grammars, os.path.abspath(args.out),
-                                 size=args.size, seed=args.seed)
+                                 size=args.size, density=args.density,
+                                 seed=args.seed)
     if getattr(args, "json_log", False):
         print(json.dumps(res, indent=2))
     else:
+        how = (f"fixed {args.size}px" if args.size
+               else f"{res['density']:.0f} px/m")
         print(f"pixelcoat: theme '{res['theme']}' -> {res['kind_count']} packs "
-              f"in {res['out_dir']}")
+              f"in {res['out_dir']}  [{how}]")
         for kind, name in sorted(res["packs"].items()):
-            print(f"  {kind:14s} -> {name}/")
+            s = res["sizes"][kind]
+            print(f"  {kind:14s} -> {name}/  {s['size']}px / "
+                  f"{s['meters_per_tile']:.2f}m = {s['px_per_m']:.0f} px/m")
     return 0
 
 

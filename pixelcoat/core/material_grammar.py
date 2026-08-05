@@ -24,6 +24,7 @@ Scope decisions (grounded in the factory's verified runtime, not guessed):
 from __future__ import annotations
 
 import json
+import math
 import os
 from dataclasses import dataclass, field
 from typing import Any
@@ -415,8 +416,31 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
     return manifest
 
 
+# Texel density. Zoo lays down world-metre cube-projected UVs and drives a
+# Mapping node at 1/meters_per_tile, so a pack's ON-MESH density is
+# ``size * texel / meters_per_tile``. A fixed size across a library whose
+# meters_per_tile spans 1.0-3.0 therefore ships a 3x density spread -- a window
+# at 512 px/m set into a concrete wall at 171 px/m, on every building.
+DEFAULT_DENSITY = 128.0          # pixels per world metre
+PACK_SIZE_BOUNDS = (64, 1024)
+
+
+def pack_size_for(meters_per_tile, density: float = DEFAULT_DENSITY,
+                  bounds=PACK_SIZE_BOUNDS) -> int:
+    """Texture size that puts ``density`` pixels on every world metre.
+
+    Rounded to a power of two: that caps the residual density error at sqrt(2)
+    (measured worst case across the shipped library: 1.33x, against 3.0x for a
+    fixed size) and keeps every map POT for the GPU.
+    """
+    mpt = float(meters_per_tile or 1.0)
+    size = 2 ** int(round(math.log2(max(float(density) * mpt, 1.0))))
+    return int(min(max(size, bounds[0]), bounds[1]))
+
+
 def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
-                        size=512, seed: int = DEFAULT_SEED) -> dict:
+                        size=None, density: float = DEFAULT_DENSITY,
+                        seed: int = DEFAULT_SEED) -> dict:
     """Build a Zoo ``--skins`` library from a *theme profile* — the reproducible
     curation the Level Factory orchestrator needs.
 
@@ -436,6 +460,7 @@ def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
             profile = json.load(f)
     theme = profile["theme"]
     packs: dict[str, str] = {}
+    sizes: dict[str, dict] = {}
     for kind, gram_id in profile.get("materials", {}).items():
         g = MaterialGrammar.load(os.path.join(grammars_dir, f"{gram_id}.json"))
         if g.kind != kind:
@@ -443,10 +468,16 @@ def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
                 f"theme '{theme}': grammar '{gram_id}' is kind '{g.kind}', "
                 f"but the profile maps it to the '{kind}' slot")
         pack_dir = os.path.join(out_dir, f"{kind}_{theme}")
-        build_material_pack(g, pack_dir, size=size, seed=seed)
+        # size=None means "hold texel density flat"; an explicit size is the
+        # escape hatch and reproduces the old fixed-size behaviour exactly.
+        px = int(size) if size else pack_size_for(g.meters_per_tile, density)
+        build_material_pack(g, pack_dir, size=px, seed=seed)
         packs[kind] = f"{kind}_{theme}"
+        sizes[kind] = {"size": px, "meters_per_tile": float(g.meters_per_tile),
+                       "px_per_m": round(px / float(g.meters_per_tile or 1.0), 1)}
     return {"theme": theme, "out_dir": os.path.abspath(out_dir),
-            "packs": packs, "kind_count": len(packs)}
+            "packs": packs, "kind_count": len(packs), "sizes": sizes,
+            "density": None if size else float(density)}
 
 
 def _to_u8(arr: np.ndarray) -> np.ndarray:
