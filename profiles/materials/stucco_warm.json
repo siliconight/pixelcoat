@@ -2,9 +2,9 @@
   "id": "stucco_warm",
   "kind": "plaster",
   "base_colors": [
-    "#d8cdb8",
-    "#e0d6c2",
-    "#cfc4ae"
+    "#cac0ab",
+    "#d2c8b4",
+    "#c2b7a1"
   ],
   "meters_per_tile": 2.0,
   "bands": {

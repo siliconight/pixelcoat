@@ -2,9 +2,9 @@
   "id": "subway_tile_white",
   "kind": "tile",
   "base_colors": [
-    "#eef0ef",
-    "#e7eae8",
-    "#f3f5f4"
+    "#d1d2d1",
+    "#cacdcb",
+    "#d5d7d6"
   ],
   "meters_per_tile": 1.0,
   "bands": {
@@ -32,7 +32,7 @@
     "cols": 3,
     "offset": 0.5,
     "mortar": 0.03,
-    "mortar_color": "#8a8f8c",
+    "mortar_color": "#787d7a",
     "brick_variation": 0.05
   },
   "detail_strength": 0.04,

@@ -73,16 +73,16 @@
       "value_range": 0.10134877715892265
     },
     "ceiling_tile_delco": {
-      "blown_frac": 0.123138427734375,
-      "chroma_mean": 0.018616320804806498,
-      "chroma_p95": 0.023487881614997035,
+      "blown_frac": 0.001800537109375,
+      "chroma_mean": 0.018139688545872272,
+      "chroma_p95": 0.02388342808578005,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.054812305791442625,
+      "hf_energy": 0.054644234075939754,
       "kind": "ceiling_tile",
       "rough_mean": 0.9033138499540441,
       "tier": null,
-      "value_range": 0.15720295295564235
+      "value_range": 0.15969613853683862
     },
     "cinderblock_delco": {
       "blown_frac": 0.0,
@@ -529,28 +529,28 @@
       "value_range": 0.0
     },
     "stucco_warm": {
-      "blown_frac": 0.131591796875,
-      "chroma_mean": 0.03394680032636043,
+      "blown_frac": 0.0091400146484375,
+      "chroma_mean": 0.03430121409327283,
       "chroma_p95": 0.04185519527300144,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.05731319086654963,
+      "hf_energy": 0.05469731961963298,
       "kind": "plaster",
       "rough_mean": 0.808062744140625,
       "tier": null,
-      "value_range": 0.1641236096983809
+      "value_range": 0.1925459945077338
     },
     "subway_tile_white": {
-      "blown_frac": 0.4471435546875,
-      "chroma_mean": 0.00652039423311995,
-      "chroma_p95": 0.027842651887665784,
+      "blown_frac": 0.0,
+      "chroma_mean": 0.0034704496649849044,
+      "chroma_p95": 0.02615475506942624,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.10676883190488402,
+      "hf_energy": 0.10473491805416384,
       "kind": "tile",
       "rough_mean": 0.12602251838235295,
       "tier": null,
-      "value_range": 0.32818569604715697
+      "value_range": 0.29109653525816515
     },
     "terrazzo": {
       "blown_frac": 0.0,
@@ -577,16 +577,16 @@
       "value_range": 0.3050515287790032
     },
     "travertine_warm": {
-      "blown_frac": 0.141693115234375,
-      "chroma_mean": 0.022930880580078722,
-      "chroma_p95": 0.026673200213728803,
+      "blown_frac": 0.0,
+      "chroma_mean": 0.02272941843789366,
+      "chroma_p95": 0.02705854154851683,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.031790490001301755,
+      "hf_energy": 0.028086358718383983,
       "kind": "concrete",
       "rough_mean": 0.3764705882352941,
       "tier": null,
-      "value_range": 0.1256141663906276
+      "value_range": 0.0975441129280763
     },
     "vct_floor_beige": {
       "blown_frac": 0.051727294921875,

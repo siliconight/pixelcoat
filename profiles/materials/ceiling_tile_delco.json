@@ -2,9 +2,9 @@
   "id": "ceiling_tile_delco",
   "kind": "ceiling_tile",
   "base_colors": [
-    "#d7d4c9",
-    "#dedbd0",
-    "#cfccc1"
+    "#c7c4b9",
+    "#cdcbc0",
+    "#c0bdb2"
   ],
   "meters_per_tile": 2.0,
   "bands": {
@@ -31,7 +31,7 @@
     "cols": 3,
     "offset": 0.0,
     "mortar": 0.035,
-    "mortar_color": "#b7b4a9",
+    "mortar_color": "#a9a69b",
     "brick_variation": 0.05
   },
   "detail_strength": 0.09,

@@ -2,9 +2,9 @@
   "id": "travertine_warm",
   "kind": "concrete",
   "base_colors": [
-    "#e7e0d2",
-    "#efe9dc",
-    "#ddd5c5"
+    "#d3ccbe",
+    "#dad4c8",
+    "#cac2b2"
   ],
   "meters_per_tile": 2.0,
   "bands": {
