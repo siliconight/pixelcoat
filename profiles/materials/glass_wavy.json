@@ -6,14 +6,14 @@
   ],
   "bands": {
     "macro": 0.15,
-    "meso": 0.5,
+    "meso": 0.25,
     "micro": 0.1
   },
   "meso": {
     "generator": "wave",
     "count": 14,
     "axis": "x",
-    "warp": 0.35
+    "warp": 0.12
   },
   "roughness": {
     "base": 0.24,
@@ -34,7 +34,7 @@
   "detail_strength": 0.03,
   "albedo_pattern": 0.1,
   "posterize": 0,
-  "height_strength": 0.9,
+  "height_strength": 0.45,
   "emit": {
     "roughness": true,
     "normal": true
