@@ -1,16 +1,17 @@
 {
-  "theme": "delco",
-  "description": "The gritty urban base theme: red brick, poured concrete, drywall interiors, frosted glass, mirror-blue upper facades.",
-  "materials": {
-    "brick": "brick_delco",
-    "concrete": "concrete_delco",
-    "tile": "tile_delco",
-    "drywall": "drywall_delco",
-    "glass": "glass_frosted",
-    "glass_facade": "glass_facade_mirror_blue",
-    "wood": "wood_delco",
-    "carpet": "carpet_delco",
-    "ceiling_tile": "ceiling_tile_delco",
-    "plaster": "plaster_delco"
-  }
+ "theme": "delco",
+ "description": "The gritty urban base theme: red brick, poured concrete, drywall interiors, frosted glass, mirror-blue upper facades.",
+ "materials": {
+  "brick": "brick_delco",
+  "carpet": "carpet_delco",
+  "ceiling_tile": "ceiling_tile_delco",
+  "concrete": "concrete_delco",
+  "drywall": "drywall_delco",
+  "glass": "glass_frosted",
+  "glass_facade": "glass_facade_mirror_blue",
+  "metal": "metal_rusted_street",
+  "plaster": "plaster_delco",
+  "tile": "tile_delco",
+  "wood": "wood_delco"
+ }
 }
