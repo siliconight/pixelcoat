@@ -1,0 +1,50 @@
+{
+  "id": "brick_buff_civic",
+  "kind": "brick",
+  "base_colors": [
+    "#a89a86",
+    "#b2a68e",
+    "#9d9081",
+    "#ab9f8b"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.15,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 150,
+    "octaves": 2
+  },
+  "masonry": {
+    "rows": 6,
+    "cols": 3,
+    "offset": 0.5,
+    "mortar": 0.05,
+    "mortar_color": "#8f887a",
+    "brick_variation": 0.12
+  },
+  "detail_strength": 0.11,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.72,
+    "variation": 0.07
+  },
+  "height_strength": 0.45,
+  "emit": {
+    "roughness": true,
+    "normal": true
+  }
+}

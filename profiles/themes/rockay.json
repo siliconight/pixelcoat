@@ -1,17 +1,17 @@
 {
-  "theme": "rockay",
-  "description": "Rockay City coastal art-deco, hurricane night: teal-glazed exterior brick, polished casino concrete and terrazzo underfoot, deco brass fittings, ocean-mirror curtain-wall glass and wavy display glass, warm salt-worn stucco. Built for the Category 5 beachfront-casino mission.",
-  "materials": {
-    "brick": "brick_glazed_green",
-    "concrete": "concrete_polished_casino",
-    "glass": "glass_wavy",
-    "glass_facade": "glass_facade_mirror_blue",
-    "metal": "metal_brass_casino",
-    "tile": "terrazzo",
-    "wood": "hardwood_plank",
-    "carpet": "carpet_delco",
-    "ceiling_tile": "ceiling_tile_delco",
-    "drywall": "drywall_delco",
-    "plaster": "stucco_warm"
-  }
+ "theme": "rockay",
+ "description": "Rockay City coastal art-deco, hurricane night: teal-glazed exterior brick, polished casino concrete and terrazzo underfoot, deco brass fittings, ocean-mirror curtain-wall glass and wavy display glass, warm salt-worn stucco. Built for the Category 5 beachfront-casino mission.",
+ "materials": {
+  "brick": "brick_glazed_green",
+  "carpet": "carpet_delco",
+  "ceiling_tile": "ceiling_tile_delco",
+  "concrete": "concrete_polished_casino",
+  "drywall": "drywall_delco",
+  "glass": "glass_wavy",
+  "glass_facade": "glass_facade_mirror_blue",
+  "metal": "metal_galvanized_stadium",
+  "plaster": "stucco_warm",
+  "tile": "terrazzo",
+  "wood": "hardwood_plank"
+ }
 }

@@ -88,21 +88,34 @@ def test_theme_covers_the_exterior_kinds(path):
     assert not missing, f"{theme.get('theme')}: no {sorted(missing)}"
 
 
+def _rockay_family():
+    """Every theme in the family INCLUDING the base `rockay`.
+
+    An earlier version of these tests matched `rockay_` with the underscore,
+    which silently excluded the base theme the variants are variants OF. It
+    passed while rockay and rockay_civic shared their brick, their tile and
+    their metal -- so two buildings on the same street rendered identically
+    and the suite said the family was varied. A contact sheet caught it; the
+    test could not, because it was not looking at the pair that collided.
+    """
+    return [_load(p) for p in _theme_paths()
+            if os.path.basename(p).startswith("rockay")]
+
+
 def test_rockay_family_shares_its_signature_surfaces():
-    """Variety from the wall, cohesion from the surfaces that read at
-    distance: every rockay_* variant wears the same curtain wall, so a
-    mixed-theme street reads as one city."""
-    variants = [_load(p) for p in _theme_paths()
-                if os.path.basename(p).startswith("rockay_")]
-    assert len(variants) >= 2, "expected the rockay_* variant family"
-    shared = {t["materials"].get("glass_facade") for t in variants}
+    """Cohesion from the surface that reads at distance: every theme in the
+    family wears the same curtain wall, so a mixed-theme street reads as one
+    city."""
+    family = _rockay_family()
+    assert len(family) >= 2, "expected the rockay family"
+    shared = {t["materials"].get("glass_facade") for t in family}
     assert shared == {"glass_facade_mirror_blue"}, shared
 
 
 def test_rockay_family_varies_the_wall():
-    """...and no two variants wear the same brick, or the street reads as
-    differently-shaped buildings in identical paint."""
-    variants = [_load(p) for p in _theme_paths()
-                if os.path.basename(p).startswith("rockay_")]
-    bricks = [t["materials"].get("brick") for t in variants]
+    """...and variety from the wall itself: no two themes in the family wear
+    the same brick, or the street reads as differently-shaped buildings in
+    identical paint -- which is the complaint that started this work."""
+    family = _rockay_family()
+    bricks = [t["materials"].get("brick") for t in family]
     assert len(set(bricks)) == len(bricks), bricks

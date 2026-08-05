@@ -56,9 +56,20 @@ ENV_BUDGET = {
     # sect.6 "Low Chroma ... large terrain surfaces, broad walls, repeated
     # structural modules". sect.3 "70% environmental base colors" drawn from
     # "neutral gray, cool gray-blue, muted green, desaturated brown, pale
-    # stone, weathered metal, dusty beige, dark charcoal" -- every one of
-    # which lands under Oklab C 0.06.
-    "chroma_mean": 0.060,
+    # stone, weathered metal, dusty beige, dark charcoal".
+    #
+    # RECALIBRATED 2026-08-05, downward, by looking at the library instead of
+    # reading the word list. 0.060 was set from the prose and it passed two
+    # materials that are unmistakably COLOURED on sight:
+    #   painted_metal_industrial  C 0.051  -> saturated green
+    #   metal_painted_trafficsignal C 0.049 -> green
+    # while metal_brass_casino at 0.109 reads as screaming yellow. A moderate
+    # chroma spread over a LARGE UNIFORM FIELD reads far louder than the same
+    # number speckled through a masonry pattern, and chroma_mean cannot tell
+    # those apart. The library's own environment-tier distribution puts p50 at
+    # 0.023 and p75 at 0.049; everything that reads neutral to the eye sits
+    # below ~0.030. That is the number, and it came from the contact sheet.
+    "chroma_mean": 0.030,
     # sect.6 again, but for the hot tail: a quiet mean hiding loud speckle still
     # competes. Allowed roughly 2x the mean budget.
     "chroma_p95": 0.120,

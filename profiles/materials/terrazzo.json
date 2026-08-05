@@ -29,18 +29,18 @@
     "cells": 55,
     "gap": 0.06,
     "colors": [
-      "#e3ded3",
-      "#e3ded3",
-      "#e3ded3",
-      "#b0a89a",
-      "#8a6f5a",
-      "#7a8a72",
-      "#9a5040",
-      "#5a5550"
+      "#ceccc8",
+      "#ceccc8",
+      "#ceccc8",
+      "#b7b4af",
+      "#a49a93",
+      "#a0a59d",
+      "#ab8f88",
+      "#8f8d8b"
     ],
     "fill": 0.85,
     "variation": 0.05,
-    "gap_color": "#d6d0c4",
+    "gap_color": "#c8c6c2",
     "gap_strength": 0.5
   },
   "detail_strength": 0.06,

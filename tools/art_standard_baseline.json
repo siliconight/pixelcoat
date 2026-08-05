@@ -12,6 +12,18 @@
       "tier": null,
       "value_range": 0.15731532473188314
     },
+    "brick_buff_civic": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.033296000397518025,
+      "chroma_p95": 0.05433799889337919,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.048154498223382546,
+      "kind": "brick",
+      "rough_mean": 0.6819696164598652,
+      "tier": null,
+      "value_range": 0.1301968022832004
+    },
     "brick_delco": {
       "blown_frac": 0.0,
       "chroma_mean": 0.08088651430658314,
@@ -554,15 +566,15 @@
     },
     "terrazzo": {
       "blown_frac": 0.0,
-      "chroma_mean": 0.029155603667820888,
-      "chroma_p95": 0.08878488971932404,
+      "chroma_mean": 0.011838033063716946,
+      "chroma_p95": 0.036967575902077575,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.14515657425652612,
+      "hf_energy": 0.05660996044664253,
       "kind": "tile",
       "rough_mean": 0.32373453776041666,
       "tier": null,
-      "value_range": 0.36180602607416057
+      "value_range": 0.13065996800315927
     },
     "tile_delco": {
       "blown_frac": 0.0150604248046875,

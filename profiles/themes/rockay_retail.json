@@ -1,17 +1,17 @@
 {
-  "description": "Rockay City, storefront block. Salt-bleached painted brick over a concrete sidewalk bulkhead, wide see-through display glass at street level, VCT underfoot. Keeps the family's ocean-mirror curtain wall and deco brass fittings -- it is the same city, one block down from the casino.",
-  "materials": {
-    "brick": "brick_painted_white",
-    "carpet": "carpet_delco",
-    "ceiling_tile": "ceiling_tile_delco",
-    "concrete": "concrete_sidewalk_street",
-    "drywall": "drywall_delco",
-    "glass": "glass_circles",
-    "glass_facade": "glass_facade_mirror_blue",
-    "metal": "metal_brass_casino",
-    "plaster": "stucco_warm",
-    "tile": "vct_floor_beige",
-    "wood": "hardwood_plank"
-  },
-  "theme": "rockay_retail"
+ "description": "Rockay City, storefront block. Salt-bleached painted brick over a concrete sidewalk bulkhead, wide see-through display glass at street level, VCT underfoot. Keeps the family's ocean-mirror curtain wall and deco brass fittings -- it is the same city, one block down from the casino.",
+ "materials": {
+  "brick": "brick_painted_white",
+  "carpet": "carpet_delco",
+  "ceiling_tile": "ceiling_tile_delco",
+  "concrete": "concrete_sidewalk_street",
+  "drywall": "drywall_delco",
+  "glass": "glass_circles",
+  "glass_facade": "glass_facade_mirror_blue",
+  "metal": "metal_galvanized_stadium",
+  "plaster": "stucco_warm",
+  "tile": "vct_floor_beige",
+  "wood": "hardwood_plank"
+ },
+ "theme": "rockay_retail"
 }
