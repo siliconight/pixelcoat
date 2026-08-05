@@ -174,10 +174,22 @@ def measure(grammar, synth) -> dict:
             e = e.max(axis=-1)
         emis_frac = float(np.mean(e > 8))    # >3% of full scale counts as lit
 
+    # Chroma-weighted hue. The vector sum of (a, b) IS the chroma weighting --
+    # a near-neutral pixel contributes almost nothing, which is what we want,
+    # because the hue of a grey pixel is noise. `hue_strength` is the length of
+    # that resultant: when it is small the ANGLE is meaningless and must not be
+    # compared. (`glass_reeded_cathedral` is the standing reminder that a mean
+    # is the wrong statistic for a surface that sweeps a gradient.)
+    a_sum = float(np.mean(lab[..., 1]))
+    b_sum = float(np.mean(lab[..., 2]))
+
     return {
         "id": grammar.id,
         "kind": grammar.kind,
         "tier": getattr(grammar, "tier", None),
+        "value_mean": float(np.mean(L)),
+        "hue_deg": float(np.degrees(np.arctan2(b_sum, a_sum)) % 360.0),
+        "hue_strength": float(np.hypot(a_sum, b_sum)),
         "chroma_mean": float(np.mean(C)),
         "chroma_p95": float(np.percentile(C, 95)),
         "value_p5": float(np.percentile(L, 5)),
@@ -234,9 +246,175 @@ def judge(row: dict) -> list:
     return faults
 
 
+
+# --------------------------------------------------------------------------- #
+# Neighbour pairs (sect.5 "separated value clusters", read across materials)
+#
+# `judge` scores one grammar at a time, and every metric it has can pass while
+# two surfaces that MEET on a wall still read wrong together. Measured on the
+# rockay contact sheet: `concrete_polished_casino` and `drywall_delco` sit
+# 0.208 apart in lightness and 0.001 apart in high-frequency energy. That is
+# not two materials -- it is one material at two brightnesses, which the eye
+# reads as a texture that failed to load, or as a lighting seam, rather than as
+# a decision.
+#
+# The complaint generalises: a VALUE STEP NEEDS A REASON THE EYE CAN SEE. An
+# edge, a change of grain, a shift of hue -- something. It is the same gap as a
+# missing bevel, one level up: geometry and shading both need the change to be
+# legible as intentional.
+#
+# NOTHING HERE JUDGES YET. The thresholds are deliberately absent until the
+# real distribution has been looked at, because the chroma budget was once set
+# from the prose of the standard (0.060), shipped, and passed a material that
+# renders as bright green -- it took a contact sheet to find 0.030. Measure
+# first, then decide. `--pairs` prints the table.
+# --------------------------------------------------------------------------- #
+
+def _hue_delta(deg_a, deg_b):
+    """Shortest angular distance between two hues, in degrees (0..180)."""
+    d = abs(float(deg_a) - float(deg_b)) % 360.0
+    return d if d <= 180.0 else 360.0 - d
+
+
+HUE_FLOOR = 0.004   # below this resultant length a material has no usable hue
+
+# CALIBRATED 2026-08-05 from the measured distribution over all 387
+# environment-tier pairs in the shipped themes, not from the prose:
+#
+#     d_value   p10 0.018   p50 0.217   p90 0.488
+#     d_hf      p10 0.004   p50 0.027   p90 0.082
+#     d_chroma  p10 0.005   p50 0.024   p90 0.065
+#
+# PAIR_VALUE_STEP -- below the median gap, but well clear of the p10 noise
+# floor. A pair closer than this in lightness reads as the SAME material,
+# which is fine; there is no step to justify.
+PAIR_VALUE_STEP = 0.12
+# The three ways a step can earn itself. Each sits between p10 and p50: low
+# enough that a real difference clears it, high enough that measurement noise
+# does not. A pair need satisfy only ONE -- structure, chroma, or hue.
+PAIR_HF_DIFF = 0.010
+PAIR_CHROMA_DIFF = 0.015
+PAIR_HUE_DIFF = 30.0     # degrees
+
+
+def neighbour_pairs(rows, theme_materials):
+    """Every unordered pair of ENVIRONMENT-tier materials a theme declares.
+
+    The theme is the right scope: these are the surfaces that actually end up
+    adjacent in one building. Comparing across themes would flag materials
+    that never meet.
+    """
+    by_id = {r["id"]: r for r in rows}
+    used, seen = [], set()
+    for gid in (theme_materials or {}).values():
+        r = by_id.get(gid)
+        if r is None or gid in seen:
+            continue
+        if r["kind"] not in TERTIARY_KINDS:
+            continue          # secondary/accent surfaces are not the bulk read
+        seen.add(gid)
+        used.append(r)
+
+    out = []
+    for i in range(len(used)):
+        for j in range(i + 1, len(used)):
+            a, b = used[i], used[j]
+            hue_ok = (a["hue_strength"] >= HUE_FLOOR
+                      and b["hue_strength"] >= HUE_FLOOR)
+            out.append({
+                "a": a["id"], "b": b["id"],
+                "d_value": abs(a["value_mean"] - b["value_mean"]),
+                "d_hf": abs(a["hf_energy"] - b["hf_energy"]),
+                "d_chroma": abs(a["chroma_mean"] - b["chroma_mean"]),
+                "d_hue": (_hue_delta(a["hue_deg"], b["hue_deg"])
+                          if hue_ok else None),
+            })
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # Report
 # --------------------------------------------------------------------------- #
+
+def pair_faults(pairs):
+    """Pairs whose lightness step has nothing to justify it.
+
+    A value step needs a reason the eye can see. If two environment surfaces
+    differ in lightness by more than `PAIR_VALUE_STEP` and differ in NOTHING
+    else -- same grain, same chroma, same hue -- the boundary between them
+    reads as a texture that failed to load, not as a decision.
+
+    Only one of the three escapes is required, because any one of them is a
+    visible reason: different grain, different colour intensity, or different
+    hue. `d_hue is None` means at least one side is too neutral for its hue
+    angle to carry information, so hue cannot be the justification -- the
+    conservative reading, and the honest one.
+
+    Against the shipped library this fires on exactly one pair, which is the
+    one that was spotted by eye on a contact sheet before any of this existed.
+    That is the intended sensitivity: tight enough to be worth reading, not a
+    blanket over 387 pairs.
+    """
+    out = []
+    for p in pairs or ():
+        if p["d_value"] < PAIR_VALUE_STEP:
+            continue
+        if (p["d_hf"] >= PAIR_HF_DIFF
+                or p["d_chroma"] >= PAIR_CHROMA_DIFF
+                or (p["d_hue"] is not None and p["d_hue"] >= PAIR_HUE_DIFF)):
+            continue
+        hue = "-" if p["d_hue"] is None else f"{p['d_hue']:.0f}deg"
+        out.append(
+            f"{p['a']} / {p['b']}: value step {p['d_value']:.3f} with no "
+            f"reason -- structure {p['d_hf']:.3f}, chroma {p['d_chroma']:.3f}, "
+            f"hue {hue} [sect.5]")
+    return out
+
+
+def _print_pairs(result) -> None:
+    """The neighbour-pair table. Sorted by the shape we are hunting: a big
+    value step across near-identical structure and colour."""
+    print("\nNEIGHBOUR PAIRS -- environment-tier surfaces that share a theme")
+    print("dV = lightness gap.  dHF = structure gap.  dC = chroma gap.  "
+          "dHue = degrees (blank = one side is neutral).")
+    print("A large dV beside a tiny dHF/dC/dHue is the shape that reads as a "
+          "mistake rather than a decision.\n")
+    allp = []
+    for th in result.get("themes", []):
+        pairs = th.get("pairs") or []
+        if not pairs:
+            continue
+        allp += [dict(p, theme=th["theme"]) for p in pairs]
+        print(f"  [{th['theme']}]  {len(pairs)} pair(s)")
+        for p in sorted(pairs, key=lambda p: (p["d_hf"], -p["d_value"]))[:6]:
+            hue = f"{p['d_hue']:5.0f}" if p["d_hue"] is not None else "    -"
+            print(f"    {p['a']:28s} {p['b']:28s} "
+                  f"dV {p['d_value']:.3f}  dHF {p['d_hf']:.3f}  "
+                  f"dC {p['d_chroma']:.3f}  dHue {hue}")
+        print()
+    if not allp:
+        print("  (no themes measured)")
+        return
+    for key in ("d_value", "d_hf", "d_chroma"):
+        v = sorted(p[key] for p in allp)
+        n = len(v)
+        print(f"  {key:9s} over {n} pairs: min {v[0]:.3f}  "
+              f"p10 {v[int(n*0.10)]:.3f}  p50 {v[n//2]:.3f}  "
+              f"p90 {v[int(n*0.90)]:.3f}  max {v[-1]:.3f}")
+    faults = []
+    for th in result.get("themes", []):
+        for f in pair_faults(th.get("pairs")):
+            faults.append(f"[{th['theme']}] {f}")
+    if faults:
+        print(f"\n  {len(faults)} pair(s) over budget "
+              f"(value step >= {PAIR_VALUE_STEP:.2f} with nothing to justify "
+              f"it):")
+        for f in sorted(set(faults)):
+            print(f"    {f}")
+    else:
+        print(f"\n  no pair carries a value step >= {PAIR_VALUE_STEP:.2f} "
+              f"without a structure, chroma or hue difference to justify it.")
+
 
 def audit(materials_dir, themes_dir=None, size=256, seed=1999) -> dict:
     from pixelcoat.core import material_grammar as mg
@@ -262,6 +440,7 @@ def audit(materials_dir, themes_dir=None, size=256, seed=1999) -> dict:
             themes.append({
                 "theme": t.get("theme"),
                 "kinds": len(used),
+                "pairs": neighbour_pairs(rows, t.get("materials", {})),
                 # sect.3: the compositional target is about the ENVIRONMENTAL
                 # base, so average over the tertiary tier only.
                 "chroma_mean": sum(r["chroma_mean"] for r in env) / len(env),
@@ -376,6 +555,10 @@ def main(argv=None) -> int:
     ap.add_argument("--size", type=int, default=256)
     ap.add_argument("--seed", type=int, default=1999)
     ap.add_argument("--json", default=None, help="also write the raw rows here")
+    ap.add_argument("--pairs", action="store_true",
+                    help="also print the neighbour-pair table (value steps "
+                         "across near-identical structure). Reports only -- "
+                         "no pass/fail until a threshold is calibrated.")
     ap.add_argument("--baseline", default=None,
                     help="compare against this snapshot and fail on REGRESSION "
                          "only; over-budget rows already in the snapshot are "
@@ -386,6 +569,8 @@ def main(argv=None) -> int:
 
     result = audit(args.materials, args.themes, size=args.size, seed=args.seed)
     _print(result)
+    if args.pairs:
+        _print_pairs(result)
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, sort_keys=True)
