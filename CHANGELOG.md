@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.12.0] - The art standard gets a gate, and the library is calibrated against it
+
+### Added
+- **Baseline regression gate over the material library** (`a14fa62`). The
+  Controlled Contrast Environment Art Standard was a document; this makes it
+  a check the library is measured against, so the standard is enforced rather
+  than remembered.
+- **Neighbour-pair check** (`dd707fd`): a value step between adjacent
+  materials needs a visible reason. A step nobody can see is a step nobody
+  chose.
+- **The `rockay` profile** (`72a9056`), with retail / service / civic
+  variants and profile validation (`2e282af`).
+- **`metal_rusted_street`** joins the delco theme (`c3db6c2`).
+
+### Changed
+- **Pack size derives from `meters_per_tile` at a target texel density**
+  (`8cadc44`) instead of being chosen. Texel density is the thing that has to
+  be right; pack size is what falls out of it.
+- **Four palettes pulled off the luminance ceiling; baseline re-snapshotted**
+  (`19a65e6`). `value_range` widens as the clipping is removed -- the range
+  was being compressed by the ceiling, not by the palettes.
+- **The bulk metal and the civic floor quieted; civic gets its own brick; the
+  chroma budget recalibrated from the contact sheet** (`f01e3fb`).
+- **Mortar joints that read**, and polished concrete separated from drywall
+  by hue (`0f9772c`).
+- **`glass_wavy` ripple calmed**: warp 0.35 -> 0.12, height 0.9 -> 0.45
+  (`ca614bb`).
+
+### Docs
+- README points at `PIPELINE_MAP.md` and states what this repo owns
+  (`531aa2e`).
+
+Assembled on 2026-08-14 from this repo's own commits, eleven of them since
+VERSION last moved, after `verify-manifest` reported pixelcoat STALE. Each
+bullet names its commit; the numbers are carried through from the subjects
+rather than paraphrased, because they are the part worth checking against the
+code.
+
 ## [0.11.0] - Procedural material library + themed curation + stylized glass
 
 ### Added
