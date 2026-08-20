@@ -1,6 +1,9 @@
 {
  "description": "Rockay City, storefront block. Salt-bleached painted brick over a concrete sidewalk bulkhead, wide see-through display glass at street level, VCT underfoot. Keeps the family's ocean-mirror curtain wall and deco brass fittings -- it is the same city, one block down from the casino.",
  "materials": {
+  "metal_painted": "metal_painted_neutral",
+  "metal_bare": "metal_bare_neutral",
+  "plastic": "plastic_neutral",
   "brick": "brick_painted_white",
   "carpet": "carpet_delco",
   "ceiling_tile": "ceiling_tile_delco",

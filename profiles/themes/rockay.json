@@ -2,6 +2,9 @@
  "theme": "rockay",
  "description": "Rockay City coastal art-deco, hurricane night: teal-glazed exterior brick, polished casino concrete and terrazzo underfoot, deco brass fittings, ocean-mirror curtain-wall glass and wavy display glass, warm salt-worn stucco. Built for the Category 5 beachfront-casino mission.",
  "materials": {
+  "metal_painted": "metal_painted_neutral",
+  "metal_bare": "metal_bare_neutral",
+  "plastic": "plastic_neutral",
   "brick": "brick_glazed_green",
   "carpet": "carpet_delco",
   "ceiling_tile": "ceiling_tile_delco",

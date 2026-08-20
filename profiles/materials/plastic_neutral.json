@@ -1,0 +1,43 @@
+{
+  "id": "plastic_neutral",
+  "kind": "plastic",
+  "tintable": true,
+  "base_colors": [
+    "#e9e9e6",
+    "#f2f1ed"
+  ],
+  "meters_per_tile": 1.5,
+  "bands": {
+    "macro": 0.12,
+    "meso": 0.22,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "directional_grain",
+    "cells_along": 3,
+    "cells_across": 40,
+    "axis": "y"
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 140,
+    "octaves": 2
+  },
+  "detail_strength": 0.05,
+  "albedo_pattern": 0.55,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.34,
+    "variation": 0.09
+  },
+  "height_strength": 0.12,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

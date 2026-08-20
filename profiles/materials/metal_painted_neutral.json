@@ -1,0 +1,42 @@
+{
+  "id": "metal_painted_neutral",
+  "kind": "metal_painted",
+  "tintable": true,
+  "base_colors": [
+    "#ececea",
+    "#f3f2f0"
+  ],
+  "meters_per_tile": 1.2,
+  "bands": {
+    "macro": 0.14,
+    "meso": 0.18,
+    "micro": 0.22
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 26,
+    "octaves": 3
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 160,
+    "octaves": 2
+  },
+  "detail_strength": 0.045,
+  "albedo_pattern": 0.5,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.42,
+    "variation": 0.07
+  },
+  "height_strength": 0.1,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

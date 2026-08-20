@@ -69,6 +69,13 @@ class MaterialGrammar:
     emissive: dict = field(default_factory=dict)  # backlit glow (stained glass, screens)
     transparency: dict = field(default_factory=dict)  # see-through glass: {opacity, ior}
     emit: dict = field(default_factory=lambda: {"roughness": True, "normal": False})
+    # ACHROMATIC-BY-INTENT. True means "my albedo is a surface, not a paint
+    # job -- the consumer supplies the hue". Zoo multiplies the mesh's own
+    # base colour into a tintable pack and skips it for every other pack, so
+    # a rusted-metal facade keeps its rust while a plastic shroud takes the
+    # genome's red. Keyed here and not on `kind` because one kind (metal)
+    # legitimately serves both cases.
+    tintable: bool = False
 
     @classmethod
     def from_dict(cls, raw: dict) -> "MaterialGrammar":
@@ -392,6 +399,7 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
         "tileable": ["x", "y"],
         "meters_per_tile": float(grammar.meters_per_tile),
         "seed": int(seed),
+        "tintable": bool(grammar.tintable),
         "import_hints": {
             "color_space": {k: ("srgb" if k in ("albedo", "emissive") else "linear")
                             for k in map_files},

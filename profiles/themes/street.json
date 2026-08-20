@@ -2,6 +2,9 @@
   "theme": "street",
   "description": "Street-corner storefront: red brick above a cinderblock bulkhead, see-through display-window glass at street level, opaque bronze glass on the hollow upper floors, subway-tile vestibule, rusted metal, hardwood trim.",
   "materials": {
+    "metal_painted": "metal_painted_neutral",
+    "metal_bare": "metal_bare_neutral",
+    "plastic": "plastic_neutral",
     "brick": "brick_delco",
     "glass": "glass_circles",
     "glass_facade": "glass_facade_bronze",

@@ -2,6 +2,9 @@
  "theme": "delco",
  "description": "The gritty urban base theme: red brick, poured concrete, drywall interiors, frosted glass, mirror-blue upper facades.",
  "materials": {
+  "metal_painted": "metal_painted_neutral",
+  "metal_bare": "metal_bare_neutral",
+  "plastic": "plastic_neutral",
   "brick": "brick_delco",
   "carpet": "carpet_delco",
   "ceiling_tile": "ceiling_tile_delco",

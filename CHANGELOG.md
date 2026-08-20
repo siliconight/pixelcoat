@@ -1,5 +1,101 @@
 # Changelog
 
+## [0.15.0] - prop metal splits from architectural metal
+
+`metal` was doing two jobs. A rusted storefront facade and a corrugated wall
+belong to the BUILDING, and the theme should own their look. A vending machine
+and a car body belong to the OBJECT, and the genome should own their colour.
+One kind cannot serve both: making it tintable would repaint the architecture
+by its greybox colour, and leaving it fixed is what put a galvanized spangle on
+a red vending machine.
+
+Measured before splitting anything: of the 42 Zoo species that can wear
+`metal`, only 12 declare a style colour with chroma >= 0.10. The other 30 --
+including all ten architectural species -- are already near-grey and correctly
+keep `metal`. This is a 12-species change, not a 42-species one.
+
+### Added
+- `metal_painted_neutral` (tintable) -- semi-gloss enamel over sheet steel.
+  Fine orange-peel at meso, tight grain at micro, roughness 0.42.
+- `metal_bare_neutral` (tintable) -- brushed stock. Directional grain along x,
+  hash grain at micro, roughness 0.28.
+
+Two profiles and not one because Zoo looks up METALLIC per kind: paint is a
+dielectric and bare metal is a conductor. A single shared profile would have
+made every painted prop render with a metallic sheen.
+
+### Changed
+- All nine themes map `metal_painted` and `metal_bare`.
+
+### Note
+Nothing renders differently. No Zoo genome names either kind yet; that is the
+next change and it is deliberately separate so each batch of species can be
+looked at before the next one starts.
+
+## [0.14.0] - plastic joins the vocabulary
+
+Every theme mapped the same 11 architectural kinds. Zoo's `KNOWN_KINDS` has
+22, and the gap was not evenly distributed: `plastic` is named by 17 of the 53
+species and hard-coded as a literal in 6 recipe bodies, so it was the largest
+single hole in the library by a wide margin. It stayed open because the only
+plastic profile was `plastic_delco`, a dark red -- and Zoo shares one material
+per kind, so mapping it would have turned every ATM shroud, vending machine
+trim, CRT bezel, condiment bottle and car bumper the same red in all nine
+themes. Worse than flat.
+
+0.13.0 gave a grammar a way to say its albedo is a surface and not a paint
+job. Zoo 0.42.0 reads it, and `tools/tint_probe.py` measured that the tint
+reaches the exported GLB intact. So the mapping is now safe to make.
+
+### Changed
+- All nine themes map `plastic -> plastic_neutral`. Because that pack is
+  tintable, this does NOT make 17 species share a colour: each mesh keeps the
+  hue its genome or style declares and gains the pack's grain, sheen and
+  roughness response.
+
+### Note
+`plastic_delco` is untouched and unmapped. It is a red plastic, correct for a
+specific object and wrong for a shared kind slot; it stays available for a
+theme that wants exactly that.
+
+Still unmapped, in demand order: laminate (6 species, no profile), paper (5,
+no profile), leather (3, profile exists), dirt (3, profile exists), gravel (2,
+no profile), rubber (1 genome + hard-coded in simple_car and boots, profile
+exists), tar (1 -- the `roof` species, no profile, unmapped since it shipped),
+canvas, carbon, vegetation.
+
+## [0.13.0] - a pack can now say it wants to be painted
+
+Zoo's `make_material` drops the genome's per-specimen colour the moment a
+pack resolves: every object of a kind shares one cached material named for
+the pack, and the only thing modulating it is COLOR_0, which carries
+greyscale wear. That is right for a brick wall and wrong for a bumper. The
+fix cannot key on material KIND, because `metal` serves both a rusted
+storefront facade and 42 prop species. So it keys on the PACK.
+
+### Added
+- **`tintable` on the material grammar**, written into the pack manifest. A
+  grammar sets it when its albedo is deliberately achromatic and the
+  consumer is expected to supply the hue. `metal_rusted_street` does not set
+  it and never should; `plastic_neutral` does.
+- **`plastic_neutral`** - an injection-moulded plastic in near-white, with
+  flow-direction grain and a low-variance sheen. It carries the surface and
+  nothing else, so a red vending machine and a black ATM shroud can share
+  it. This is the first profile authored to be multiplied rather than used.
+
+### Fixed
+- **`version.py` still said 0.11.0** while `VERSION` said 0.12.0. The 0.12.0
+  release bumped one and not the other, so every pack built since - including
+  the five theme libraries rebuilt today - is stamped
+  `"tool_version": "0.11.0"`. That file's own docstring calls itself the
+  single source of truth "baked into every manifest so output is traceable to
+  the exact tool revision"; for one release it was not. Both now read 0.13.0.
+
+### Note
+Nothing renders differently yet. No theme maps `plastic`, so no pack resolves
+for it and every plastic prop stays on the flat tinted path. Mapping it is a
+separate change, deliberately held until Zoo reads `tintable`.
+
 ## [0.12.0] - The art standard gets a gate, and the library is calibrated against it
 
 ### Added

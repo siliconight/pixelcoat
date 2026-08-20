@@ -2,6 +2,9 @@
   "theme": "bank",
   "description": "Formal banking hall: marble floors, brass fittings, mirror-blue curtain wall, subway-tiled vestibule, warm plaster walls.",
   "materials": {
+    "metal_painted": "metal_painted_neutral",
+    "metal_bare": "metal_bare_neutral",
+    "plastic": "plastic_neutral",
     "brick": "brick_delco",
     "concrete": "marble_bank_floor",
     "glass": "glass_circles",

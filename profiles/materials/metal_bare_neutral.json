@@ -1,0 +1,41 @@
+{
+  "id": "metal_bare_neutral",
+  "kind": "metal_bare",
+  "tintable": true,
+  "base_colors": [
+    "#eeedea",
+    "#f5f4f1"
+  ],
+  "meters_per_tile": 1.0,
+  "bands": {
+    "macro": 0.1,
+    "meso": 0.3,
+    "micro": 0.24
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "directional_grain",
+    "cells_along": 2,
+    "cells_across": 96,
+    "axis": "x"
+  },
+  "micro": {
+    "generator": "hash_grain"
+  },
+  "detail_strength": 0.07,
+  "albedo_pattern": 0.6,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.28,
+    "variation": 0.11
+  },
+  "height_strength": 0.08,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}
