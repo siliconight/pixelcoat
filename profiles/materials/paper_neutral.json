@@ -1,0 +1,43 @@
+{
+  "id": "paper_neutral",
+  "kind": "paper",
+  "base_colors": [
+    "#eceae4",
+    "#e4e1d9",
+    "#f2f0ea"
+  ],
+  "meters_per_tile": 1.0,
+  "bands": {
+    "macro": 0.1,
+    "meso": 0.16,
+    "micro": 0.34
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 60,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 210,
+    "octaves": 2
+  },
+  "albedo_pattern": 0.35,
+  "detail_strength": 0.06,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.86,
+    "variation": 0.04
+  },
+  "height_strength": 0.08,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "tintable": true
+}

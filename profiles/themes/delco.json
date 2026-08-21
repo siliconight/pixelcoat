@@ -15,6 +15,16 @@
   "metal": "metal_rusted_street",
   "plaster": "plaster_delco",
   "tile": "tile_delco",
-  "wood": "wood_delco"
+  "wood": "wood_delco",
+  "canvas": "canvas_delco",
+  "carbon": "carbon_neutral",
+  "dirt": "dirt_delco",
+  "gravel": "pebble_gravel",
+  "laminate": "laminate_neutral",
+  "leather": "leather_delco",
+  "paper": "paper_neutral",
+  "rubber": "rubber_delco",
+  "tar": "tar_neutral",
+  "vegetation": "vegetation_neutral"
  }
 }

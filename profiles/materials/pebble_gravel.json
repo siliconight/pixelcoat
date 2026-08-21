@@ -1,6 +1,6 @@
 {
   "id": "pebble_gravel",
-  "kind": "dirt",
+  "kind": "gravel",
   "base_colors": [
     "#8f887c"
   ],

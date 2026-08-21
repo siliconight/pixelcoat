@@ -1,0 +1,43 @@
+{
+  "id": "laminate_neutral",
+  "kind": "laminate",
+  "base_colors": [
+    "#d8d8d4",
+    "#cfcfca",
+    "#e0e0dc"
+  ],
+  "meters_per_tile": 1.2,
+  "bands": {
+    "macro": 0.12,
+    "meso": 0.18,
+    "micro": 0.3
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 46,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 170,
+    "octaves": 2
+  },
+  "albedo_pattern": 0.45,
+  "detail_strength": 0.07,
+  "posterize": 16,
+  "roughness": {
+    "base": 0.34,
+    "variation": 0.05
+  },
+  "height_strength": 0.12,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "tintable": true
+}

@@ -14,7 +14,17 @@
   "metal": "metal_galvanized_stadium",
   "plaster": "stucco_warm",
   "tile": "vct_floor_beige",
-  "wood": "hardwood_plank"
+  "wood": "hardwood_plank",
+  "canvas": "canvas_delco",
+  "carbon": "carbon_neutral",
+  "dirt": "dirt_delco",
+  "gravel": "pebble_gravel",
+  "laminate": "laminate_neutral",
+  "leather": "leather_delco",
+  "paper": "paper_neutral",
+  "rubber": "rubber_delco",
+  "tar": "tar_neutral",
+  "vegetation": "vegetation_neutral"
  },
  "theme": "rockay_retail"
 }

@@ -1,0 +1,42 @@
+{
+  "id": "carbon_neutral",
+  "kind": "carbon",
+  "base_colors": [
+    "#2b2d31",
+    "#232529",
+    "#34373c"
+  ],
+  "meters_per_tile": 1.0,
+  "bands": {
+    "macro": 0.1,
+    "meso": 0.3,
+    "micro": 0.28
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 44
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 190,
+    "octaves": 2
+  },
+  "albedo_pattern": 0.6,
+  "detail_strength": 0.1,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.32,
+    "variation": 0.06
+  },
+  "height_strength": 0.18,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "tintable": false
+}

@@ -1,0 +1,47 @@
+{
+  "id": "tar_neutral",
+  "kind": "tar",
+  "base_colors": [
+    "#2e2c2a",
+    "#26241f",
+    "#38352f"
+  ],
+  "undercoat": "#1c1a17",
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.28,
+    "micro": 0.3
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 22
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 200,
+    "octaves": 2
+  },
+  "chips": {
+    "cells": 30,
+    "amount": 0.08
+  },
+  "albedo_pattern": 0.7,
+  "detail_strength": 0.18,
+  "posterize": 12,
+  "roughness": {
+    "base": 0.72,
+    "variation": 0.1
+  },
+  "height_strength": 0.3,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "tintable": false
+}

@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.16.0] - 2026-08-21
+
+### Added
+- Five material grammars for kinds that had none: `laminate_neutral`,
+  `paper_neutral`, `carbon_neutral`, `tar_neutral`, `vegetation_neutral`.
+  `laminate` and `paper` are `tintable` with achromatic bases; the other three
+  carry their own colour. All five use only `fbm` and `worley_f1`, the two
+  generators with worked examples in the existing profiles.
+
+### Changed
+- `pebble_gravel` declared `kind: dirt` while `gravel` had no profile at all.
+  Retagged to `kind: gravel` on the evidence of its own content -- an aggregate
+  block of six stone colours with a gap colour, at roughness 0.9. `dirt` keeps
+  `dirt_delco`, which is soil: browns, an undercoat, and a chips block.
+- All nine theme profiles now list ten previously unmapped kinds. `canvas`,
+  `dirt`, `leather` and `rubber` already had `_delco` profiles that no theme
+  referenced, so they had never been built.
+
+### Notes
+- The theme profile is the gate: a kind is built only if a theme names a
+  profile for it. Libraries went from 68 packs to 118, `MISMATCHES=0`.
+- `bank`, `casino`, `delco` and `stadium` are wired but still have no built
+  library. `carpet` is themed by 7 of 9 by design -- a service alley and a
+  street have no carpet.
+
 ## [0.15.0] - prop metal splits from architectural metal
 
 `metal` was doing two jobs. A rusted storefront facade and a corrugated wall
