@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.17.0] - frosted glass you can see through
+
+Reported from a walk of `precinct_yard_001`: "we need to turn up the window
+transparency, it's a bit too flat and you can't see through very well." A
+screenshot of the shipped level shows the glazing reading as a flat panel
+rather than a window.
+
+### Changed
+- `glass_frosted` `transparency.opacity` 0.68 -> 0.34. At 0.68 the pane is 68%
+  opaque, and the frosted noise sits on top of that -- so the interior behind
+  it never resolves and the window reads as a lighter wall. The value reaches
+  a shipped build as the glTF `baseColorFactor` alpha on the skinned material:
+  verified on `LF_precinct_yard_001.portable-godot`, where
+  `M_Skin_glass_delco` carries `alphaMode: BLEND` and
+  `baseColorFactor [1, 1, 1, 0.68]` on every `window_delco_*.glb`. `ior`
+  is unchanged.
+
+  SCOPE, and it is wider than the report. `glass_frosted` is the `glass` kind
+  for THREE themes -- `delco`, `rockay_service` and `stadium` -- so all three
+  get the more transparent pane. That is deliberate: 0.68 was too opaque for
+  the material's own description ("frosted glass"), not just for delco's use
+  of it. If a theme later wants its own glazing, `profiles/materials/` already
+  carries nine other glass grammars.
+
+### Noted, not changed
+`glass_delco.json` exists in `profiles/materials/` -- dark teal, roughness
+0.10, and NO transparency block at all -- and is referenced by no theme. It is
+orphaned content, and `delco` resolves `glass` to `glass_frosted` instead. Not
+touched here because adopting it would change colour and gloss as well as
+transparency, which is not what was asked for.
+
 ## [0.16.0] - 2026-08-21
 
 ### Added
