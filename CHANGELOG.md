@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.18.0] - concrete that tiles with the walls it is on
+
+Reported from a walk of `precinct_yard_001`: the stone "looks stretched out
+and not good against the other texture next to it", and one skin "sticks out
+the most when we have seams showing". The seams are at every wall module
+boundary, the whole length of a facade.
+
+### Changed
+- `concrete_delco` `meters_per_tile` 2.5 -> 2.0. THE SEAM IS ARITHMETIC, not
+  art: Deli Counter's wall modules are 2.0, 1.6, 1.4, 1.3, 1.2 and 0.3 m wide,
+  and a 2.5 m tile divides none of them, so every module box-projects a
+  fraction of a tile, ends mid-pattern, and its neighbour restarts at zero.
+  The break lands at EVERY boundary and is identical each time, which is why
+  it reads as a deliberate architectural line rather than as noise. At a 2.0 m
+  tile a 2.0 m module consumes exactly one whole tile and ends where it began,
+  so the next module continues it -- the seam is not hidden, it stops
+  existing.
+
+  MEASURED on a bench that simulates box projection across the six real module
+  widths, scoring the mean luminance step AT a boundary against the step
+  everywhere else. Continuous projection scores 1.05 and box projection 2.13,
+  so the bench reports "no seam" for the case that has none. Current skin
+  30.04 at the boundary against 14.09 elsewhere; at `meters_per_tile` 2.0,
+  20.55 against 13.99. Per boundary, in the order 2.0|1.4, 1.4|2.0, 2.0|1.3,
+  1.3|2.0, 2.0|1.6: 27.7, 33.5, 27.7, 33.5, 27.7 becomes 14.4, 28.4, 14.4,
+  32.9, 12.7 -- the three boundaries whose left module is 2.0 m wide fall to
+  the texture's own step and the rest do not move.
+
+  TWO CHEAPER EXPLANATIONS REFUTED FIRST. `concrete_delco` is the
+  highest-contrast grammar in the library (28.2 against a 13.7 median) and is
+  on roughly two thirds of a delco level's surfaces, so contrast looked like
+  the culprit. Lowering it to 25.1 moved the seam 12% and made the
+  seam-to-surroundings ratio WORSE, because the surrounding texture quieted
+  faster than the boundary did. Removing the macro band outright moved it 4%.
+  The boundary step is the difference between two arbitrary PHASES of the
+  texture and is set by the tile period, not by how loud or how coarse it is.
+
+  DENSITY, and it is the reason this is an art decision and not only a fix.
+  `pack_size_for` rounds both 2.5 and 2.0 to a 256 px pack, so the resolution
+  is unchanged and the on-mesh density rises 102.4 -> 128 px/m: the concrete
+  reads about 25% finer. Verified through a real build of
+  `precinct_yard_001` -- the whole art layer re-run, structural checks passed,
+  and the `KHR_texture_transform` scale in the shipped GLBs moved concrete
+  0.4 -> 0.5 with metal, drywall, carpet and ceiling untouched -- then walked
+  and approved by the person who reported the defect.
+
+  SCOPE is narrow: `delco` is the only theme that resolves `concrete` to this
+  grammar. 2.0 is also the library's MEDIAN `meters_per_tile` across 60
+  grammars, so this moves an outlier onto the norm rather than inventing a
+  value.
+
+### Noted, not changed
+The same arithmetic applies to the other skins on those walls, and neither is
+fixed here because each is its own art call: `metal_delco` tiles every 1.5 m
+and `drywall_delco` every 3.0 m, so both still end mid-pattern on every
+module width. They are the obvious next candidates.
+
+This does NOT address stretched `wallEnd` filler modules, which are a
+different defect with a different cause. A filler is a unit box scaled onto a
+slot remainder -- measured up to (0.1, 4.7, 0.3) -- so its texture density is
+`uv1_scale / node_scale` and changing the tile period scales both sides and
+cancels. Measured on the shipped build, concrete world density spans 0.106 to
+5.000, a 47x mismatch between surfaces and 47x stretch within one surface,
+identical before and after this change. Only world-space projection makes
+density independent of node scale; with it, every concrete surface measures
+1.200. That is Level Factory roadmap item 88 and it is not Pixelcoat's to fix.
+
 ## [0.17.0] - frosted glass you can see through
 
 Reported from a walk of `precinct_yard_001`: "we need to turn up the window
