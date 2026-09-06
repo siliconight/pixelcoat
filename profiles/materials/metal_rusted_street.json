@@ -3,7 +3,7 @@
   "kind": "metal",
   "base_colors": ["#6b4a35", "#7a5539", "#875f3c"],
   "cavity": "#3a2416",
-  "meters_per_tile": 1.5,
+  "meters_per_tile": 2.0,
   "bands": {"macro": 0.4, "meso": 0.35, "micro": 0.25},
   "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
   "meso": {"generator": "worley_f1", "cells": 8},

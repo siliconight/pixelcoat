@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.19.0] - metal and drywall tile with the walls too
+
+0.18.0 did concrete. The same arithmetic applied to the other two skins on the
+same walls, and both were named there as the obvious next candidates.
+
+### Changed
+- `metal_rusted_street` `meters_per_tile` 1.5 -> 2.0, `drywall_delco` 3.0 ->
+  2.0. Same mechanism as 0.18.0: a 2.0 m wall module consumes exactly one
+  whole tile and ends where it began, so its neighbour continues the pattern
+  instead of restarting it. Benched across the six real module widths, seam
+  step against the step elsewhere: metal 17.09/12.41 (1.38) -> 15.51/12.31
+  (1.26); drywall 10.10/6.92 (1.46) -> 8.03/6.89 (1.17). Both started well
+  below concrete's 2.13, which matches the report that concrete was the skin
+  that stuck out.
+
+  DENSITY, and 2.0 is derived rather than picked. `pack_size_for` rounds to a
+  power of two, and both 1.5 and 3.0 round badly: each landed on 170.7 px/m
+  against the library's `DEFAULT_DENSITY` of 128. At 2.0 the rounding is
+  exact -- 256 px / 2.0 m = 128 px/m -- so all three skins now sit on the
+  intended density instead of 33% over or 20% under. `drywall_delco`'s pack
+  drops 512 -> 256 px as a consequence; the density is unchanged in intent and
+  normalized in fact, but a tile carries a quarter of the pixels it used to.
+
+  SCOPE IS WIDER THAN DELCO, unlike 0.18.0. `metal_rusted_street` serves
+  `delco:metal` and `street:metal`. `drywall_delco` serves NINE theme slots --
+  bank, casino, delco, rockay, rockay_civic, rockay_retail, rockay_service,
+  stadium and street -- so this changes drywall in every theme that has any.
+
+### Known: world projection currently overrides all of this
+`meters_per_tile` reaches a shipped package as the glTF
+`KHR_texture_transform` scale, which Godot imports as the material's
+`uv1_scale`. Level Factory 0.57.0 made every exported package run
+`zoo_worldskin.gd` at import, and that script REPLACES `uv1_scale` with the
+density it measures off the mesh -- Zoo's own texel constant, 1.2, which does
+not vary with this field. Measured on a build carrying four different tile
+periods (concrete 2.5, metal 1.5, drywall 3.0, glass 1.0, so `uv1_scale` 0.4,
+0.6667, 0.3333 and 1.0): all four came out at 1.2000.
+
+So in a package with world projection on, every skin repeats every 0.833 m and
+this field changes nothing. The seam numbers above, and 0.18.0's, were
+measured and approved on walk builds WITHOUT projection, where the field is
+live. Both changes are still right -- they normalize density onto the
+library's target and they are correct for any consumer that does not
+world-project -- but neither is currently visible in a shipped export. The
+fix belongs in `zoo_worldskin.gd`, which should carry the material's authored
+`uv1_scale` into the world-space density rather than discarding it; its own
+docstring claims it "reproduces the old density exactly", and it does not.
+Tracked as Level Factory roadmap 104.
+
 ## [0.18.0] - concrete that tiles with the walls it is on
 
 Reported from a walk of `precinct_yard_001`: the stone "looks stretched out
