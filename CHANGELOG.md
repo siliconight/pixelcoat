@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.21.0] - delco wears the drywall somebody actually looked at
+
+0.20.0 shipped three drywall grammars and wired `delco` to
+`drywall_orangepeel_delco` WITHOUT anyone having seen one on a wall, because
+no instrument in the toolchain photographed an interior. That gap is now
+closed (`look_shots --interiors N`), so the choice was made on evidence.
+
+### Changed
+- `delco:drywall` `drywall_orangepeel_delco` -> `drywall_scuffed_delco`.
+  Chosen by the reporter from the interior station on `int_1_1_seg0`, the same
+  wall in three builds differing only in this field.
+
+  IT IS ALSO WHAT THE NUMBERS SAID, which is worth recording because they were
+  available before the walk and were not trusted on their own. Scuffed
+  measures contrast 15.70, between the plain base's 9.88 and the library
+  median of 13.7. Orange peel measures 23.88 -- close to `concrete_delco`'s
+  28.2, and a walk report had already singled that skin out as the one that
+  "sticks out". Putting the library's second-loudest grammar on every interior
+  wall a player stands next to was the risk flagged when it was wired, and the
+  eye agreed.
+
+`drywall_orangepeel_delco` and `drywall_taped_delco` stay in the library and
+stay wired where 0.20.0 put them -- taped on `rockay_service`, scuffed now on
+both `bank` and `delco`. Neither of those two themes has been built, because a
+mission carries one theme and the only mission available is on `delco`.
+
 ## [0.20.0] - drywall stops being one material
 
 Every interior wall in every theme was the same grammar. Measured across the
