@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.20.0] - drywall stops being one material
+
+Every interior wall in every theme was the same grammar. Measured across the
+nine shipped themes: 15 of 24 material slots have exactly ONE grammar in the
+whole 60-grammar library, and `drywall` is the one that costs the most --
+210 kit surfaces on `precinct_yard_001`, identical in all nine.
+
+### Added
+- `drywall_taped_delco` -- a butt joint with compound feathered over it. ONE
+  `form_lines` seam per tile, not two: a 2.0 m tile repeats every 1.67 m in
+  world space, so a single line lands about where a sheet joint does, and two
+  read as stripes rather than as architecture. Strength 0.12, because joint
+  compound is nearly the colour of the board. Measured row/col 4.38 against
+  the base's 1.23 -- directional structure, contrast barely moved.
+- `drywall_orangepeel_delco` -- the sprayed commercial finish, and the wall a
+  player stands closest to. Stipple in meso/micro (`worley_f1` 64, fbm 200),
+  `detail_strength` 0.18. Contrast 23.88 and fine detail 23.72 against the
+  base's 9.88 and 8.55, direction-free at 1.02.
+- `drywall_scuffed_delco` -- painted board knocked about, with `chips`
+  exposing an `undercoat` set to paper colour, so the damage reveals what is
+  actually under the paint. Contrast 15.70.
+
+`drywall_delco` is unchanged and stays the neutral. It was never wrong; it was
+only ever alone.
+
+### Changed
+- `delco:drywall` -> `drywall_orangepeel_delco`
+- `bank:drywall` -> `drywall_scuffed_delco`
+- `rockay_service:drywall` -> `drywall_taped_delco`
+
+### NOT VISUALLY VERIFIED IN PLACE, and the reason is structural
+All three were built through the full pipeline on `precinct_yard_001` --
+structural checks passed, and the three packages carry three distinct drywall
+albedos by hash, so the change reaches a shipped export. But the difference
+between them is invisible to `look_shots`: across eight cameras the largest
+delta between variants is 0.06% of pixels. The rig derives an overview, four
+orthographic elevations and spawn/objective/extraction, and none of them
+stands in a room facing a wall. Drywall is an interior material and nothing in
+this toolchain photographs interiors -- Level Factory roadmap item 18.
+
+So these were judged on the texture at matched scale, not on a lit wall at
+2 m, which is the distance that decides whether the orange peel reads as
+finish or as noise. Its contrast (23.88) is close to `concrete_delco`'s (28.2),
+which is the skin a walk report singled out as too loud.
+
+`bank` and `rockay_service` are wired on the same reasoning and have not been
+built at all: a mission carries one theme, and the only mission available here
+is on `delco`.
+
 ## [0.19.0] - metal and drywall tile with the walls too
 
 0.18.0 did concrete. The same arithmetic applied to the other two skins on the

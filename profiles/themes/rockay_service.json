@@ -7,7 +7,7 @@
     "brick": "brick_delco",
     "ceiling_tile": "ceiling_tile_delco",
     "concrete": "cinderblock_delco",
-    "drywall": "drywall_delco",
+    "drywall": "drywall_taped_delco",
     "glass": "glass_frosted",
     "glass_facade": "glass_facade_mirror_blue",
     "metal": "corrugated_metal_delco",

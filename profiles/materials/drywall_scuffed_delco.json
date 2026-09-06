@@ -1,0 +1,46 @@
+{
+  "id": "drywall_scuffed_delco",
+  "kind": "drywall",
+  "base_colors": [
+    "#c4c1b7",
+    "#cbc8be",
+    "#b8b5ab"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.35,
+    "meso": 0.2,
+    "micro": 0.15
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 24,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 160,
+    "octaves": 2
+  },
+  "detail_strength": 0.12,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.85,
+    "variation": 0.05
+  },
+  "height_strength": 0.22,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "undercoat": "#b0a693",
+  "chips": {
+    "cells": 30,
+    "amount": 0.035
+  }
+}

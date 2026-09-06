@@ -1,0 +1,40 @@
+{
+  "id": "drywall_orangepeel_delco",
+  "kind": "drywall",
+  "base_colors": [
+    "#cdc9bf",
+    "#d6d2c8",
+    "#c4c0b6"
+  ],
+  "meters_per_tile": 2.0,
+  "bands": {
+    "macro": 0.18,
+    "meso": 0.42,
+    "micro": 0.3
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 64
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 200,
+    "octaves": 3
+  },
+  "detail_strength": 0.18,
+  "posterize": 16,
+  "roughness": {
+    "base": 0.88,
+    "variation": 0.08
+  },
+  "height_strength": 0.3,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}
