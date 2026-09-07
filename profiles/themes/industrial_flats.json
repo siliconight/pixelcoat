@@ -1,0 +1,30 @@
+{
+  "theme": "industrial_flats",
+  "description": "The low industrial ground: mill brick and board-formed concrete, corrugated siding, factory sash with panes out of it, taped drywall in the office somebody partitioned off the floor, and VCT where the break room is. Reads as working stock rather than ruin. The concrete is `concrete_boardform_stadium` -- its name records where it was first authored, not where it belongs; it is the one grammar in the library that reads as genuinely board-formed rather than exposed-aggregate.",
+  "materials": {
+    "canvas": "canvas_delco",
+    "carbon": "carbon_neutral",
+    "carpet": "carpet_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "dirt": "dirt_delco",
+    "gravel": "pebble_gravel",
+    "laminate": "laminate_neutral",
+    "leather": "leather_delco",
+    "metal_bare": "metal_bare_neutral",
+    "metal_painted": "metal_painted_neutral",
+    "paper": "paper_neutral",
+    "plaster": "plaster_delco",
+    "rubber": "rubber_delco",
+    "tar": "tar_neutral",
+    "vegetation": "vegetation_neutral",
+    "brick": "brick_delco",
+    "concrete": "concrete_boardform_stadium",
+    "drywall": "drywall_taped_delco",
+    "glass": "glass_cracked_cells",
+    "glass_facade": "glass_facade_spandrel_green",
+    "metal": "corrugated_metal_delco",
+    "plastic": "plastic_neutral",
+    "tile": "vct_floor_beige",
+    "wood": "plywood_sheathing"
+  }
+}

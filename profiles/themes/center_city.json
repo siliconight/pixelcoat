@@ -1,0 +1,30 @@
+{
+  "theme": "center_city",
+  "description": "Philadelphia rowhouse and storefront blocks: painted brick above a subway-tiled shopfront, wavy old glass in the upper sash, bronze curtain wall on whatever went up in the eighties, and city-grey sidewalk underfoot. Older, denser and more finished than delco -- the same city with another eighty years on it.",
+  "materials": {
+    "canvas": "canvas_delco",
+    "carbon": "carbon_neutral",
+    "carpet": "carpet_delco",
+    "ceiling_tile": "ceiling_tile_delco",
+    "dirt": "dirt_delco",
+    "gravel": "pebble_gravel",
+    "laminate": "laminate_neutral",
+    "leather": "leather_delco",
+    "metal_bare": "metal_bare_neutral",
+    "metal_painted": "metal_painted_neutral",
+    "paper": "paper_neutral",
+    "plaster": "plaster_delco",
+    "rubber": "rubber_delco",
+    "tar": "tar_neutral",
+    "vegetation": "vegetation_neutral",
+    "brick": "brick_painted_white",
+    "concrete": "concrete_sidewalk_street",
+    "drywall": "drywall_orangepeel_delco",
+    "glass": "glass_wavy",
+    "glass_facade": "glass_facade_bronze",
+    "metal": "metal_painted_trafficsignal",
+    "plastic": "plastic_delco",
+    "tile": "subway_tile_white",
+    "wood": "hardwood_plank"
+  }
+}

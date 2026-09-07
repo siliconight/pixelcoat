@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.22.0] - the Philadelphia half of the setting becomes buildable
+
+`USING_THE_FACTORY.md` now records the game's setting: 1990s Pennsylvania,
+weighted to Philadelphia urban and Delaware County. Measured against that,
+the sharpest gap in the toolset was not missing art -- it was two missing
+files. Zoo already carries species styles for `center_city` at 54 of 56
+species and `industrial_flats` at 54 of 56, better coverage than `delco`'s
+39, and neither could be built because Pixelcoat had no theme profile for
+either. This adds both.
+
+### Added
+- `profiles/themes/center_city.json` -- Philadelphia rowhouse and storefront
+  blocks. Painted brick over a subway-tiled shopfront, wavy old glass in the
+  upper sash, bronze curtain wall on whatever went up in the eighties, city
+  sidewalk underfoot. Distinct from `delco` on brick, glass, glass_facade,
+  metal, tile and wood: older, denser, more finished -- the same city with
+  another eighty years on it.
+- `profiles/themes/industrial_flats.json` -- the low industrial ground. Mill
+  brick and board-formed concrete, corrugated siding, factory sash with panes
+  out of it, taped drywall in the office somebody partitioned off the floor,
+  VCT in the break room. Reads as working stock rather than ruin.
+
+Both carry all 24 material slots, pass `tests/test_theme_profiles.py` (every
+grammar exists and its declared `kind` IS the slot it fills), and were BUILT
+rather than only statically checked -- that test's own docstring says it
+exists so nobody pays for synthesis, so a new profile should pay once.
+`themes.resolve` now reports both `ok` with Zoo at 54/56.
+
+### Known, and not addressed here
+- FIVE OF THE FOURTEEN `concrete` GRAMMARS RENDER AS ONE EXPOSED-AGGREGATE
+  PATTERN at different scales -- `concrete_delco`, `concrete_sidewalk_street`,
+  `concrete_panel_delco`, `concrete_boardform_delco` and `asphalt_street`.
+  Those are the names a profile reaches for first, and concrete is the most
+  referenced material in the Deli Counter library at 194 uses. Meanwhile
+  `concrete_boardform_stadium` reads as genuine board-formed concrete and
+  `concrete_interior_delco` as plain cast concrete.
+
+  `center_city` keeps the semantically correct `concrete_sidewalk_street` and
+  the gap is filed rather than dodged. `industrial_flats` uses
+  `concrete_boardform_stadium`, whose name records where it was first authored
+  and not where it belongs -- it is the only grammar in the library that reads
+  as genuinely board-formed. That choice was forced rather than preferred: the
+  obvious pick, `concrete_boardform_delco`, IS NOT COMMITTED. It and
+  `concrete_panel_delco` have sat untracked in the working tree since
+  2026-09-06, from the macro-structure skin pass, awaiting a judgement that
+  was given for the panel one ("reads as stripes, not intentional
+  architecture") and never acted on. A shipped profile may not reference a
+  grammar that is not in the repo: the static test would pass on the machine
+  that has the file and fail on every clean checkout.
+
+- `tests/test_texel_density.py::test_fixed_size_reproduces_the_old_three_times_spread`
+  is RED and was red before this change (verified by removing both new
+  profiles and re-running). It pins a historical 3.0x spread; the library now
+  spreads 4.0x because `concrete_panel_delco` carries `meters_per_tile` 4.0
+  against a floor of 1.0. Stale baseline, not a regression -- but a red test
+  nobody has decided about is how `test_pvp_heist.py` stayed red for twelve
+  days.
+
 ## [0.21.0] - delco wears the drywall somebody actually looked at
 
 0.20.0 shipped three drywall grammars and wired `delco` to
