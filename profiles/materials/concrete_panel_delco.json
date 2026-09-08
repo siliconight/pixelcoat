@@ -43,7 +43,10 @@
   "count": 3,
   "seam": 0.62,
   "jitter": 0.03,
-  "strength": 0.34
+  "strength": 0.34,
+  "cross": {
+   "count": 3
+  }
  },
  "streaks": {
   "density": 0.22,

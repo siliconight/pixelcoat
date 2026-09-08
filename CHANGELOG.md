@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.26.0] - the panel grammar earns its name
+
+### Changed
+- `concrete_panel_delco` takes `form_lines.cross: {count: 3}`. Three joints
+  each way on a 4 m tile is roughly 1.33 m square panels, and the surface now
+  reads as discrete precast units instead of horizontal bands. That closes the
+  operator's original verdict on it -- "reads as stripes, not intentional
+  architecture" -- which turned out to be a capability report: `form_lines`
+  could only draw one direction until 0.25.0.
+- `industrial_flats` points its `concrete` at `concrete_boardform_delco`
+  rather than `concrete_boardform_stadium`. Same look, honest name. 0.22.0
+  routed around it only because the grammar was uncommitted at the time.
+
+### A line is not texture interest
+Counted while making this change, because "lines everywhere" is a real way for
+a library to go wrong: 5 of 65 grammars use `form_lines` at all, and 1 uses
+`cross`.
+
+```
+concrete_boardform_delco     count 7            board courses
+concrete_boardform_stadium   count 7            board courses
+concrete_interior_delco      count 5            formwork
+concrete_panel_delco         count 3 + cross 3  panel joints
+drywall_taped_delco          count 1  str 0.12  one taped seam
+```
+
+Every one is a surface whose real-world subject IS the joint. The rule worth
+keeping: a seam goes in when the surface is made of units or courses and the
+joint would read at gameplay distance -- not to break up a flat area. The
+other 60 grammars have no lines and render byte-identically to before 0.25.0,
+verified by hash.
+
 ## [0.25.0] - form_lines can draw the other direction
 
 `form_lines` drew horizontal seams and only horizontal seams: `axis="y"` was
