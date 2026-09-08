@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.24.0] - the macro-structure concretes stop being aggregate
+
+One field. Both grammars were `concrete_delco` plus `form_lines`, and both
+inherited its `edges` (`cells 9, thr 0.7, strength 0.35`) -- which is what
+draws the exposed-aggregate cell boundaries that were burying the structure.
+`concrete_boardform_stadium` has always set `edges: null`, and that alone was
+why it was the only concrete in the library reading as genuinely board-formed.
+
+### Changed
+- `concrete_boardform_delco`: `edges` -> null. It now reads as board-formed
+  concrete -- seven board courses with vertical grain between them -- instead
+  of aggregate with faint lines over it. This is the grammar
+  `industrial_flats` wanted; 0.22.0 routed around it to
+  `concrete_boardform_stadium` only because it was uncommitted at the time.
+- `concrete_panel_delco`: `edges` -> null, `form_lines.count` 2 -> 3. Cleaner
+  cast concrete, and three seams give a panel rhythm where two read as a slab
+  cut in half.
+
+### Known: `concrete_panel_delco` still cannot read as PANELS
+`form_lines` draws horizontal seams only -- `axis="y"` is hardcoded at
+`material_grammar.py:284`, and the field's own comment says "horizontal
+form-board seams". A precast panel wall needs vertical joints as well, so at
+any `count` this grammar produces horizontal BANDS rather than a panel grid.
+That is the residue of the operator's original verdict on it, "reads as
+stripes, not intentional architecture", and raising the count improves the
+rhythm without addressing the cause.
+
+`ps.stripes` already takes an `axis`, so the capability is one parameter away:
+`form_lines` would need to accept an axis (or a second cross-axis block) and
+pass it through. Not done here -- it is a grammar-schema change and this
+release is a tuning pass.
+
 ## [0.23.0] - the two macro-structure concretes join the repo
 
 `concrete_boardform_delco` and `concrete_panel_delco` were authored on
