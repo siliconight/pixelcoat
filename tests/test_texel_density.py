@@ -63,10 +63,23 @@ def test_density_across_the_shipped_library_stays_within_two():
         assert 1 / 1.415 <= d / mg.DEFAULT_DENSITY <= 1.415, d
 
 
-def test_fixed_size_reproduces_the_old_three_times_spread():
-    """The regression this replaces, asserted so it cannot come back unnoticed."""
+def test_fixed_size_reproduces_the_old_four_times_spread():
+    """The regression this replaces, asserted so it cannot come back unnoticed.
+
+    THE NUMBER IS 4.0, NOT THE 3.0 THIS ASSERTED UNTIL 0.23.0, and the history
+    is the point rather than the arithmetic. It went stale the day
+    `concrete_panel_delco` was authored at `meters_per_tile` 4.0 against a
+    library floor of 1.0 -- and that grammar sat UNTRACKED in the working tree
+    from 2026-09-06, so the test was red against a file the repo did not have.
+    Anyone cloning fresh saw it pass. Committing the grammar is what makes 4.0
+    the library's real spread and this assertion true again.
+
+    It is a foil, not a target: the derived-size path above holds the spread to
+    1.667x, and this records what fixed 512 px tiles would do instead. A wider
+    library makes the foil worse, which is the argument working.
+    """
     got = [512.0 / mpt for mpt in _tile_sizes().values()]
-    assert max(got) / min(got) == pytest.approx(3.0, abs=0.01)
+    assert max(got) / min(got) == pytest.approx(4.0, abs=0.01)
 
 
 def test_theme_library_derives_per_kind_and_size_overrides(tmp_path):

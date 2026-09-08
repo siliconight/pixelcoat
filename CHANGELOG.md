@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.23.0] - the two macro-structure concretes join the repo
+
+`concrete_boardform_delco` and `concrete_panel_delco` were authored on
+2026-09-06 in the macro-structure skin pass, shown, and left UNTRACKED in the
+working tree. Untracked art is art the repo does not have: a profile may not
+reference it, a clean checkout does not build it, and a test can go red
+against it while every fresh clone reports green.
+
+### Added
+- `profiles/materials/concrete_boardform_delco.json` (`meters_per_tile` 2.0,
+  7 form lines) and `profiles/materials/concrete_panel_delco.json`
+  (`meters_per_tile` 4.0, 2 panel seams, streaking). Committed as authored and
+  as reviewed -- no art changed here.
+
+### Fixed
+- `test_fixed_size_reproduces_the_old_three_times_spread` -> `..._four_times_`,
+  asserting 4.0. It pinned a historical 3.0x fixed-tile spread and went stale
+  the day `concrete_panel_delco` was written at `meters_per_tile` 4.0 against
+  a library floor of 1.0. Because that grammar was untracked, the test was RED
+  on this machine and GREEN on every clean clone -- the worst of both. It is a
+  foil for the derived-size path (which holds 1.667x), so a wider library
+  making the foil worse is the argument working, not a regression.
+
+### Known, unchanged, and now precisely attributed
+- BOTH NEW GRAMMARS READ AS EXPOSED AGGREGATE WITH FAINT LINES rather than as
+  board-formed or panelised concrete, and the cause is ONE FIELD. Each is
+  `concrete_delco` plus `form_lines` and a `cavity` colour; every other field
+  -- `base_colors`, `macro`, `meso`, `micro`, `posterize`, `roughness`, and
+  crucially `edges` -- is byte-identical to it. `edges`
+  (`cells 9, thr 0.7, strength 0.35`) is what draws the aggregate cell
+  boundaries, and `concrete_boardform_stadium` sets `edges: null`, which is
+  the whole reason that one reads as genuine board-formed concrete.
+
+  Not changed here, because that is an art judgement and the operator has
+  already given one on the panel variant ("reads as stripes, not intentional
+  architecture"). The one-field experiment is cheap and is worth running
+  before either grammar is wired into a theme.
+
 ## [0.22.0] - the Philadelphia half of the setting becomes buildable
 
 `USING_THE_FACTORY.md` now records the game's setting: 1990s Pennsylvania,
