@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.25.0] - form_lines can draw the other direction
+
+`form_lines` drew horizontal seams and only horizontal seams: `axis="y"` was
+hardcoded at the call site and the field's own comment said "horizontal
+form-board seams". So `concrete_panel_delco` could not read as precast panels
+at ANY `count` -- a panel wall needs joints both ways, and it could only make
+bands. The operator's verdict on that grammar, "reads as stripes, not
+intentional architecture", was a capability report rather than a taste note,
+and this is the capability.
+
+### Added
+- `form_lines.axis` -- `"y"` (default, horizontal board courses) or `"x"`.
+- `form_lines.cross` -- an optional second pass on the perpendicular axis,
+  which is what turns bands into a GRID. It inherits the primary's `seam`,
+  `jitter` and `strength` unless it overrides them, because a panel wall's two
+  joint directions are usually the same joint seen twice. `{"count": 3}` is
+  enough to get square panels out of a 4 m tile.
+
+Both passes go through one `_apply_form_lines` helper: two spellings of a seam
+is how one direction ends up with a jitter the other does not.
+
+### Unchanged
+- BYTE-IDENTICAL for every grammar that does not use the new keys, verified by
+  hash rather than by the suite passing: `concrete_boardform_delco`,
+  `concrete_panel_delco` and `concrete_boardform_stadium` all re-render to the
+  same md5 as before the change. A grammar with no `axis` and no `cross` takes
+  exactly the path it took before.
+- `concrete_panel_delco` is NOT wired to use `cross` here. The capability is a
+  tool change; how big a precast panel should be is an art call, and the
+  contact sheet for counts 2, 3 and 4 goes to the operator rather than being
+  decided in a changelog.
+
 ## [0.24.0] - the macro-structure concretes stop being aggregate
 
 One field. Both grammars were `concrete_delco` plus `form_lines`, and both

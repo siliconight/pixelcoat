@@ -57,7 +57,9 @@ class MaterialGrammar:
     edges: dict = field(default_factory=dict)   # crisp cracks / seams (worley F2-F1)
     scratches: dict = field(default_factory=dict)  # crisp directional wear lines
     streaks: dict = field(default_factory=dict)  # vertical gravity grime/water stains
-    form_lines: dict = field(default_factory=dict)  # horizontal form-board seams
+    form_lines: dict = field(default_factory=dict)  # formwork seams;
+    #   {count, seam, jitter, strength, axis='y', cross={...}} -- `cross`
+    #   adds the perpendicular pass that makes a panel GRID
     veins: dict = field(default_factory=dict)   # flowing veins (marble/stone)
     masonry: dict = field(default_factory=dict)  # brick/tile bond + mortar/grout
     aggregate: dict = field(default_factory=dict)  # filled Voronoi stones/chips
@@ -146,6 +148,22 @@ def _hw(size):
 # --------------------------------------------------------------------------- #
 # Synthesis
 # --------------------------------------------------------------------------- #
+
+def _apply_form_lines(albedo, height, size, cfg, axis, seed):
+    """One pass of formwork seams along `axis`, darkening albedo and height.
+
+    Split out so the primary and the `cross` pass are literally the same code:
+    two spellings of a seam is how one direction ends up with a jitter the
+    other does not.
+    """
+    fl = ps.stripes(size, cfg.get("count") or 6, seed, axis=axis,
+                    seam=cfg.get("seam", 0.5) if cfg.get("seam") is not None else 0.5,
+                    jitter=cfg.get("jitter", 0.05) if cfg.get("jitter") is not None else 0.05)
+    # stripes() is bright bands with dark seams; pull out the seam darkening.
+    dark = np.clip(0.5 - fl, 0.0, 0.5) * 2.0
+    st = cfg.get("strength", 0.25) if cfg.get("strength") is not None else 0.25
+    return albedo * (1.0 - st * dark)[..., None], height - dark * 0.3
+
 
 def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> dict:
     """Compose a grammar into aligned map arrays.
@@ -278,17 +296,35 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = albedo * (1.0 - gm) + mcol * gm
         height = height - gapm * 0.5
 
-    # Horizontal form-board seams (concrete formwork lines) — subtle dark bands.
+    # Form-board seams (concrete formwork lines) — subtle dark bands.
+    #
+    # `axis` DEFAULTS TO "y", which is where this started and what every
+    # grammar written before it existed still gets: horizontal board courses.
+    # `cross` adds a second pass on the perpendicular axis, which is what
+    # turns bands into a GRID -- and a grid is the difference between
+    # board-formed concrete and precast panels. `concrete_panel_delco` could
+    # not read as panels at any `count` while this only drew one direction;
+    # the operator's verdict on it, "reads as stripes, not intentional
+    # architecture", was a capability report and not a taste note.
+    #
+    # `cross` inherits the primary's seam/jitter/strength unless it overrides
+    # them, because a panel wall's two joint directions are usually the same
+    # joint seen twice.
     if grammar.form_lines:
-        fl = ps.stripes((h, w), grammar.form_lines.get("count", 6),
-                        ps.stream_seed(seed, "form"), axis="y",
-                        seam=grammar.form_lines.get("seam", 0.5),
-                        jitter=grammar.form_lines.get("jitter", 0.05))
-        # stripes() is bright bands with dark seams; pull out the seam darkening.
-        dark = np.clip(0.5 - fl, 0.0, 0.5) * 2.0
-        st = grammar.form_lines.get("strength", 0.25)
-        albedo = albedo * (1.0 - st * dark)[..., None]
-        height = height - dark * 0.3
+        fl_cfg = grammar.form_lines
+        axis = str(fl_cfg.get("axis", "y")).lower()
+        albedo, height = _apply_form_lines(
+            albedo, height, (h, w), fl_cfg, axis,
+            ps.stream_seed(seed, "form"))
+        cross = fl_cfg.get("cross")
+        if cross:
+            other = "x" if axis == "y" else "y"
+            merged = {k: cross.get(k, fl_cfg.get(k))
+                      for k in ("count", "seam", "jitter", "strength")}
+            albedo, height = _apply_form_lines(
+                albedo, height, (h, w), merged,
+                str(cross.get("axis", other)).lower(),
+                ps.stream_seed(seed, "form_cross"))
 
     # Vertical grime/water streaks (interior-concrete stain character).
     if grammar.streaks:
