@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.27.0] - delco_1997, a theme the briefs have asked for since cold run 7002
+
+### Added
+- `profiles/themes/delco_1997.json`. Delaware County, 1997: a commercial strip
+  at dusk.
+
+  WHY IT WAS MISSING FOR SO LONG. `level_factory/packages/tools/themes.py`
+  records cold run 7002 putting three candidates through Blender, Lot, Laser
+  Tag and walktest -- tens of minutes -- and then `pixelcoat_build` exiting 1
+  in two seconds on `no theme profile for 'delco_1997'`. Roadmap 72 responded
+  by adding a PRE-FLIGHT CHECK, which was the right call for the defect it
+  named ("the absence of the check was the defect") and left the content gap
+  standing. Cold run 9003 hit the same wall from the other side: the check
+  fired early and correctly, and there was still no profile behind it.
+
+  NOT AN ALIAS TO `delco`, and not a copy of it. An alias resolves the error
+  and leaves the next consumer naming a period theme with nothing behind it.
+  A copy duplicates 24 mappings that then drift apart. This is a real profile
+  built only from grammars already in the library, differing from `delco`
+  exactly where 1997 differs:
+
+        glass_facade   mirror blue   -> bronze anodized shopfront
+        glass          frosted       -> plain storefront glazing
+        tile           tile_delco    -> beige VCT
+        drywall        scuffed       -> orange peel
+        plastic        neutral       -> delco
+
+  Every grammar's declared `kind` was checked against the slot before it was
+  authored. `tests/test_theme_profiles.py` exists because two shipped
+  `rockay_*` profiles mis-slotted `cinderblock_delco` and `travertine_warm`,
+  and that check only fires at build time otherwise. 39 profile tests pass,
+  224 in the suite.
+
+### Known
+- Zoo carries no `delco_1997` style across its 56 species, so the prop kit
+  still falls back to flat colour on this theme. That is the other half of the
+  same gap and is not closed here; `themes.py` reports it as a warning rather
+  than a wall, which is the correct severity -- a missing Pixelcoat profile
+  stops the art pass, a missing Zoo style disappoints it.
+
 ## [0.26.0] - the panel grammar earns its name
 
 ### Changed
