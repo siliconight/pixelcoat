@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.28.0] - the drywall reads as a wall, not as static
+
+### Changed
+- `drywall_orangepeel_delco` and `carpet_delco` lose most of their per-texel
+  grain. Roadmap 140, walked 2026-09-11 on cold run 9005: the ward walls
+  read as "fizzy, too much digital noise". Two numbers over the albedo's
+  luminance say what that is -- spread (std, 0-255) and the correlation
+  between a texel and its neighbour (1.0 smooth, 0.0 every texel on its
+  own). The shipped delco_1997 packs, 256 px at 2.0 m:
+
+      drywall_orangepeel   std 23.9   ac1 0.12
+      carpet               std 10.0   ac1 0.08
+      plaster              std 12.1   ac1 0.34
+      ceiling_tile         std 15.6   ac1 0.51
+      concrete             std 28.2   ac1 0.75
+      brick                std 31.5   ac1 0.80
+
+  Drywall had brick's amplitude at carpet's correlation: a large random term
+  with no spatial structure, which at 128 texels per metre is static rather
+  than orange peel. THE DIAL WAS `detail_strength`, the hash grain: dropping
+  it alone took drywall from 23.9 / 0.12 to 10.7 / 0.61. The micro band was
+  not the dial -- its weight (0.30 x 0.12 of a +-0.5 field) sits under one
+  step of `posterize: 16` and quantises away; changing its cells or octaves
+  moved nothing at one decimal, which is the null-result rule's case. What
+  ships: drywall meso worley 24 (a mottle at 8 cm, the roller's scale, not
+  the peel's -- the peel is sub-texel at this density), micro 40/2, grain
+  0.04 -> std 11.6 / ac1 0.70, concrete's correlation at plaster's
+  amplitude. Carpet: grain 0.05, meso fbm 48/2 at band 0.7 so the amplitude
+  comes from pile structure rather than noise -> std 7.5 / ac1 0.66.
+- `tests/test_theme_profiles.py` synthesises delco_1997's drywall, carpet
+  and plaster at their pack size and holds correlation >= 0.5 (0.3 for
+  plaster) inside a spread band. Orange peel as RELIEF -- a normal map --
+  is the honest version of this material and is not emitted yet
+  (`emit.normal: false`); this change is the albedo reading right at the
+  distance a person stands from a wall.
+
 ## [0.27.0] - delco_1997, a theme the briefs have asked for since cold run 7002
 
 ### Added

@@ -119,3 +119,56 @@ def test_rockay_family_varies_the_wall():
     family = _rockay_family()
     bricks = [t["materials"].get("brick") for t in family]
     assert len(set(bricks)) == len(bricks), bricks
+
+
+# --------------------------------------------------------------------------- #
+# Roadmap 140: a skin must read as a surface, not as noise
+# --------------------------------------------------------------------------- #
+#
+# Walked 2026-09-11 on cold run 9005: the delco_1997 drywall read as "fizzy,
+# too much digital noise". Two numbers over the albedo's luminance say why --
+# its spread (std, 0-255) and the correlation between a texel and its
+# neighbour (1.0 = smooth, 0.0 = every texel independent). Measured on the
+# shipped packs that day: drywall std 23.9 / ac1 0.12, carpet 10.0 / 0.08,
+# against plaster 12.1 / 0.34, ceiling_tile 15.6 / 0.51, concrete 28.2 /
+# 0.75, brick 31.5 / 0.80. Brick's amplitude at carpet's correlation is
+# static. The dial was `detail_strength`, the per-texel hash grain: 0.18 on
+# drywall, 0.22 on carpet, and sweeping it alone took drywall to 10.7 / 0.61.
+# The micro band was NOT the dial -- its weight (0.30 x 0.12 of a +-0.5
+# field) sits under one posterize step and quantises away, so changing it
+# moved nothing at one decimal.
+#
+# The floor below is the check: correlation at least 0.5, the ceiling_tile /
+# concrete band, for the interior finishes a person stands next to.
+
+_SURFACE_NOT_NOISE = {
+    # kind -> (min ac1, std range) at the pack size the theme ships
+    "drywall": (0.5, (9.0, 16.0)),
+    "carpet": (0.5, (5.0, 12.0)),
+    "plaster": (0.3, (8.0, 16.0)),
+}
+
+
+def _albedo_metric(albedo_u8):
+    import numpy as np
+    a = albedo_u8.astype(np.float64)
+    lum = 0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]
+    d = lum - lum.mean()
+    var = (d * d).mean()
+    ax = (d[:, :-1] * d[:, 1:]).mean() / var
+    ay = (d[:-1, :] * d[1:, :]).mean() / var
+    return float(lum.std()), float((ax + ay) / 2.0)
+
+
+@pytest.mark.parametrize("kind", sorted(_SURFACE_NOT_NOISE))
+def test_delco_interior_finishes_read_as_surface_not_noise(kind):
+    from pixelcoat.core import material_grammar as mg
+    theme = _load(os.path.join(_THEMES, "delco_1997.json"))
+    grammar_id = theme["materials"][kind]
+    raw = _load(os.path.join(_MATERIALS, grammar_id + ".json"))
+    g = mg.MaterialGrammar.from_dict(raw)
+    size = mg.pack_size_for(raw.get("meters_per_tile"))
+    std, ac1 = _albedo_metric(mg.synthesize(g, size=size)["albedo"])
+    min_ac1, (lo, hi) = _SURFACE_NOT_NOISE[kind]
+    assert ac1 >= min_ac1, (grammar_id, std, ac1)
+    assert lo <= std <= hi, (grammar_id, std, ac1)

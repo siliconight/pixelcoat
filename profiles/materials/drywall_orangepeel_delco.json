@@ -19,14 +19,14 @@
   },
   "meso": {
     "generator": "worley_f1",
-    "cells": 64
+    "cells": 24
   },
   "micro": {
     "generator": "fbm",
-    "cells": 200,
-    "octaves": 3
+    "cells": 40,
+    "octaves": 2
   },
-  "detail_strength": 0.18,
+  "detail_strength": 0.04,
   "posterize": 16,
   "roughness": {
     "base": 0.88,
