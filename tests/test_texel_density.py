@@ -76,10 +76,13 @@ def test_fixed_size_reproduces_the_old_four_times_spread():
 
     It is a foil, not a target: the derived-size path above holds the spread to
     1.667x, and this records what fixed 512 px tiles would do instead. A wider
-    library makes the foil worse, which is the argument working.
+    library makes the foil worse, which is the argument working -- and it did:
+    `road_paint_delco` (0.31.0) is authored at 0.5 m per tile, a 0.12 m line
+    needing texels, against `concrete_panel_delco`'s 4.0, so the foil is now
+    8.0.
     """
     got = [512.0 / mpt for mpt in _tile_sizes().values()]
-    assert max(got) / min(got) == pytest.approx(4.0, abs=0.01)
+    assert max(got) / min(got) == pytest.approx(8.0, abs=0.01)
 
 
 def test_theme_library_derives_per_kind_and_size_overrides(tmp_path):

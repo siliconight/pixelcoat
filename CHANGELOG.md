@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.31.0] - road paint, a cutout decal for Lot's markings
+
+Roadmap 153 / 152 step 2. A `road_paint` kind for Lot (`_LOT_KINDS`), minted
+as `road_paint_delco` and mapped by the delco themes: near-white paint at
+0.5 m per tile with a CUTOUT alpha -- a new grammar field, `cutout`, that
+thresholds a generator field into an on/off alpha channel on the albedo,
+so the paint is worn through to the road in patches -- and a transparency
+hint of `alpha_mode: scissor`, so the consumer tests the alpha rather than
+blending it. Lot's marking quads wear the pack tinted by the marking's own
+colour (white edge lines, a yellow centre line). `synthesize` returns an
+RGBA albedo only for a grammar with a cutout; the texel-density foil moves
+from 4.0 to 8.0 with the new 0.5 m tile in the library.
+
 ## [0.30.0] - 2026-09-12
 
 The ground has kinds now: `asphalt` and `sidewalk`.

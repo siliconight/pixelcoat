@@ -1,0 +1,51 @@
+{
+  "id": "road_paint_delco",
+  "kind": "road_paint",
+  "base_colors": [
+    "#e6e3dc",
+    "#d8d4ca",
+    "#efece5"
+  ],
+  "meters_per_tile": 0.5,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.35,
+    "micro": 0.35
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 2,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 9
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "detail_strength": 0.15,
+  "posterize": 6,
+  "roughness": {
+    "base": 0.75,
+    "variation": 0.1
+  },
+  "height_strength": 0.1,
+  "cutout": {
+    "generator": {
+      "generator": "worley_f1",
+      "cells": 7
+    },
+    "threshold": 0.22
+  },
+  "transparency": {
+    "opacity": 1.0,
+    "alpha_mode": "scissor"
+  },
+  "emit": {
+    "roughness": true,
+    "normal": false
+  }
+}

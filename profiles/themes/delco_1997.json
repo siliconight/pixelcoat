@@ -22,6 +22,7 @@
     "paper": "paper_neutral",
     "plaster": "plaster_delco",
     "plastic": "plastic_delco",
+    "road_paint": "road_paint_delco",
     "rubber": "rubber_delco",
     "sidewalk": "sidewalk_delco",
     "tar": "tar_neutral",

@@ -70,6 +70,12 @@ class MaterialGrammar:
     height_strength: float = 0.6
     emissive: dict = field(default_factory=dict)  # backlit glow (stained glass, screens)
     transparency: dict = field(default_factory=dict)  # see-through glass: {opacity, ior}
+    # CUTOUT: an alpha channel on the albedo, 1 where a generator field is at
+    # or above `threshold` and 0 where it is not -- paint worn through to the
+    # road, a grate's holes. `{generator: {...}, threshold: 0..1, invert}`.
+    # Pair it with `transparency: {alpha_mode: "scissor"}` so the consumer
+    # tests the alpha rather than blending it; a marking is crisp or gone.
+    cutout: dict = field(default_factory=dict)
     emit: dict = field(default_factory=lambda: {"roughness": True, "normal": False})
     # ACHROMATIC-BY-INTENT. True means "my albedo is a surface, not a paint
     # job -- the consumer supplies the hue". Zoo multiplies the mesh's own
@@ -357,6 +363,16 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = ps.posterize(albedo, grammar.posterize)   # hard value steps (Q2)
 
     out: dict[str, Any] = {"albedo": _to_u8(albedo)}
+
+    if grammar.cutout:
+        co = grammar.cutout
+        fld = _generator(co.get("generator") or {"generator": "worley_f1", "cells": 8},
+                         (h, w), ps.stream_seed(seed, "cutout"), "cutout")
+        keep = fld >= float(co.get("threshold", 0.25))
+        if co.get("invert"):
+            keep = ~keep
+        alpha = keep.astype(np.float32)
+        out["albedo"] = _to_u8(np.concatenate([albedo, alpha[..., None]], axis=-1))
 
     if grammar.emit.get("roughness", True):
         r = grammar.roughness or {}

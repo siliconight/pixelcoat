@@ -93,7 +93,9 @@ def test_all_shipped_grammars_build():
     for f in files:
         g = mg.MaterialGrammar.load(f)
         out = mg.synthesize(g, size=48)
-        assert "albedo" in out and out["albedo"].shape == (48, 48, 3), f
+        # RGB, or RGBA for a grammar with a cutout (road paint)
+        assert "albedo" in out and out["albedo"].shape[:2] == (48, 48), f
+        assert out["albedo"].shape[2] == (4 if g.cutout else 3), f
         assert g.kind, f                                 # every grammar names a kind
 
 

@@ -353,8 +353,9 @@ _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
 
 
 #: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks
-#: (roadmap 152). A theme names them the same way; Lot reads the pack.
-_LOT_KINDS = ("asphalt", "sidewalk")
+#: (roadmap 152), and the road paint its markings wear as a cutout decal
+#: (roadmap 153). A theme names them the same way; Lot reads the pack.
+_LOT_KINDS = ("asphalt", "sidewalk", "road_paint")
 
 
 def _warn_unknown_kind(kind: str) -> None:
