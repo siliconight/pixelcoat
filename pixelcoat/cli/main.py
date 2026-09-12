@@ -349,7 +349,9 @@ def _preview_compression(args) -> int:
 # kind match) will never resolve unless a species explicitly requests it.
 _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
               "canvas", "carbon", "glass", "paper", "concrete", "plaster",
-              "brick", "tile", "drywall", "ceiling_tile", "carpet", "dirt")
+              "brick", "tile", "drywall", "ceiling_tile", "carpet", "dirt",
+              # foliage: the leaf-cluster cutout a tree's crown cards wear
+              "foliage")
 
 
 #: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks

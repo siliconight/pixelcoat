@@ -1,0 +1,57 @@
+{
+  "id": "foliage_delco",
+  "kind": "foliage",
+  "base_colors": [
+    "#4d6b33",
+    "#3f5a2b",
+    "#5d7d3d",
+    "#6b8a45",
+    "#7a9a4a"
+  ],
+  "undercoat": "#33421f",
+  "meters_per_tile": 1.5,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.34,
+    "micro": 0.24
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 4,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 30
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 160,
+    "octaves": 2
+  },
+  "albedo_pattern": 0.85,
+  "detail_strength": 0.2,
+  "posterize": 14,
+  "roughness": {
+    "base": 0.8,
+    "variation": 0.08
+  },
+  "height_strength": 0.35,
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "tintable": false,
+  "cutout": {
+    "generator": {
+      "generator": "worley_f1",
+      "cells": 5
+    },
+    "threshold": 0.55,
+    "invert": true
+  },
+  "transparency": {
+    "opacity": 1.0,
+    "alpha_mode": "scissor"
+  }
+}

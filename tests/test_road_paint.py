@@ -38,3 +38,41 @@ def test_a_grammar_without_a_cutout_is_unchanged():
     g = mg.MaterialGrammar.from_dict({"id": "plain", "kind": "concrete",
                                       "base_colors": ["#808080"]})
     assert mg.synthesize(g, size=32)["albedo"].shape == (32, 32, 3)
+
+
+def test_the_foliage_grammar_is_a_leaf_cluster_cutout():
+    g = mg.MaterialGrammar.load(os.path.join(_PROFILES, "foliage_delco.json"))
+    assert g.kind == "foliage" and g.cutout.get("invert")
+    a = mg.synthesize(g, size=96, seed=1999)["albedo"]
+    assert a.shape[2] == 4
+    frac = float((a[..., 3] == 255).mean())
+    assert 0.5 < frac < 0.85, frac                  # clusters with sky between
+    assert g.transparency.get("alpha_mode") == "scissor"
+
+
+def test_the_paint_wears_in_patches_not_speckle():
+    """Cold run 9029's frames: 7-cell worley holes read as speckle. The wear
+    is now a low-frequency field, so the paint goes in patches."""
+    g = mg.MaterialGrammar.load(os.path.join(_PROFILES, "road_paint_delco.json"))
+    assert g.cutout["generator"]["generator"] == "fbm"
+    a = mg.synthesize(g, size=64, seed=1999)["albedo"]
+    holes = (a[..., 3] == 0)
+    assert 0.03 < holes.mean() < 0.3
+    # a patch is bigger than a speck: the largest 4-connected hole spans
+    # more than a tenth of the tile
+    import numpy as np
+    seen = np.zeros_like(holes, bool)
+    best = 0
+    for y in range(holes.shape[0]):
+        for x in range(holes.shape[1]):
+            if holes[y, x] and not seen[y, x]:
+                stack, n = [(y, x)], 0
+                seen[y, x] = True
+                while stack:
+                    cy, cx = stack.pop(); n += 1
+                    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        ny, nx = (cy + dy) % 64, (cx + dx) % 64
+                        if holes[ny, nx] and not seen[ny, nx]:
+                            seen[ny, nx] = True; stack.append((ny, nx))
+                best = max(best, n)
+    assert best > 64 * 64 * 0.01, best

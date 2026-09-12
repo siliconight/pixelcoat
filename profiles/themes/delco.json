@@ -11,6 +11,7 @@
     "concrete": "concrete_delco",
     "dirt": "dirt_delco",
     "drywall": "drywall_scuffed_delco",
+    "foliage": "foliage_delco",
     "glass": "glass_frosted",
     "glass_facade": "glass_facade_mirror_blue",
     "gravel": "pebble_gravel",

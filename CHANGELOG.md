@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.32.0] - the paint wears in patches; foliage, a leaf-cluster cutout
+
+Roadmap 153 residue. `road_paint_delco`'s cutout is a low-frequency fbm
+field (3 cells, 4 octaves, threshold 0.40) rather than 7-cell worley holes:
+cold run 9029's frames read the holes as speckle, and worn paint goes in
+patches. `foliage_delco` is a new Zoo kind, `foliage`: the vegetation
+grammar's greens with an inverted worley cutout -- discs of leaf mass with
+sky between -- and a scissor hint, for the crown cards of Zoo's
+`street_tree`. Both delco themes map it.
+
 ## [0.31.0] - road paint, a cutout decal for Lot's markings
 
 Roadmap 153 / 152 step 2. A `road_paint` kind for Lot (`_LOT_KINDS`), minted
