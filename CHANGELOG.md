@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.30.0] - 2026-09-12
+
+The ground has kinds now: `asphalt` and `sidewalk`.
+
+Roadmap 152. The exterior ground plate in every cold package was one
+untextured grey (`gb_floor`, 0.52, no image), because Lot's plate is not a
+Zoo module and nothing had ever handed it a skin. The theme library builds
+one pack per kind a theme names, and a theme slot must carry a grammar of
+that kind (`test_theme_profiles`), so two grammars are minted with the kinds
+Lot will ask for: `asphalt_delco` (from `asphalt_street`, 3 m tile) and
+`sidewalk_delco` (from `concrete_sidewalk_street`, 2 m). `delco` and
+`delco_1997` map `asphalt` and `sidewalk` to them; `theme-library` now emits
+`asphalt_<theme>/` and `sidewalk_<theme>/` beside the 24 kinds it built
+before. The two kinds are Lot's vocabulary, not Zoo's (`_LOT_KINDS`), so the
+unknown-kind warning does not fire on them. The existing street grammars
+keep their `concrete` kind: `center_city` maps `concrete` to the sidewalk
+one and would have failed its own test otherwise.
+
 ## [0.29.0] - a new person can mint a material
 
 ### Added

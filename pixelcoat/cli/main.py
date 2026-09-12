@@ -352,8 +352,13 @@ _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
               "brick", "tile", "drywall", "ceiling_tile", "carpet", "dirt")
 
 
+#: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks
+#: (roadmap 152). A theme names them the same way; Lot reads the pack.
+_LOT_KINDS = ("asphalt", "sidewalk")
+
+
 def _warn_unknown_kind(kind: str) -> None:
-    if kind not in _ZOO_KINDS:
+    if kind not in _ZOO_KINDS and kind not in _LOT_KINDS:
         print(f"pixelcoat: warning: material kind '{kind}' is not in Zoo's "
               f"known vocabulary; Zoo resolves packs by exact kind, so this "
               f"one won't be picked up unless a species requests '{kind}'.",
