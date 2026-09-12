@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.29.0] - a new person can mint a material
+
+### Added
+- `tools/new_material.py` (roadmap 150, the texture half). `report` lists,
+  per theme, the kinds Zoo's species can wear that the theme has no profile
+  for -- a species wearing one renders flat. `new <profile> --kind --like
+  --colors [--meters-per-tile] [--theme]` writes a grammar from a template
+  profile, synthesizes it at 64 px and prints the two numbers item 140
+  measures a skin by (albedo std and neighbour correlation, with a warning
+  under 0.3), maps the kind into the theme so `theme-library` builds it
+  (`--replace` to take a mapped slot), refuses to overwrite, and says when
+  the kind is one Zoo does not know yet. A grammar copied with new colours
+  is the template's surface in new colours, which is the honest state of a
+  material nobody has authored; the profile file is where the authoring
+  goes. `tests/test_new_material.py`.
+
 ## [0.28.0] - the drywall reads as a wall, not as static
 
 ### Changed
