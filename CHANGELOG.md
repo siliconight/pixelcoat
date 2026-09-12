@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.32.1] - one foliage tile is one card
+
+Cold run 9031's frames: the tree's crown cards carried the cutout but the
+tile repeated 2.7 times across a 4 m card and the card's border was a hard
+line, so the crown read as a square lattice. A cutout may now name an
+`ellipse` (`rx`, `ry` in tile units, centred on the tile's corner so it
+wraps to the centre of a card whose UVs run -0.5..0.5): nothing survives
+outside it. `foliage_delco` is authored at 4.0 m per tile -- the card's
+width -- with a 0.46 x 0.44 ellipse and 7-cell clusters, so the card's
+edge is the canopy's, ragged by the clusters.
+
 ## [0.32.0] - the paint wears in patches; foliage, a leaf-cluster cutout
 
 Roadmap 153 residue. `road_paint_delco`'s cutout is a low-frequency fbm

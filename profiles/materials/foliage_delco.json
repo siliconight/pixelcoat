@@ -9,7 +9,7 @@
     "#7a9a4a"
   ],
   "undercoat": "#33421f",
-  "meters_per_tile": 1.5,
+  "meters_per_tile": 4.0,
   "bands": {
     "macro": 0.3,
     "meso": 0.34,
@@ -17,16 +17,16 @@
   },
   "macro": {
     "generator": "fbm",
-    "cells": 4,
+    "cells": 3,
     "octaves": 3
   },
   "meso": {
     "generator": "worley_f1",
-    "cells": 30
+    "cells": 40
   },
   "micro": {
     "generator": "fbm",
-    "cells": 160,
+    "cells": 200,
     "octaves": 2
   },
   "albedo_pattern": 0.85,
@@ -45,10 +45,14 @@
   "cutout": {
     "generator": {
       "generator": "worley_f1",
-      "cells": 5
+      "cells": 7
     },
     "threshold": 0.55,
-    "invert": true
+    "invert": true,
+    "ellipse": {
+      "rx": 0.46,
+      "ry": 0.44
+    }
   },
   "transparency": {
     "opacity": 1.0,

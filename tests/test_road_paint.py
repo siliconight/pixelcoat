@@ -46,8 +46,15 @@ def test_the_foliage_grammar_is_a_leaf_cluster_cutout():
     a = mg.synthesize(g, size=96, seed=1999)["albedo"]
     assert a.shape[2] == 4
     frac = float((a[..., 3] == 255).mean())
-    assert 0.5 < frac < 0.85, frac                  # clusters with sky between
+    assert 0.35 < frac < 0.75, frac                 # clusters with sky between
     assert g.transparency.get("alpha_mode") == "scissor"
+    # one tile is one card: nothing survives outside the ellipse, whose
+    # centre wraps to the tile's corner (a card's UVs run -0.5..0.5)
+    assert g.meters_per_tile == 4.0 and g.cutout["ellipse"]
+    n = a.shape[0]
+    mid = n // 2
+    assert (a[mid - 4:mid + 4, mid - 4:mid + 4, 3] == 0).all()      # the tile's centre is outside
+    assert (a[:6, :6, 3] == 255).any() or (a[-6:, -6:, 3] == 255).any()   # the corner is inside
 
 
 def test_the_paint_wears_in_patches_not_speckle():

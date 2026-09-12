@@ -371,6 +371,19 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         keep = fld >= float(co.get("threshold", 0.25))
         if co.get("invert"):
             keep = ~keep
+        # ELLIPSE: nothing outside an ellipse centred on the tile's corner
+        # (wrapped, so it sits at the centre of a card whose UVs run -0.5
+        # to 0.5 across it). For a tile that IS one card -- a tree's crown
+        # card at `meters_per_tile` = the card's width -- the card's edge
+        # becomes the canopy's, ragged by the clusters, and not a hard
+        # line. `{"rx": 0.46, "ry": 0.44}` in tile units.
+        ell = co.get("ellipse")
+        if ell:
+            rx, ry = float(ell.get("rx", 0.46)), float(ell.get("ry", 0.46))
+            fy, fx = np.meshgrid((np.arange(h) + 0.5) / h, (np.arange(w) + 0.5) / w,
+                                 indexing="ij")
+            dx, dy = np.minimum(fx, 1.0 - fx), np.minimum(fy, 1.0 - fy)
+            keep = keep & ((dx / rx) ** 2 + (dy / ry) ** 2 <= 1.0)
         alpha = keep.astype(np.float32)
         out["albedo"] = _to_u8(np.concatenate([albedo, alpha[..., None]], axis=-1))
 
