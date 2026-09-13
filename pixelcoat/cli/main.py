@@ -561,7 +561,17 @@ def _theme_signs(args) -> int:
         if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
             raise ValueError(f"{pack_dir} already holds a pack (use --force)")
         shape = (max(32, args.size // 4), args.size)      # a cabinet, not a tile
-        if s.get("style") == "neon":
+        if s.get("style") == "price":
+            # a price board is taller than it is wide per row; one row is
+            # about a third of the width
+            rows = [(r["grade"], r["price"]) for r in s["rows"]]
+            arrays = sgn.fuel_price_sign(
+                rows, (max(48, int(args.size * 0.62)), args.size),
+                panel=s.get("panel", "#f2f2ee"),
+                text_color=s.get("text_color", "#1a1a1a"),
+                grade_color=s.get("grade_color", "#c8102e"),
+                border=s.get("border"))
+        elif s.get("style") == "neon":
             arrays = sgn.neon_sign(s["text"], shape,
                                    color=s.get("color", "#ff2a6d"),
                                    backer=s.get("backer", "#0b0b10"))
@@ -571,7 +581,12 @@ def _theme_signs(args) -> int:
                                     text_color=s.get("text_color", "#4dff8a"),
                                     border=s.get("border"))
         man = sgn.build_sign_pack(pack_dir, arrays, f"sign_{slug}")
-        index.append({"slug": slug, "text": s["text"],
+        # a price board has rows rather than one name; the index says what
+        # the sign READS so a consumer can pick one without re-reading the
+        # profile
+        text = s.get("text") or " / ".join(
+            f"{r['grade']} {r['price']}" for r in s.get("rows", []))
+        index.append({"slug": slug, "text": text,
                       "style": s.get("style", "panel"),
                       "families": list(s.get("families", ["default"])),
                       "dir": f"sign_{slug}", "asset_id": man["asset_id"]})

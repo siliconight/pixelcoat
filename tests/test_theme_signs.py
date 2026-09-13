@@ -26,7 +26,11 @@ def test_the_theme_names_a_street_of_businesses():
     for need in ("bank", "deli", "liquor", "bar", "retail", "warehouse"):
         assert need in families, need
     for s in p["signs"]:
-        assert s["style"] in ("panel", "neon")
+        assert s["style"] in ("panel", "neon", "price")
+        if s["style"] == "price":
+            # a price board has rows, not one name
+            assert s["rows"] and "derivation" in s
+            continue
         assert s["text"] == s["text"].upper()
         assert len(s["text"]) <= 20, s["text"]
 
@@ -35,8 +39,12 @@ def test_every_sign_renders_with_the_built_in_font():
     """A character the font has no glyph for renders as a space, which is a
     silent hole in a shop's name -- so assert the font covers every one."""
     for s in _profile()["signs"]:
-        for ch in s["text"]:
-            assert ch in sgn._FONT, (s["slug"], ch)
+        words = ([s["text"]] if s.get("text") else
+                 [r["grade"] for r in s.get("rows", [])]
+                 + [r["price"] for r in s.get("rows", [])])
+        for word in words:
+            for ch in word:
+                assert ch in sgn._FONT, (s["slug"], ch)
 
 
 @pytest.mark.parametrize("style", ["panel", "neon"])
@@ -54,3 +62,20 @@ def test_the_signs_are_invented_and_say_so():
     """The one claim this file exists to keep true."""
     note = _profile()["description"].lower()
     assert "invented" in note and "not any company" in note
+
+
+def test_a_price_board_reads_1997_and_carries_the_fraction():
+    """The walker asked for 1997 prices specifically, so the profile carries
+    the derivation and this asserts the number it derived."""
+    price = [s for s in _profile()["signs"] if s.get("style") == "price"]
+    assert price, "the theme names no fuel price board"
+    board = price[0]
+    grades = {r["grade"]: r["price"] for r in board["rows"]}
+    assert grades["REGULAR"] == "1.21"
+    assert float(grades["PLUS"]) - float(grades["REGULAR"]) == pytest.approx(0.10)
+    assert float(grades["SUPER"]) - float(grades["PLUS"]) == pytest.approx(0.10)
+    src = board["derivation"]
+    assert "0.770" in src and "0.259" in src and "0.184" in src
+    arrays = sgn.fuel_price_sign([(g, p) for g, p in grades.items()], (192, 256))
+    assert "albedo" in arrays and "emissive" in arrays
+    assert sgn.PRICE_FRACTION == "9"

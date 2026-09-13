@@ -205,6 +205,66 @@ def panel_sign(text: str, size=128, *, panel: str = "#12351f",
     return _pack_arrays(alb, emis)
 
 
+#: WHY A PUMP PRICE ENDS IN NINE TENTHS OF A CENT. States began taxing
+#: gasoline in tenths of a cent (the federal tax of the Revenue Act of 1932
+#: was set that way), and with gas near ten cents a gallon a whole cent was
+#: a ten percent rise -- so a station added the fraction instead. By the
+#: 1950s the fraction had settled on 9/10 and stayed there. A 1997 price
+#: board without it is the wrong decade.
+PRICE_FRACTION = "9"
+
+
+def fuel_price_sign(rows, size=(256, 192), *, panel: str = "#f2f2ee",
+                    text_color: str = "#1a1a1a", grade_color: str = "#c8102e",
+                    border: str | None = "#c8102e", powered: bool = True) -> dict:
+    """A price board: one row per grade, the grade's name on the left and its
+    price on the right with the 9/10 raised small.
+
+    ``rows`` is [(grade, "1.21"), ...] -- the dollars-and-cents part only;
+    the fraction is this function's business, because it is a property of
+    how a pump price is written and not of any one price.
+    """
+    h, w = _hw(size)
+    pan = ps.hex_to_rgb(panel)
+    field = pan[None, None] * np.ones((h, w, 1), np.float32)
+    if border:
+        b = ps.hex_to_rgb(border)
+        edge = np.ones((h, w), np.float32)
+        m = max(2, h // 18)
+        edge[m:-m, m:-m] = 0.0
+        field = field * (1 - edge[..., None]) + b[None, None] * edge[..., None]
+    rows = list(rows)
+    n = max(1, len(rows))
+    grade_ink = np.zeros((h, w), np.float32)
+    price_ink = np.zeros((h, w), np.float32)
+    # one scale for every row, from the widest line, so the board reads as
+    # one board rather than as rows that each found their own size
+    g_scale = min(fit_scale(g, (h / n * 0.42, w * 0.46)) for g, _p in rows)
+    p_scale = min(fit_scale(p + PRICE_FRACTION, (h / n * 0.62, w * 0.48))
+                  for _g, p in rows)
+    for i, (grade, price) in enumerate(rows):
+        cy = (i + 0.5) / n
+        grade_ink = np.maximum(grade_ink, _place_text(
+            (h, w), grade, g_scale, cx=0.27, cy=cy - 0.5 / n * 0.30))
+        price_ink = np.maximum(price_ink, _place_text(
+            (h, w), price, p_scale, cx=0.63, cy=cy))
+        # the fraction: half height, raised to the top of the digits
+        price_ink = np.maximum(price_ink, _place_text(
+            (h, w), PRICE_FRACTION, max(1, p_scale // 2), cx=0.87,
+            cy=cy - 0.5 / n * 0.34))
+    txt = ps.hex_to_rgb(text_color)
+    grd = ps.hex_to_rgb(grade_color)
+    alb = field * (1 - np.maximum(grade_ink, price_ink)[..., None])
+    alb = alb + grd[None, None] * grade_ink[..., None]
+    alb = alb + txt[None, None] * price_ink[..., None]
+    if powered:
+        emis = pan[None, None] * 0.55 * np.ones((h, w, 1), np.float32)
+    else:
+        alb = alb * 0.4
+        emis = np.zeros((h, w, 3), np.float32)
+    return _pack_arrays(alb, emis)
+
+
 def screen(mode: str = "bars", size=128, *, seed: int = DEFAULT_SEED,
            tint: str = "#39ff88", powered: bool = True,
            scanlines: bool = True) -> dict:

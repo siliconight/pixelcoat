@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.34.0] - a fuel price board, at 1997 Pennsylvania prices
+
+Roadmap 153. `signage.fuel_price_sign` draws a price board: one row per
+grade, the grade in red on the left and the price in black on the right
+with the nine tenths raised small. The fraction is the function's business
+rather than any price's, because it is a property of how a pump price is
+written -- states taxed gasoline in tenths of a cent, a whole cent was a
+ten percent rise when gas was a dime, and by the 1950s the fraction had
+settled on 9/10.
+
+The numbers are LOOKED UP AND DERIVED, and the derivation rides in the
+profile beside them. EIA's Pennsylvania conventional regular retail series
+-- price by all sellers, which excludes tax -- averages 0.770 $/gal across
+1997's twelve months; Pennsylvania levied 0.259 (0.12 liquid fuels plus
+0.139 oil company franchise, the highest in the nation) and the federal
+excise was 0.183 until 1 October 1997 and 0.184 after it. 0.770 + 0.259 +
+0.184 = 1.213, so the board reads 1.21 and nine tenths, with a dime a
+grade above it. The national pump average for 1997 was 1.234, which is the
+same number from the other end: the two series disagree only by the tax
+the state one leaves out.
+
 ## [0.33.0] - the businesses a theme names, as signs
 
 Roadmap 153, the 1990s street. `theme-signs --theme <t>` builds one sign
