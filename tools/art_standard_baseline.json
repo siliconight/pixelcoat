@@ -720,6 +720,18 @@
       "tier": null,
       "value_range": 0.0
     },
+    "shingle_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.0320193815062003,
+      "chroma_p95": 0.035731703829373726,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.04619178570842791,
+      "kind": "shingle",
+      "rough_mean": 0.8816794002757353,
+      "tier": null,
+      "value_range": 0.14029958146561683
+    },
     "sidewalk_delco": {
       "blown_frac": 0.0,
       "chroma_mean": 0.011550065078511923,
@@ -731,6 +743,18 @@
       "rough_mean": 0.9521747065525429,
       "tier": null,
       "value_range": 0.19985138841589167
+    },
+    "siding_delco": {
+      "blown_frac": 0.01116943359375,
+      "chroma_mean": 0.033481158231914186,
+      "chroma_p95": 0.04639401720179566,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.07000136873603797,
+      "kind": "siding",
+      "rough_mean": 0.608355832567402,
+      "tier": null,
+      "value_range": 0.2286226257027011
     },
     "stucco_warm": {
       "blown_frac": 0.0091400146484375,

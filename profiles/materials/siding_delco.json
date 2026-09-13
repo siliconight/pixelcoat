@@ -1,0 +1,51 @@
+{
+  "id": "siding_delco",
+  "kind": "siding",
+  "base_colors": [
+    "#d6cdb8",
+    "#cfc5ae",
+    "#dcd4c2"
+  ],
+  "meters_per_tile": 2.5,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 40,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "hash_grain"
+  },
+  "bands": {
+    "macro": 0.34,
+    "meso": 0.14,
+    "micro": 0.16
+  },
+  "form_lines": {
+    "count": 12,
+    "seam": 0.42,
+    "jitter": 0.02,
+    "strength": 0.3
+  },
+  "warp": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 3,
+      "octaves": 3
+    },
+    "intensity": 0.012,
+    "angle": 90
+  },
+  "detail_strength": 0.1,
+  "posterize": 16,
+  "height_strength": 0.3,
+  "roughness": {
+    "base": 0.62,
+    "variation": 0.1
+  },
+  "notes": "Vinyl or aluminium lap siding, the surface the late 1990s put over older Delco houses (docs/DELCO_1997_ART_DIRECTION.md point 5). `form_lines` and not `masonry`: a lap course is one continuous board with a shadow line under its butt edge and no vertical joint. 12 courses on a 2.5 m tile is a 21 cm exposure, a double-4 profile. The warp at 90 degrees is the sag a long vinyl run takes; without it the courses are a ruler."
+}

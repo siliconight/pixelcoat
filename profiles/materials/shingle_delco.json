@@ -1,0 +1,53 @@
+{
+  "id": "shingle_delco",
+  "kind": "shingle",
+  "base_colors": [
+    "#6b5a4a",
+    "#5c4e40",
+    "#7a6957"
+  ],
+  "meters_per_tile": 2.5,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 90
+  },
+  "micro": {
+    "generator": "hash_grain"
+  },
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.26,
+    "micro": 0.3
+  },
+  "masonry": {
+    "rows": 18,
+    "cols": 8,
+    "offset": 0.5,
+    "mortar": 0.01,
+    "mortar_color": "#3b332b",
+    "mortar_strength": 0.65,
+    "brick_variation": 0.16
+  },
+  "warp": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 5,
+      "octaves": 3
+    },
+    "intensity": 0.01,
+    "angle": 0
+  },
+  "detail_strength": 0.2,
+  "posterize": 16,
+  "height_strength": 0.34,
+  "roughness": {
+    "base": 0.9,
+    "variation": 0.08
+  },
+  "notes": "Brown asphalt shingle, the roof the art direction names. The meso band at 90 cells is the granule -- an asphalt shingle is stone chips bonded to felt, about 1 mm, and reading it as smooth is what makes a roof look like painted card. Colours are 33 codes of channel spread apart, comfortably coarser than the 16-step quantiser, so the posterize rule in tests/test_posterize_palette.py does not bite."
+}

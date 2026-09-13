@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.38.0] - the siding and the shingle the late 1990s put on Delco
+
+Two more surfaces from the walker's art direction, and only two: these are
+the ones with a CONSUMER. Deli Counter's twin wears siding over a stone base
+and `roof_material` puts shingle on a house's roof. Glass block, EIFS, faux
+shutters and storm doors are named in the direction and are not minted --
+an unused pack is built into every library and reaches no surface, which is
+what happened to `stone` until Zoo learned the kind.
+
+`siding_delco` is `form_lines`, not `masonry`. A lap course is one
+continuous board with a shadow line under its butt edge and no vertical
+joint, which is what `masonry` would draw. 12 courses on a 2.5 m tile is a
+21 cm exposure, a double-4 profile. Jitter is a fifth of the formwork
+default -- extruded vinyl is machine straight, and the waviness comes from
+the warp at 90 degrees rather than from a crooked course.
+
+`shingle_delco` IS `masonry`, because a shingle course is a staggered bond:
+18 rows on a 2.5 m tile is a 14 cm exposure (a three-tab strip laid at five
+inches), 8 columns a 31 cm tab, offset 0.5 so the joints never line up. The
+meso band at 90 cells is the granule -- a shingle is stone chips bonded to
+felt, and reading it as smooth is what makes a roof look like painted card.
+
+Both palettes are 27 and 33 codes of channel spread, comfortably coarser
+than their 16-step quantiser, so the rule in tests/test_posterize_palette.py
+does not bite. Both Delco themes now map 31 kinds.
+
 ## [0.37.0] - three refutations, a stone the county is built of
 
 Cold run 9041 scored zero and its frames still showed walls of pebbledash.
