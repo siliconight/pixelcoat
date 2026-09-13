@@ -1,16 +1,50 @@
 {
   "id": "concrete_delco",
   "kind": "concrete",
-  "base_colors": ["#8f8b83", "#9c988f", "#827e77"],
+  "base_colors": [
+    "#8f8b83",
+    "#9c988f",
+    "#827e77"
+  ],
   "meters_per_tile": 2.0,
-  "bands": {"macro": 0.45, "meso": 0.35, "micro": 0.2},
-  "macro": {"generator": "fbm", "cells": 3, "octaves": 3},
-  "meso": {"generator": "worley_f1", "cells": 14},
-  "micro": {"generator": "fbm", "cells": 128, "octaves": 3},
-  "edges": {"cells": 9, "thr": 0.7, "strength": 0.35},
+  "bands": {
+    "macro": 0.52,
+    "meso": 0.16,
+    "micro": 0.32
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "worley_f1",
+    "cells": 120
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 128,
+    "octaves": 3
+  },
   "detail_strength": 0.15,
   "posterize": 14,
-  "roughness": {"base": 0.9, "variation": 0.08},
+  "roughness": {
+    "base": 0.9,
+    "variation": 0.08
+  },
   "height_strength": 0.4,
-  "emit": {"roughness": true, "normal": false}
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "warp": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 4,
+      "octaves": 3
+    },
+    "intensity": 0.03,
+    "angle": 75
+  },
+  "notes": "Cold run 9041's frames showed every facade as pale cells on a dark matrix -- pebbledash, on 187 of 236 slots of that shell. The cause was `edges` at 9 cells / 0.70 / 0.35, a crack NET rather than a few cracks, exactly the mistake the asphalt had (roadmap 45). Concrete is a warm grey panel: sand in the face at 120 cells, the macro band carrying the staining a wall gets from its own roof, three cracks instead of ninety, and a warp so the staining does not run true. REFUTED AND CORRECTED: `thr` thins a crack, it never removes one -- F2-F1 is a closed tessellation -- so 0.96 was still crazy paving at 67 cm. `sparsity` 0.22 keeps about a fifth of the net, which is a few cracks that begin and end. AND THE CRACKS CAME OUT ALTOGETHER. Sparsity works by keeping a FRACTION of the net, so at 0.12 on a 2 m tile the survivors are one recognisable clump, and a 2 m tile crossing a 30 m wall repeats it fifteen times in a lattice. An isolated feature in a tiling texture advertises the tile; cracks on a wall belong in an insert layer, which is what the Bloodborne reference calls tileables plus inserts (docs/SET_DRESSING_REFERENCES.md). Sparsity stays on the asphalt, where 0.30 leaves dozens of fragments per tile and no motif."
 }

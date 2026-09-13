@@ -1,0 +1,58 @@
+{
+  "id": "fieldstone_delco",
+  "kind": "stone",
+  "base_colors": [
+    "#7d7468"
+  ],
+  "meters_per_tile": 2.5,
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 3
+  },
+  "meso": {
+    "generator": "fbm",
+    "cells": 60,
+    "octaves": 2
+  },
+  "micro": {
+    "generator": "hash_grain"
+  },
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.24,
+    "micro": 0.3
+  },
+  "aggregate": {
+    "cells": 6,
+    "gap": 0.035,
+    "colors": [
+      "#8c8578",
+      "#7a7266",
+      "#968d7e",
+      "#6e685d",
+      "#857b6b"
+    ],
+    "fill": 0.78,
+    "variation": 0.09,
+    "gap_color": "#4a453e",
+    "gap_strength": 0.8
+  },
+  "warp": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 7,
+      "octaves": 4
+    },
+    "intensity": 0.02,
+    "angle": 40
+  },
+  "detail_strength": 0.22,
+  "posterize": 32,
+  "height_strength": 0.42,
+  "roughness": {
+    "base": 0.82,
+    "variation": 0.12
+  },
+  "notes": "Local fieldstone, the material the walker calls the county's visual ballast (docs/DELCO_1997_ART_DIRECTION.md point 3): grey, tan and brown, heavy, irregular, locally sourced -- facades, foundations, retaining walls, churches, schools, mills, bridge abutments. Not a veneer: the mortar is recessed and the tone jitter is per stone. Size derived from the 20-40 cm face a Delco wall is laid in. `cells` is PER AXIS, so 6 on a 2.5 m tile is a 42 cm stone; the first draft read it as cells per tile, asked for 40, and rendered 6 cm chips -- lichen, not a wall. The theme had no stone kind at all before this. POSTERIZE AND A NEUTRAL PALETTE. `posterize` quantises each channel independently, so a palette whose channels differ by LESS than one step (255/n) has its hue chosen by the quantiser rather than by its author: at n=12 the warm grey #6e685d lands on (116,93,93), a pink, and #7a7266 on (116,116,93), an olive. Measured, not supposed. The steps here are finer than the palette's own channel spread for that reason -- a near-neutral palette is the FRAGILE case, which is the opposite of the intuition."
+}

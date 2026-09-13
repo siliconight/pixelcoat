@@ -27,7 +27,8 @@
   "edges": {
     "cells": 3,
     "thr": 0.965,
-    "strength": 0.18
+    "strength": 0.18,
+    "sparsity": 0.3
   },
   "detail_strength": 0.26,
   "posterize": 10,
@@ -49,5 +50,5 @@
     "intensity": 0.05,
     "angle": 15
   },
-  "notes": "Aggregate at 150 cells on a 3 m tile is 2 cm of stone, which is what asphalt is. REFUTED ON THE WAY: the cell mosaic the walker kept seeing was read as the MESO band and it is not -- a before/after render (2026-09-13) showed the pattern unchanged when meso went from 22 cells to 150, because the cells are the `edges` layer, a 5-to-6-cell Worley crack network at 0.25 strength on a 3 m tile: 50 cm cracks in a grid, which is crazy paving. Edges are now 3 cells at 0.965 threshold, which is a few long cracks, and the aggregate does the rest."
+  "notes": "Aggregate at 150 cells on a 3 m tile is 2 cm of stone, which is what asphalt is. REFUTED ON THE WAY: the cell mosaic the walker kept seeing was read as the MESO band and it is not -- a before/after render (2026-09-13) showed the pattern unchanged when meso went from 22 cells to 150, because the cells are the `edges` layer, a 5-to-6-cell Worley crack network at 0.25 strength on a 3 m tile: 50 cm cracks in a grid, which is crazy paving. Edges are now 3 cells at 0.965 threshold, which is a few long cracks, and the aggregate does the rest. CORRECTED after cold run 9041: the crack layer is a closed tessellation, so the 'few long cracks' the retune claimed were a honeycomb at every threshold. sparsity 0.3 breaks it."
 }

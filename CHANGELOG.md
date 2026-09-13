@@ -1,5 +1,71 @@
 # Changelog
 
+## [0.37.0] - three refutations, a stone the county is built of
+
+Cold run 9041 scored zero and its frames still showed walls of pebbledash.
+`shell.slots.json` says why that mattered more than it looked: 187 of that
+shell's 236 slots ask for `concrete`, so ONE grammar dresses 79% of every
+wall surface in the level. Chasing it turned up three things that were
+believed and are not true, all three measured rather than argued.
+
+**`cells` is PER AXIS.** `voronoi_cells` and `worley_edges` both build a
+`cells x cells` feature grid, so a cell is `meters_per_tile / cells` across
+and a tile holds `cells**2` of them. The first `fieldstone_delco` draft was
+authored against the other reading, asked for 40 cells on a 2.5 m tile
+expecting a 40 cm stone, and rendered 6 cm chips -- lichen, not a wall. The
+field now says so where it is declared.
+
+**`edges` is a closed tessellation and cannot draw a crack that ends.** The
+0.36.0 asphalt retune claimed 3 cells at a 0.965 threshold gave "a few long
+cracks". F2-F1 spikes at every cell wall, so every cell is closed at every
+threshold: `thr` controls how THIN a crack is, never how MANY. Three
+grammars shipped crazy paving while their notes claimed cracks -- asphalt (a
+1 m honeycomb), `concrete_delco` (a 22 cm pebbledash) and `sidewalk_delco`
+(crazing over the slabs). `edges.sparsity` is the fraction of the net that
+draws: a low-frequency field thresholded at its own quantile, so whole runs
+go uncracked and the survivors begin and end. 1.0 is the old behaviour and
+is the default, because grout and panel seams want the whole net.
+
+**A sparse feature in a tiling texture advertises the tile.** Sparsity keeps
+a FRACTION, so at 0.12 on a 2 m tile the survivors were one recognisable
+clump, and a 2 m tile crossing a 30 m wall repeats it fifteen times in a
+lattice. `concrete_delco` therefore has no cracks at all: cracks on a wall
+belong in an insert layer, which is what the Bloodborne reference already
+called tileables plus inserts. Sparsity stays on the asphalt at 0.30, where
+dozens of fragments per tile make no motif.
+
+**And the one that was invisible: `posterize` decides the hue of a neutral
+palette.** It steps each channel independently, so a colour whose channels
+differ by less than one step (255/n) has its hue chosen by where the
+channels happen to fall. Measured at n = 12, step 21.2: the warm grey
+`#6e685d` lands on (116, 93, 93), a pink; `#7a7266` on (116, 116, 93), an
+olive. Five warm greys came out of one render as a harlequin. A near-neutral
+palette is the FRAGILE case, which is the opposite of the intuition, and
+`tests/test_posterize_palette.py` now asserts the rule exactly where it
+bites -- a palette poured FLAT into a region (`aggregate`, `masonry`), where
+no noise band dithers across the levels to hide it. Three grammars were
+failing it: `fieldstone_delco` (12 -> 32), `cobblestone` (18 -> 32) and
+`terrazzo` (20 -> 64). Thirty-five grammars have palettes finer than their
+own step and look correct because their noise dithers; the test does not
+touch them, and says so.
+
+**`fieldstone_delco`, and a `stone` kind in both Delco themes.** The
+walker's art direction (`docs/DELCO_1997_ART_DIRECTION.md`, point 3) calls
+local fieldstone the county's visual ballast -- grey, tan and brown, heavy,
+irregular, locally sourced, in facades, foundations, retaining walls,
+churches, schools, mills and bridge abutments. `delco_1997.json` mapped 29
+kinds and none was stone, so nothing downstream could ask for it. The
+`aggregate` band already draws it; this is a palette and a size decision. 6
+cells on a 2.5 m tile is a 42 cm face, the middle of the 20-40 cm range a
+Delco wall is laid in, with the mortar recessed and a warp so the stones are
+not convex.
+
+`concrete_delco` is now a stained grey panel with sand in the face. The art
+standard's baseline was re-snapshotted for it (`chroma_mean` 0.0145 ->
+0.0180, well inside the 0.03 budget) and for `terrazzo`'s finer quantiser
+(`value_range` 0.1307 -> 0.1511, `hf_energy` 0.0566 -> 0.0602). 33 of 70
+grammars remain over budget.
+
 ## [0.36.0] - a directional warp, and ground that stopped reading as paving
 
 The walker sent two frames of Substance Designer: a `Directional Warp`

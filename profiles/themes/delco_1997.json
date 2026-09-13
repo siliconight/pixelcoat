@@ -26,6 +26,7 @@
     "road_paint": "road_paint_delco",
     "rubber": "rubber_delco",
     "sidewalk": "sidewalk_delco",
+    "stone": "fieldstone_delco",
     "tar": "tar_neutral",
     "tile": "vct_floor_beige",
     "vegetation": "vegetation_neutral",

@@ -44,7 +44,7 @@
     "gap_strength": 0.5
   },
   "detail_strength": 0.06,
-  "posterize": 20,
+  "posterize": 64,
   "roughness": {
     "base": 0.3,
     "variation": 0.05
@@ -53,5 +53,6 @@
   "emit": {
     "roughness": true,
     "normal": false
-  }
+  },
+  "notes": "POSTERIZE AND A NEUTRAL PALETTE. `posterize` quantises each channel independently, so a palette whose channels differ by LESS than one step (255/n) has its hue chosen by the quantiser rather than by its author: at n=12 the warm grey #6e685d lands on (116,93,93), a pink, and #7a7266 on (116,116,93), an olive. Measured, not supposed. The steps here are finer than the palette's own channel spread for that reason -- a near-neutral palette is the FRAGILE case, which is the opposite of the intuition."
 }

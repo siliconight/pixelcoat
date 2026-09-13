@@ -54,7 +54,23 @@ class MaterialGrammar:
     meso: dict = field(default_factory=dict)    # material identity / structure
     micro: dict = field(default_factory=dict)   # close-range surface response
     chips: dict = field(default_factory=dict)   # optional damage (expose under/cavity)
-    edges: dict = field(default_factory=dict)   # crisp cracks / seams (worley F2-F1)
+    #: Crisp cracks / seams, from the F2-F1 ridge field.
+    #: `{cells, thr, strength, sparsity}`.
+    #:
+    #: `cells` is PER AXIS: a cell is `meters_per_tile / cells` across and a
+    #: tile holds `cells**2` of them. Two grammars were authored against the
+    #: other reading and came out an order of magnitude off.
+    #:
+    #: F2-F1 IS A COMPLETE TESSELLATION. Every cell is closed by its own
+    #: walls at every threshold, so `thr` controls how THIN a crack is and
+    #: never how MANY -- which is why asphalt, concrete and sidewalk all
+    #: shipped crazy paving while their notes claimed "a few cracks"
+    #: (cold run 9041's frames). `sparsity` is the fraction of the net that
+    #: draws: a second low-frequency field is thresholded at its own
+    #: quantile so whole runs go uncracked and the survivors begin and end.
+    #: 1.0 is the tessellation, unchanged, and is the default -- grout and
+    #: panel seams want the whole net.
+    edges: dict = field(default_factory=dict)
     scratches: dict = field(default_factory=dict)  # crisp directional wear lines
     streaks: dict = field(default_factory=dict)  # vertical gravity grime/water stains
     form_lines: dict = field(default_factory=dict)  # formwork seams;
@@ -265,6 +281,18 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         e = ps.worley_edges((h, w), grammar.edges.get("cells", 16),
                             ps.stream_seed(seed, "edges"), label="edges")
         crack = (e >= grammar.edges.get("thr", 0.72)).astype(np.float32)
+        # SPARSITY: keep only the fraction of the net that falls under a
+        # low-frequency mask. Thresholded at the field's own quantile so the
+        # fraction is the fraction asked for rather than whatever a fixed
+        # cut happens to pass on this seed.
+        sp = float(grammar.edges.get("sparsity", 1.0))
+        if sp < 1.0:
+            keep = _generator(grammar.edges.get("mask") or
+                              {"generator": "fbm", "cells": 2, "octaves": 2},
+                              (h, w), ps.stream_seed(seed, "edge_mask"),
+                              "edge_mask")
+            crack = crack * (keep >= np.quantile(keep, 1.0 - max(sp, 0.0))
+                             ).astype(np.float32)
         st = grammar.edges.get("strength", 0.5)
         albedo = albedo * (1.0 - st * crack)[..., None]
         height = height - crack * 0.6

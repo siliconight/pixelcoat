@@ -28,7 +28,8 @@
   "edges": {
     "cells": 3,
     "thr": 0.985,
-    "strength": 0.07
+    "strength": 0.07,
+    "sparsity": 0.28
   },
   "chips": {
     "cells": 16,
@@ -68,5 +69,5 @@
     "intensity": 0.012,
     "angle": 100
   },
-  "notes": "A concrete walk is SLABS: a 2x2 grid of scored joints on a 2.5 m tile is 1.25 m squares, which is what a Delco sidewalk is poured in. REFUTED ON THE WAY: the white mosaic on the frames was read as the meso Worley and it was the `edges` crack network (5 cells at 0.35 strength) -- adding slabs without fixing that gave a sidewalk wearing both. Edges are now hairlines and nearly nothing (0.07 at a 0.985 threshold): at 0.16 the crack web still read over the slabs, so the walk wore both; the joints are the masonry grid and the face is fine sand."
+  "notes": "A concrete walk is SLABS: a 2x2 grid of scored joints on a 2.5 m tile is 1.25 m squares, which is what a Delco sidewalk is poured in. REFUTED ON THE WAY: the white mosaic on the frames was read as the meso Worley and it was the `edges` crack network (5 cells at 0.35 strength) -- adding slabs without fixing that gave a sidewalk wearing both. Edges are now hairlines and nearly nothing (0.07 at a 0.985 threshold): at 0.16 the crack web still read over the slabs, so the walk wore both; the joints are the masonry grid and the face is fine sand. CORRECTED after cold run 9041: the crack layer is a closed tessellation, so the 'few long cracks' the retune claimed were a honeycomb at every threshold. sparsity 0.28 breaks it."
 }
