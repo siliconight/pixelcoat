@@ -99,9 +99,30 @@ def render_text(text: str, *, scale: int = 4, spacing: int = 1) -> np.ndarray:
     return m
 
 
-def _place_text(canvas_hw, text, scale, *, cx=0.5, cy=0.5):
-    """Return a full-canvas mask with the text block centred at (cx, cy)."""
+def fit_scale(text: str, canvas_hw, *, spacing: int = 1, margin: float = 0.86) -> int:
+    """The largest glyph scale that fits ``text`` inside ``canvas_hw``.
+
+    A SIGN THAT DOES NOT FIT IS A DIFFERENT SIGN. `panel_sign`'s default
+    scale of 6 puts a ten-character name 360 px wide on a 256 px tile, and
+    `_place_text` clips what hangs over the edge: the first build of the
+    delco street's signs read GOOSE MART as "OOSE MAR" and CORNER TAP as
+    "ORNER TA" (2026-09-13). Fitting is arithmetic nobody has to remember,
+    so it is the default; an explicit scale still wins.
+    """
     h, w = canvas_hw
+    n = max(1, len(text))
+    per = _GW + spacing
+    by_w = int((w * margin) // (n * per))
+    by_h = int((h * margin) // _GH)
+    return max(1, min(by_w, by_h))
+
+
+def _place_text(canvas_hw, text, scale, *, cx=0.5, cy=0.5):
+    """Return a full-canvas mask with the text block centred at (cx, cy).
+    ``scale`` of None fits the text to the canvas (`fit_scale`)."""
+    h, w = canvas_hw
+    if scale is None:
+        scale = fit_scale(text, canvas_hw)
     ink = render_text(text, scale=scale)
     th, tw = ink.shape
     out = np.zeros((h, w), np.float32)
@@ -141,14 +162,14 @@ def _hw(size):
 # --------------------------------------------------------------------------- #
 
 def neon_sign(text: str, size=128, *, color: str = "#ff2a6d",
-              backer: str = "#0b0b10", scale: int = 5, glow: float = 0.6,
+              backer: str = "#0b0b10", scale: int | None = None, glow: float = 0.6,
               powered: bool = True) -> dict:
     """Glowing neon tube text on a dark backer."""
     h, w = _hw(size)
     ink = _place_text((h, w), text, scale)
     tube = ps.hex_to_rgb(color)
     back = ps.hex_to_rgb(backer)
-    halo = _blur(ink, max(2, scale)) * glow
+    halo = _blur(ink, max(2, scale if scale else fit_scale(text, (h, w)))) * glow
     if powered:
         emis = tube[None, None] * (ink[..., None] + 0.5 * halo[..., None])
         alb = back[None, None] * (1 - ink[..., None]) + tube[None, None] * ink[..., None]
@@ -161,7 +182,7 @@ def neon_sign(text: str, size=128, *, color: str = "#ff2a6d",
 
 
 def panel_sign(text: str, size=128, *, panel: str = "#12351f",
-               text_color: str = "#4dff8a", scale: int = 6,
+               text_color: str = "#4dff8a", scale: int | None = None,
                powered: bool = True, border: str | None = None) -> dict:
     """Backlit panel sign — glowing letters on a lit panel (EXIT, OPEN, ...)."""
     h, w = _hw(size)

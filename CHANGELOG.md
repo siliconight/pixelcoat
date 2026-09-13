@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.33.0] - the businesses a theme names, as signs
+
+Roadmap 153, the 1990s street. `theme-signs --theme <t>` builds one sign
+pack per business in `profiles/signs/<t>.json` and an index of them --
+slug, the text on it, the style, and the families of business it suits --
+which is what a consumer reads to pick a sign for a building. The theme
+already owns the street's material vocabulary; a Delaware County strip in
+1997 is as much its businesses (the hoagie shop, the beer distributor, the
+state store, the corner tap, the video rental) as its brick.
+
+EVERY NAME IS INVENTED. None reproduces a company's name, mark or trade
+dress, and the profile says so in a line a test asserts: a sign that did
+would be the one asset in a generated level nobody could ship.
+
+`signage.fit_scale` picks the largest glyph scale that fits a name inside
+its panel, and both sign renderers default to it. The first build of these
+signs read GOOSE MART as "OOSE MAR" and CORNER TAP as "ORNER TA": the
+default scale of 6 puts a ten-character name 360 px wide on a 256 px tile
+and `_place_text` clips the overhang. Fitting is arithmetic nobody has to
+remember, so it is the default and an explicit scale still wins.
+`theme-signs` renders a cabinet four times as wide as it is tall rather
+than a square tile, because that is the shape of the thing.
+
 ## [0.32.1] - one foliage tile is one card
 
 Cold run 9031's frames: the tree's crown cards carried the cutout but the

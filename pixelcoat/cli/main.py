@@ -190,6 +190,20 @@ def main(argv: list[str] | None = None) -> int:
     ln.add_argument("--force", action="store_true")
     ln.add_argument("--json", action="store_true", dest="json_log")
 
+    ts = sub.add_parser("theme-signs",
+                        help="build one sign pack per business a theme names "
+                             "(profiles/signs/<theme>.json) -- the shop signs "
+                             "of the street that theme describes")
+    ts.add_argument("--theme", default="delco_1997")
+    ts.add_argument("--profile", default=None,
+                    help="a signs profile to use instead of the theme's")
+    ts.add_argument("--size", type=int, default=512,
+                    help="the sign's WIDTH; a cabinet is four times as wide "
+                         "as it is tall, so the tile is size x size/4")
+    ts.add_argument("--out", default="./build/signs")
+    ts.add_argument("--force", action="store_true")
+    ts.add_argument("--json-log", action="store_true", dest="json_log")
+
     sg = sub.add_parser("sign",
                         help="generate an emissive signage/screen/label decal "
                              "(neon, panel, screen, hazard, arrow)")
@@ -228,6 +242,8 @@ def main(argv: list[str] | None = None) -> int:
             return _skins_library(args)
         if args.cmd == "theme-library":
             return _theme_library(args)
+        if args.cmd == "theme-signs":
+            return _theme_signs(args)
         if args.cmd == "signal-lenses":
             return _signal_lenses(args)
         if args.cmd == "sign":
@@ -512,6 +528,66 @@ def _theme_library(args) -> int:
 
 def _slug(s: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in s.lower()).strip("_") or "sign"
+
+
+def _theme_signs(args) -> int:
+    """One sign pack per business the theme names, plus an index of them.
+
+    THE THEME OWNS THE STREET'S VOCABULARY, and a 1990s Delaware County
+    strip is as much its businesses -- the hoagie shop, the beer
+    distributor, the state store, the corner tap -- as its brick. Every
+    name in the profile is INVENTED for the genre; none reproduces a
+    company's name, mark or trade dress, because a sign that did would be
+    the one asset in a generated level nobody could ship.
+
+    The index (`signs.index.json`) is what a consumer reads to pick a sign
+    for a building: slug, the text on it, and the families of business it
+    suits. Lot hangs the pack; Level Factory picks the slug.
+    """
+    from ..core import signage as sgn
+
+    pkg = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    profiles = os.path.normpath(os.path.join(pkg, "..", "profiles"))
+    path = args.profile or os.path.join(profiles, "signs", f"{args.theme}.json")
+    if not os.path.isfile(path):
+        raise ValueError(f"no signs profile for '{args.theme}' at {path}")
+    with open(path, encoding="utf-8") as f:
+        profile = json.load(f)
+    root = os.path.abspath(args.out)
+    index = []
+    for s in profile.get("signs", []):
+        slug = s["slug"]
+        pack_dir = os.path.join(root, f"sign_{slug}")
+        if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
+            raise ValueError(f"{pack_dir} already holds a pack (use --force)")
+        shape = (max(32, args.size // 4), args.size)      # a cabinet, not a tile
+        if s.get("style") == "neon":
+            arrays = sgn.neon_sign(s["text"], shape,
+                                   color=s.get("color", "#ff2a6d"),
+                                   backer=s.get("backer", "#0b0b10"))
+        else:
+            arrays = sgn.panel_sign(s["text"], shape,
+                                    panel=s.get("panel", "#12351f"),
+                                    text_color=s.get("text_color", "#4dff8a"),
+                                    border=s.get("border"))
+        man = sgn.build_sign_pack(pack_dir, arrays, f"sign_{slug}")
+        index.append({"slug": slug, "text": s["text"],
+                      "style": s.get("style", "panel"),
+                      "families": list(s.get("families", ["default"])),
+                      "dir": f"sign_{slug}", "asset_id": man["asset_id"]})
+    os.makedirs(root, exist_ok=True)
+    with open(os.path.join(root, "signs.index.json"), "w", encoding="utf-8") as f:
+        json.dump({"schema": "pixelcoat-signs/1", "theme": profile["theme"],
+                   "signs": index}, f, indent=2, sort_keys=True)
+    if getattr(args, "json_log", False):
+        print(json.dumps({"out": root, "signs": [s["slug"] for s in index]},
+                         indent=2))
+    else:
+        print(f"pixelcoat: theme '{profile['theme']}' -> {len(index)} sign "
+              f"pack(s) in {root}")
+        for s in index:
+            print(f"  {s['slug']:18s} {s['style']:6s} {s['text']}")
+    return 0
 
 
 def _signal_lenses(args) -> int:
