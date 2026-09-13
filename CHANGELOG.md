@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.35.0] - the pipeline has a typeface
+
+Pixel Operator, by Jayvee Enaguas (HarvettFox96), CC0 1.0 -- vendored at
+`assets/fonts/pixel_operator/` with the dedication it shipped with and a
+README saying what was fetched, from where, and why.
+
+WHY CC0 AND NOT MERELY FREE. A licence that asks for attribution puts a
+condition on every level this factory ships, and the deliverable is a
+pipeline somebody else points at their own game. WHY A PIXEL FACE: every
+Pixelcoat pack asks for nearest-neighbour filtering, so an outline face
+goes soft exactly where a sign is read. WHY VENDORED: a font resolved from
+the host's installed set renders differently on two machines, which a
+deterministic pipeline cannot have.
+
+`signage.render_text` now sets text in it; `_render_bitmap` keeps the
+hand-typed 5x7 bitmap of 38 glyphs as the fallback for a checkout without
+the font, and nothing else uses it. `_snap` rounds the pixel size to the
+face's own 16 px grid and the raster is thresholded to ink-or-nothing:
+asked for 21 px the face came back antialiased, 18 distinct ink values on
+one word, which under a nearest filter is a grey fringe on every letter.
+At 16 there are two. `fit_scale` measures the typeface's real advance
+widths rather than five-pixel cells, so a wide name no longer overflows
+and a narrow one no longer wastes half its panel.
+
 ## [0.34.0] - a fuel price board, at 1997 Pennsylvania prices
 
 Roadmap 153. `signage.fuel_price_sign` draws a price board: one row per

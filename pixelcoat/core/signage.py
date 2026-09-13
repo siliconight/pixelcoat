@@ -18,8 +18,10 @@ from __future__ import annotations
 import json
 import os
 
+import functools
+
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from . import procedural_surface as ps
 from ..version import __version__, DEFAULT_SEED
@@ -80,8 +82,99 @@ _FONT = {
 _GW, _GH = 5, 7
 
 
-def render_text(text: str, *, scale: int = 4, spacing: int = 1) -> np.ndarray:
-    """Rasterise ``text`` from the built-in font → a float mask (1 = ink)."""
+#: THE TYPEFACE, and why it is vendored rather than named. `assets/fonts/
+#: pixel_operator/` holds Pixel Operator by Jayvee Enaguas, CC0 1.0 -- see
+#: the README beside it for what was fetched and why. A font resolved from
+#: the host's installed set would make a sign that renders differently on
+#: two machines, which is the one thing a deterministic pipeline cannot
+#: have; a font under a licence that asks for attribution would put a
+#: condition on every level this factory ships.
+#:
+#: Pixel Operator is drawn on a 16 px grid, so text set at a multiple of
+#: `FONT_GRID` lands on whole pixels and stays crisp under the nearest
+#: -neighbour filter every Pixelcoat pack asks for.
+FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))), "assets", "fonts",
+    "pixel_operator")
+FONT_FILES = {"regular": "PixelOperator.ttf", "bold": "PixelOperator-Bold.ttf",
+              "small_caps": "PixelOperatorSC.ttf",
+              "small_caps_bold": "PixelOperatorSC-Bold.ttf",
+              "mono": "PixelOperatorMono.ttf"}
+FONT_GRID = 16
+DEFAULT_FACE = "bold"
+
+
+def _snap(px: int) -> int:
+    """The nearest multiple of the font's own grid, at least one grid.
+
+    A PIXEL FACE IS ONLY CRISP ON ITS GRID. Pixel Operator is drawn at 16
+    px; asked for 21 it comes back antialiased, which under a pack's
+    nearest-neighbour filter is a soft grey fringe on every letter -- the
+    exact thing this pipeline chose a pixel typeface to avoid. Measured:
+    `render_text("EXIT", scale=3)` had 18 distinct ink values at 21 px and
+    2 at 16.
+    """
+    return max(FONT_GRID, int(round(px / FONT_GRID)) * FONT_GRID)
+
+
+@functools.lru_cache(maxsize=32)
+def _face(weight: str, px: int):
+    """A PIL font at ``px``, or None when the vendored file is missing --
+    in which case `render_text` falls back to the built-in bitmap and says
+    nothing, because a sign that silently changes typeface is worse than
+    one that is merely plainer."""
+    path = os.path.join(FONT_DIR, FONT_FILES.get(weight, FONT_FILES["regular"]))
+    if not os.path.isfile(path):
+        return None
+    try:
+        return ImageFont.truetype(path, px)
+    except Exception:
+        return None
+
+
+def render_text(text: str, *, scale: int = 4, spacing: int = 1,
+                weight: str = None) -> np.ndarray:
+    """Rasterise ``text`` → a float mask (1 = ink).
+
+    ``scale`` is in units of the built-in bitmap's 7-pixel cap height, kept
+    so every caller's sizes mean what they meant before the typeface
+    changed: Pixel Operator is set at ``scale * _GH`` pixels, which is the
+    same block height the bitmap drew.
+    """
+    face = _face(weight or DEFAULT_FACE, _snap(int(scale) * _GH))
+    if face is not None:
+        return _render_ttf(text, face)
+    return _render_bitmap(text, scale=scale, spacing=spacing)
+
+
+def _render_ttf(text: str, face) -> np.ndarray:
+    """The typeface's own raster, trimmed to its ink."""
+    text = text.upper()
+    box = face.getbbox(text)
+    if not box:
+        return np.zeros((1, 1), np.float32)
+    w = max(1, int(box[2] - box[0]) + 2)
+    h = max(1, int(box[3] - box[1]) + 2)
+    img = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(img).text((-box[0] + 1, -box[1] + 1), text, fill=255, font=face)
+    a = np.asarray(img, np.float32) / 255.0
+    # ink or nothing: a sign's letter has an edge, and a half-lit texel
+    # under a nearest filter is a grey fringe
+    a = (a >= 0.5).astype(np.float32)
+    rows = np.where(a.max(axis=1) > 0.25)[0]
+    cols = np.where(a.max(axis=0) > 0.25)[0]
+    if len(rows) == 0 or len(cols) == 0:
+        return np.zeros((1, 1), np.float32)
+    return a[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+
+
+def _render_bitmap(text: str, *, scale: int = 4, spacing: int = 1) -> np.ndarray:
+    """Rasterise ``text`` from the built-in font → a float mask (1 = ink).
+
+    THE FALLBACK, and the only thing that still uses `_FONT`. It drew every
+    sign this pipeline made through 2026-09-13; the walker that day: "the
+    fonts are lazy for now".
+    """
     text = text.upper()
     glyphs = [_FONT.get(c, _FONT[" "]) for c in text]
     cols = len(glyphs) * (_GW + spacing) - spacing if glyphs else 0
@@ -99,8 +192,14 @@ def render_text(text: str, *, scale: int = 4, spacing: int = 1) -> np.ndarray:
     return m
 
 
-def fit_scale(text: str, canvas_hw, *, spacing: int = 1, margin: float = 0.86) -> int:
+def fit_scale(text: str, canvas_hw, *, spacing: int = 1, margin: float = 0.86,
+              weight: str = None) -> int:
     """The largest glyph scale that fits ``text`` inside ``canvas_hw``.
+
+    Measured against the TYPEFACE when one is vendored, because Pixel
+    Operator's advance widths are proportional and the bitmap's were not:
+    a scale derived from five-pixel cells overflows on a wide word and
+    wastes half the panel on a narrow one.
 
     A SIGN THAT DOES NOT FIT IS A DIFFERENT SIGN. `panel_sign`'s default
     scale of 6 puts a ten-character name 360 px wide on a 256 px tile, and
@@ -110,6 +209,14 @@ def fit_scale(text: str, canvas_hw, *, spacing: int = 1, margin: float = 0.86) -
     so it is the default; an explicit scale still wins.
     """
     h, w = canvas_hw
+    if _face(weight or DEFAULT_FACE, FONT_GRID) is not None:
+        best = 1
+        for s in range(1, 65):
+            ink = _render_ttf(text, _face(weight or DEFAULT_FACE, _snap(s * _GH)))
+            if ink.shape[1] > w * margin or ink.shape[0] > h * margin:
+                break
+            best = s
+        return best
     n = max(1, len(text))
     per = _GW + spacing
     by_w = int((w * margin) // (n * per))

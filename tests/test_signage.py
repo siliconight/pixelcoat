@@ -10,11 +10,30 @@ from pixelcoat.core import signage as sg
 
 
 def test_render_text_shape_and_determinism():
+    """Set in Pixel Operator (CC0, vendored) since 0.35.0; the 5x7 bitmap
+    is the fallback for a checkout without the font file. Both are
+    deterministic and both are ink-on-nothing, which is what a sign needs
+    -- the cap height is the typeface's business now."""
     a = sg.render_text("EXIT", scale=3)
     b = sg.render_text("EXIT", scale=3)
     assert np.array_equal(a, b)
-    assert a.shape[0] == 7 * 3                     # 5x7 font scaled
-    assert a.max() == 1.0 and a.min() == 0.0       # binary ink
+    assert 7 <= a.shape[0] <= 7 * 3 * 1.6
+    assert set(np.unique(a).tolist()) <= {0.0, 1.0}   # ink or nothing
+
+
+def test_the_vendored_typeface_is_the_one_that_draws():
+    """The font is vendored rather than resolved from the host, so a sign
+    renders the same on two machines; when it is missing the bitmap draws
+    and nothing pretends otherwise."""
+    assert sg._face("bold", 16) is not None, "Pixel Operator is not vendored"
+    ttf = sg.render_text("EXIT", scale=3)
+    bitmap = sg._render_bitmap("EXIT", scale=3)
+    assert not np.array_equal(ttf, bitmap)
+    assert bitmap.shape[0] == 7 * 3                # the fallback, unchanged
+    assert sg._face("no_such_weight", 16) is not None   # falls back to regular
+    # and the size is snapped to the face's own grid, or every letter comes
+    # back with a soft fringe under a nearest-neighbour filter
+    assert sg._snap(21) == 16 and sg._snap(26) == 32 and sg._snap(3) == 16
 
 
 def test_neon_powered_glows_more_than_unpowered():
