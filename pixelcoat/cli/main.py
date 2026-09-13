@@ -550,7 +550,23 @@ def _theme_signs(args) -> int:
     profiles = os.path.normpath(os.path.join(pkg, "..", "profiles"))
     path = args.profile or os.path.join(profiles, "signs", f"{args.theme}.json")
     if not os.path.isfile(path):
-        raise ValueError(f"no signs profile for '{args.theme}' at {path}")
+        if args.profile:
+            # a profile somebody NAMED and that is not there is an error
+            raise ValueError(f"no signs profile at {path}")
+        # A THEME WITH NO BUSINESSES IS NOT A FAILURE. Most themes name
+        # materials and no shops, and a build of the material library must
+        # not fail because the street has nothing to sell: this writes an
+        # empty index and says so. Measured: as a raising command it took
+        # the whole pixelcoat job down for every theme but delco, and three
+        # Level Factory service tests with it.
+        os.makedirs(os.path.abspath(args.out), exist_ok=True)
+        with open(os.path.join(os.path.abspath(args.out), "signs.index.json"),
+                  "w", encoding="utf-8") as f:
+            json.dump({"schema": "pixelcoat-signs/1", "theme": args.theme,
+                       "signs": []}, f, indent=2, sort_keys=True)
+        print(f"pixelcoat: theme '{args.theme}' names no businesses "
+              f"({path} does not exist); no sign packs built")
+        return 0
     with open(path, encoding="utf-8") as f:
         profile = json.load(f)
     root = os.path.abspath(args.out)

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.35.1] - a theme with no businesses is not a failure
+
+`theme-signs` on a theme with no `profiles/signs/<theme>.json` writes an
+empty index and says so, rather than raising. Most themes name materials
+and no shops, and a build of the material library must not fail because
+the street has nothing to sell: as a raising command it took the whole
+Level Factory pixelcoat job down for every theme but delco, and three of
+that repo's service tests with it. A profile somebody NAMES with
+`--profile` and that is not there is still an error.
+
 ## [0.35.0] - the pipeline has a typeface
 
 Pixel Operator, by Jayvee Enaguas (HarvettFox96), CC0 1.0 -- vendored at

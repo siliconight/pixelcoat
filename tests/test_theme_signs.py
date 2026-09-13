@@ -79,3 +79,17 @@ def test_a_price_board_reads_1997_and_carries_the_fraction():
     arrays = sgn.fuel_price_sign([(g, p) for g, p in grades.items()], (192, 256))
     assert "albedo" in arrays and "emissive" in arrays
     assert sgn.PRICE_FRACTION == "9"
+
+
+def test_a_theme_with_no_businesses_is_not_a_failure(tmp_path, capsys):
+    """Most themes name materials and no shops. A build of the material
+    library must not fail because the street has nothing to sell: measured,
+    as a raising command this took the whole pixelcoat job down for every
+    theme but delco, and three Level Factory service tests with it."""
+    from pixelcoat.cli.main import main
+    rc = main(["theme-signs", "--theme", "no_such_theme_at_all",
+               "--out", str(tmp_path / "signs")])
+    assert rc == 0
+    idx = json.loads((tmp_path / "signs" / "signs.index.json").read_text(encoding="utf-8"))
+    assert idx["signs"] == [] and idx["theme"] == "no_such_theme_at_all"
+    assert "names no businesses" in capsys.readouterr().out
