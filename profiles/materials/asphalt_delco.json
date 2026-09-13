@@ -8,38 +8,46 @@
   ],
   "meters_per_tile": 3.0,
   "bands": {
-    "macro": 0.35,
-    "meso": 0.4,
-    "micro": 0.25
+    "macro": 0.46,
+    "meso": 0.2,
+    "micro": 0.34
   },
   "macro": {
     "generator": "fbm",
     "cells": 3,
-    "octaves": 2
+    "octaves": 3
   },
   "meso": {
     "generator": "worley_f1",
-    "cells": 22
+    "cells": 150
   },
   "micro": {
-    "generator": "fbm",
-    "cells": 170,
-    "octaves": 2
+    "generator": "hash_grain"
   },
   "edges": {
-    "cells": 6,
-    "thr": 0.85,
-    "strength": 0.25
+    "cells": 3,
+    "thr": 0.965,
+    "strength": 0.18
   },
-  "detail_strength": 0.2,
-  "posterize": 12,
+  "detail_strength": 0.26,
+  "posterize": 10,
   "roughness": {
     "base": 0.95,
     "variation": 0.05
   },
-  "height_strength": 0.3,
+  "height_strength": 0.22,
   "emit": {
     "roughness": true,
     "normal": false
-  }
+  },
+  "warp": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 4,
+      "octaves": 3
+    },
+    "intensity": 0.05,
+    "angle": 15
+  },
+  "notes": "Aggregate at 150 cells on a 3 m tile is 2 cm of stone, which is what asphalt is. REFUTED ON THE WAY: the cell mosaic the walker kept seeing was read as the MESO band and it is not -- a before/after render (2026-09-13) showed the pattern unchanged when meso went from 22 cells to 150, because the cells are the `edges` layer, a 5-to-6-cell Worley crack network at 0.25 strength on a 3 m tile: 50 cm cracks in a grid, which is crazy paving. Edges are now 3 cells at 0.965 threshold, which is a few long cracks, and the aggregate does the rest."
 }

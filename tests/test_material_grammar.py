@@ -185,3 +185,54 @@ def test_albedo_pattern_decouples_albedo_from_normal():
     assert flat["albedo"].astype(np.float32).std() < strong["albedo"].astype(np.float32).std()
     # ...but the normal (built from the height field) is unchanged.
     assert np.array_equal(strong["normal"], flat["normal"])
+
+
+def test_a_directional_warp_moves_the_pattern_and_keeps_it_tiling():
+    """The Substance node of the same name (the walker's frames, 2026-09-13):
+    blending a noise over a grid changes its colour and leaves the grid;
+    warping MOVES it, so a joint bends."""
+    base = {"id": "w", "kind": "brick", "base_colors": ["#8a5a44"],
+            "masonry": {"rows": 6, "cols": 3}, "emit": {"roughness": True,
+                                                        "normal": True}}
+    flat = mg.synthesize(mg.MaterialGrammar.from_dict(base), size=96)
+    warped = mg.synthesize(mg.MaterialGrammar.from_dict(
+        {**base, "warp": {"generator": {"generator": "fbm", "cells": 4,
+                                        "octaves": 3},
+                          "intensity": 0.06, "angle": 143}}), size=96)
+    assert not np.array_equal(flat["albedo"], warped["albedo"])
+    # the height bends with the colour, or the normal slides off the surface
+    assert not np.array_equal(flat["normal"], warped["normal"])
+    # and it still tiles: the wrap means column 0 continues from column -1
+    a = warped["albedo"].astype(np.int16)
+    seam = np.abs(a[:, 0] - a[:, -1]).mean()
+    middle = np.abs(a[:, 48] - a[:, 47]).mean()
+    assert seam <= middle * 3.0 + 6.0, (seam, middle)
+
+
+def test_the_warp_is_deterministic_and_zero_intensity_is_a_no_op():
+    base = {"id": "w2", "kind": "concrete", "base_colors": ["#808080"],
+            "masonry": {"rows": 4, "cols": 4}}
+    spec = {**base, "warp": {"intensity": 0.05, "angle": 30}}
+    one = mg.synthesize(mg.MaterialGrammar.from_dict(spec), size=64)["albedo"]
+    two = mg.synthesize(mg.MaterialGrammar.from_dict(spec), size=64)["albedo"]
+    assert np.array_equal(one, two)
+    none = mg.synthesize(mg.MaterialGrammar.from_dict(
+        {**base, "warp": {"intensity": 0.0}}), size=64)["albedo"]
+    flat = mg.synthesize(mg.MaterialGrammar.from_dict(base), size=64)["albedo"]
+    assert np.array_equal(none, flat)
+
+
+def test_the_ground_grammars_stopped_reading_as_paving():
+    """Roadmap 45, and the refutation that got there: the cell mosaic was
+    read as the meso band and it was the `edges` crack network. A 3 m
+    asphalt tile with 50 cm cracks at a quarter strength is crazy paving."""
+    for name in ("asphalt_delco", "sidewalk_delco"):
+        g = mg.MaterialGrammar.load(os.path.join(_PROFILES, f"{name}.json"))
+        assert g.edges["cells"] <= 3, (name, g.edges)
+        assert g.edges["strength"] <= 0.2, (name, g.edges)
+        assert g.edges["thr"] >= 0.95, (name, g.edges)
+        assert g.meso["cells"] >= 100, (name, g.meso)   # aggregate, not cobbles
+        assert g.warp, name
+    slab = mg.MaterialGrammar.load(os.path.join(_PROFILES, "sidewalk_delco.json"))
+    assert slab.masonry["rows"] == slab.masonry["cols"] == 2   # 1.25 m squares
+    assert slab.masonry["offset"] == 0.0                       # a grid, not a bond

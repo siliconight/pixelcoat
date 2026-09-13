@@ -76,6 +76,19 @@ class MaterialGrammar:
     # Pair it with `transparency: {alpha_mode: "scissor"}` so the consumer
     # tests the alpha rather than blending it; a marking is crisp or gone.
     cutout: dict = field(default_factory=dict)
+    #: DIRECTIONAL WARP: displace the whole composed surface along one
+    #: direction by an amount a noise field decides -- the Substance node
+    #: of the same name. `{generator, intensity, angle}`: `intensity` is
+    #: the largest displacement as a FRACTION OF THE TILE (0.04 is four
+    #: percent of its width), `angle` degrees clockwise from +x. Wrapped,
+    #: so a tiling texture stays tiling.
+    #:
+    #: WHY IT MATTERS MORE THAN ANOTHER NOISE LAYER. Blending a noise over
+    #: a grid changes its colour and leaves the grid; warping MOVES the
+    #: grid, so a mortar line bends, a paving joint wanders and a kerb
+    #: edge stops being a ruler. Everything this pipeline shipped before
+    #: it was laid by a machine, which is what the walker kept seeing.
+    warp: dict = field(default_factory=dict)
     emit: dict = field(default_factory=lambda: {"roughness": True, "normal": False})
     # ACHROMATIC-BY-INTENT. True means "my albedo is a surface, not a paint
     # job -- the consumer supplies the hue". Zoo multiplies the mesh's own
@@ -169,6 +182,31 @@ def _apply_form_lines(albedo, height, size, cfg, axis, seed):
     dark = np.clip(0.5 - fl, 0.0, 0.5) * 2.0
     st = cfg.get("strength", 0.25) if cfg.get("strength") is not None else 0.25
     return albedo * (1.0 - st * dark)[..., None], height - dark * 0.3
+
+
+def _warp_offsets(spec, size, seed):
+    """(dy, dx) integer pixel offsets for a directional warp, wrapped."""
+    h, w = _hw(size)
+    field = _generator(spec.get("generator") or {"generator": "fbm", "cells": 4,
+                                                 "octaves": 3},
+                       (h, w), ps.stream_seed(seed, "warp"), "warp")
+    amp = float(spec.get("intensity", 0.04)) * max(h, w)
+    ang = math.radians(float(spec.get("angle", 0.0)))
+    push = _centered(field) * amp
+    dy = np.rint(push * math.sin(ang)).astype(np.int64)
+    dx = np.rint(push * math.cos(ang)).astype(np.int64)
+    return dy, dx
+
+
+def _warp_apply(arr, dy, dx):
+    """Sample ``arr`` at each pixel displaced by (dy, dx), wrapped. Nearest,
+    not bilinear: every pack here is read under a nearest filter, and a
+    resampled edge would be the soft fringe the whole pipeline avoids."""
+    h, w = arr.shape[:2]
+    ys, xs = np.mgrid[0:h, 0:w]
+    sy = (ys + dy) % h
+    sx = (xs + dx) % w
+    return arr[sy, sx]
 
 
 def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> dict:
@@ -357,6 +395,19 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         height = height - chip_mask * 0.5
     else:
         chip_mask = None
+
+    # THE WARP, applied to the composed surface and everything derived from
+    # it, so the albedo, the height and the roughness all bend together --
+    # a warped colour over an unwarped normal reads as a decal sliding on
+    # the surface.
+    if grammar.warp:
+        _dy, _dx = _warp_offsets(grammar.warp, (h, w), seed)
+        albedo = _warp_apply(albedo, _dy, _dx)
+        height = _warp_apply(height, _dy, _dx)
+        meso_s = _warp_apply(meso_s, _dy, _dx)
+        micro_s = _warp_apply(micro_s, _dy, _dx)
+        if chip_mask is not None:
+            chip_mask = _warp_apply(chip_mask, _dy, _dx)
 
     albedo = np.clip(albedo, 0.0, 1.0)
     if grammar.posterize:

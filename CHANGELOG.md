@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.36.0] - a directional warp, and ground that stopped reading as paving
+
+The walker sent two frames of Substance Designer: a `Directional Warp`
+pushing a brick pattern along one angle, and a `Flood Fill to Grayscale`
+giving every brick its own value. The second this vocabulary already had --
+`masonry` and `voronoi_cells` both return a stable per-unit random and
+`brick_variation` pours it into the albedo. The first it did not.
+
+`warp` (`{generator, intensity, angle}`) displaces the composed surface
+along one direction by an amount a noise field decides, wrapped so a tiling
+texture keeps tiling, applied to the albedo, the height, the meso and the
+micro together -- a warped colour over an unwarped normal reads as a decal
+sliding on the surface. Nearest sampling, because every pack here is read
+under a nearest filter. Blending a noise over a grid changes its colour and
+leaves the grid; warping MOVES the grid, so a mortar line bends and a
+paving joint wanders.
+
+AND THE GROUND (roadmap 45). REFUTED ON THE WAY, which is the useful part:
+the cell mosaic on every frame set since cold run 9017 was read as the MESO
+band, and a before/after render showed the pattern unchanged when asphalt's
+meso went from 22 cells to 150 -- because the cells are the `edges` layer,
+a 5-to-6-cell Worley crack network at a quarter strength on a 3 m tile: 50
+cm cracks in a grid, which is crazy paving. Asphalt now carries aggregate
+at 150 cells (2 cm of stone, which is what asphalt is), a few long cracks
+at 3 cells and 0.965, and patchiness in the macro band. The sidewalk is
+SLABS: a 2x2 scored grid on a 2.5 m tile is 1.25 m squares, fine sand in
+the face, hairline cracks at 0.07 -- at 0.16 the web still read over the
+joints and the walk wore both. Both take a small warp so no joint is a
+ruler.
+
 ## [0.35.1] - a theme with no businesses is not a failure
 
 `theme-signs` on a theme with no `profiles/signs/<theme>.json` writes an
