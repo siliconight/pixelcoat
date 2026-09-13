@@ -37,5 +37,6 @@
   "emit": {
     "roughness": true,
     "normal": false
-  }
+  },
+  "notes": "KEEP THIS COLOUR. The art standard's audit measures this grammar at chroma_mean 0.064 against an environment budget of 0.030, and cold run 9044's frames were first read as a defect for it. The walker, 2026-09-13, on those same frames: they love the colour and the way this carpet looks. The budget is an instrument standing in for that judgement, not a replacement for it -- do not desaturate this to burn down the over-budget list."
 }
