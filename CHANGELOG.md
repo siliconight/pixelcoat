@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.39.0] - the paint stopped wearing in identical blotches
+
+The walker, on a generated street: why does the paint on the pavement have
+the look of identical blotches missing? Because it did. `road_paint_delco`
+was a 0.5 m tile, and Lot projects a pack in WORLD space
+(`uv1_world_triplanar` at `1 / meters_per_tile`). A crosswalk bar is 0.5 m
+wide on a 1.0 m pitch -- exactly two tiles -- so every bar of a crosswalk
+sampled the same phase and wore the same holes, and every bar repeated
+them every 0.5 m down its 9.4 m length. Measured on cold run 9044's themed
+build, with the regenerated tile byte-identical to the one it shipped: 36 of
+36 bar pairs within a crosswalk pixel-identical, 84 of 210 across the site,
+18.8 repeats down every bar and 386 down its longest edge line. The same
+lesson as the concrete's cracks in 0.37.0, from the other direction: there a
+sparse feature advertised a 2 m tile across a wall, here a 0.5 m tile
+advertised itself through the only feature it had.
+
+**The tile is 8 m.** That is the largest square the library's 128 px/m
+fits in a 1024 px pack (`PACK_SIZE_BOUNDS`), and it holds a whole
+crosswalk's bars at distinct phases. The colour bands keep their size in
+metres -- every cell count x16 -- so the paint's own grain keeps its scale. The
+wear is fbm from 4 cells (2 m) down six octaves to 6 cm: a stretch of paint
+is worn or it is intact, and the nicks inside a worn stretch are ragged
+rather than one shape. After, on the same markings: no two bars of a
+crosswalk alike, per-bar wear from 0% to 31%, no repeat within half a bar,
+and the edge line's period 8.00 m instead of 0.50. A 9.4 m bar is still
+longer than the tile, so its first 1.4 m comes back at its far end.
+
+**`cutout.coverage`**, because the threshold the grammar carried stopped
+meaning what it said the moment the octaves changed. A fixed threshold is
+not a fraction: an fbm's spread narrows as octaves are added, so the same
+0.40 kept 90% of the tile at 3 cells x 4 octaves, 70% at 4 x 6 and 23% at
+2 x 7 (1024 px, seed 1999). `coverage` is the fraction the alpha keeps, cut
+at the field's own quantile -- the reason `edges.sparsity` is a quantile.
+Opt-in; a cutout that names only `threshold` is byte-identical, so foliage
+does not move.
+
+REFUTED ON THE WAY: a 7.7 m tile was tried to break the 8 m period's
+agreement with Lot's half-metre grid, and it only moved which bars matched.
+Any world-space period repeats wherever two bars stand a multiple of it
+apart; at 8 m, 5 of cold run 9044's 210 bar pairs still match to within 24
+cm of shift (4 exactly), all across crosswalks rather than within one. This
+grammar cannot remove that residue. A per-marking UV offset in Lot can.
+
+The art standard does not move past its tolerance (`chroma_mean` 0.0163 ->
+0.0172, `hf_energy` 0.0759 -> 0.0766), so the baseline is not
+re-snapshotted. The texel-density foil is still 8.0, now between the 1.0 m
+floor and the paint rather than the paint and `concrete_panel_delco`.
+`tests/test_road_paint.py` samples the tile the way Lot's material does and
+fails the shipped 0.38.0 grammar on both counts.
+
 ## [0.38.0] - the siding and the shingle the late 1990s put on Delco
 
 Two more surfaces from the walker's art direction, and only two: these are

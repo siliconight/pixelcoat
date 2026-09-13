@@ -6,7 +6,7 @@
     "#d8d4ca",
     "#efece5"
   ],
-  "meters_per_tile": 0.5,
+  "meters_per_tile": 8.0,
   "bands": {
     "macro": 0.3,
     "meso": 0.35,
@@ -14,16 +14,16 @@
   },
   "macro": {
     "generator": "fbm",
-    "cells": 2,
+    "cells": 32,
     "octaves": 2
   },
   "meso": {
     "generator": "worley_f1",
-    "cells": 9
+    "cells": 144
   },
   "micro": {
     "generator": "fbm",
-    "cells": 40,
+    "cells": 640,
     "octaves": 2
   },
   "detail_strength": 0.15,
@@ -36,10 +36,10 @@
   "cutout": {
     "generator": {
       "generator": "fbm",
-      "cells": 3,
-      "octaves": 4
+      "cells": 4,
+      "octaves": 6
     },
-    "threshold": 0.4
+    "coverage": 0.9
   },
   "transparency": {
     "opacity": 1.0,
@@ -48,5 +48,6 @@
   "emit": {
     "roughness": true,
     "normal": false
-  }
+  },
+  "notes": "An 8 m tile, not 0.5 m, because Lot projects this pack in WORLD space (uv1_world_triplanar at 1/meters_per_tile) and a crosswalk bar is 0.5 m wide on a 1.0 m pitch: at 0.5 m every bar of a crosswalk sampled the same phase of the tile, and every bar repeated the same holes every 0.5 m down its 9.4 m length -- measured on cold run 9044's themed build, 36 of 36 bar pairs within a crosswalk and 84 of 210 across the site pixel-identical. The walker's question was why the paint wore in identical blotches. The colour bands keep their size in metres (every cell count x16). The wear is fbm from 4 cells (2 m) down six octaves to 6 cm, so a whole stretch of paint is worn or intact and the nicks inside it are ragged; `coverage` 0.9 keeps nine tenths of the tile at the field's own quantile, because the fixed 0.40 threshold this carried would have kept 70% at these octaves. RESIDUE THIS CANNOT REMOVE: any world-space period repeats wherever two bars stand a multiple of it apart (5 of 210 pairs on 9044 still match within 24 cm of shift at 8 m; a 7.7 m tile only moved which pairs); a per-marking uv offset in Lot is what ends that. 1024 px at 8 m is the library's 128 px/m."
 }

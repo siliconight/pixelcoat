@@ -91,6 +91,13 @@ class MaterialGrammar:
     # road, a grate's holes. `{generator: {...}, threshold: 0..1, invert}`.
     # Pair it with `transparency: {alpha_mode: "scissor"}` so the consumer
     # tests the alpha rather than blending it; a marking is crisp or gone.
+    #
+    # `coverage` (0..1), when given, replaces `threshold`: the fraction of
+    # the tile the alpha keeps, cut at the field's own quantile. A fixed
+    # threshold is not a fraction -- an fbm's spread narrows as octaves are
+    # added, so the same 0.40 kept 90% of `road_paint_delco` at 3 cells x 4
+    # octaves and 23% at 2 cells x 7 (measured at 1024 px, seed 1999). The
+    # same reason `edges.sparsity` is a quantile.
     cutout: dict = field(default_factory=dict)
     #: DIRECTIONAL WARP: displace the whole composed surface along one
     #: direction by an amount a noise field decides -- the Substance node
@@ -447,9 +454,16 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         co = grammar.cutout
         fld = _generator(co.get("generator") or {"generator": "worley_f1", "cells": 8},
                          (h, w), ps.stream_seed(seed, "cutout"), "cutout")
-        keep = fld >= float(co.get("threshold", 0.25))
-        if co.get("invert"):
-            keep = ~keep
+        if co.get("coverage") is not None:
+            cov = min(max(float(co["coverage"]), 0.0), 1.0)
+            if co.get("invert"):
+                keep = fld < np.quantile(fld, cov)
+            else:
+                keep = fld >= np.quantile(fld, 1.0 - cov)
+        else:
+            keep = fld >= float(co.get("threshold", 0.25))
+            if co.get("invert"):
+                keep = ~keep
         # ELLIPSE: nothing outside an ellipse centred on the tile's corner
         # (wrapped, so it sits at the centre of a card whose UVs run -0.5
         # to 0.5 across it). For a tile that IS one card -- a tree's crown

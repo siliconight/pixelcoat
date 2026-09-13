@@ -80,6 +80,11 @@ def test_fixed_size_reproduces_the_old_four_times_spread():
     `road_paint_delco` (0.31.0) is authored at 0.5 m per tile, a 0.12 m line
     needing texels, against `concrete_panel_delco`'s 4.0, so the foil is now
     8.0.
+
+    STILL 8.0 SINCE 0.39.0, FOR A DIFFERENT PAIR. `road_paint_delco` moved to
+    an 8 m tile (its wear repeated every 0.5 m down every crosswalk bar), so
+    the extremes are now the 1.0 m library floor and the paint's 8.0. Same
+    number, other ends; read the pair before reading the number.
     """
     got = [512.0 / mpt for mpt in _tile_sizes().values()]
     assert max(got) / min(got) == pytest.approx(8.0, abs=0.01)
