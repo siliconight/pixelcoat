@@ -207,6 +207,54 @@ def _apply_form_lines(albedo, height, size, cfg, axis, seed):
     return albedo * (1.0 - st * dark)[..., None], height - dark * 0.3
 
 
+def roughness_levels(grammar) -> int:
+    """How many steps a posterized grammar's roughness is quantised to."""
+    return max(4, int(grammar.posterize) // 2) if grammar.posterize else 0
+
+
+def _roughness(grammar, meso_s, chip_mask, grain_s=None):
+    """The response rule: ``base + variation * meso``, stepped when the
+    grammar posterizes, plus the chips' wear.
+
+    THE STEPS SPAN THE DECLARED BAND, NOT [0, 1]. Up to 0.40.0 the stepped
+    roughness was `posterize(base + variation * meso, levels)` -- a grid of
+    `1 / (levels - 1)` laid over the whole unit range. Every shipped grammar
+    declares a variation of 0.04-0.18, and the grid's step is 0.14-0.33, so
+    the band a grammar asked for held one or two grid points and nothing
+    between them. `metal_bare_neutral` (0.28 +- 0.11, 7 levels, step 1/6)
+    shipped exactly 0.165 and 0.333 at 128 px, 27.2% of the tile at the
+    glossy one, in runs averaging 64.6 px along x and 1.9 px across it:
+    horizontal bars half a metre long. At Zoo's metallic 0.9 the glossy bars
+    mirrored a dark room as black streaks across every bare face (Zoo's vault
+    door, 2026-09-14). `metal_painted_neutral` collapsed to one value, 0.400,
+    and `metal_chrome_casino` put 3% of its tile at 0.000.
+
+    So the level count is unchanged and the steps are laid across
+    `base +- variation`: the grammar gets the stepped response it asked for
+    AND the variation it declared. Chips add after quantising, so worn
+    patches keep their exact +0.2.
+    """
+    r = grammar.roughness or {}
+    base, var = float(r.get("base", 0.7)), float(r.get("variation", 0.2))
+    v = meso_s
+    # GRAIN (0..1): how much of the variation comes from per-texel grain
+    # instead of the meso. The meso is the material's STRUCTURE, and for a
+    # brushed metal that structure is rows half a metre long -- a response
+    # driven by it alone draws those rows in the reflection. Grain varies
+    # the response at the scale of one texel, which reads up close and
+    # averages away in the mips before it can form a line. 0 (the default)
+    # is the meso alone and draws no stream.
+    g = min(max(float(r.get("grain", 0.0)), 0.0), 1.0)
+    if g > 0.0 and grain_s is not None:
+        v = (1.0 - g) * meso_s + g * grain_s
+    if grammar.posterize:
+        v = ps.posterize((v + 1.0) * 0.5, roughness_levels(grammar)) * 2.0 - 1.0
+    rough = base + var * v
+    if chip_mask is not None:
+        rough = rough + chip_mask * 0.2                      # bare/worn is rougher
+    return np.clip(rough, 0.0, 1.0)
+
+
 def _warp_offsets(spec, size, seed):
     """(dy, dx) integer pixel offsets for a directional warp, wrapped."""
     h, w = _hw(size)
@@ -441,6 +489,7 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         height = _warp_apply(height, _dy, _dx)
         meso_s = _warp_apply(meso_s, _dy, _dx)
         micro_s = _warp_apply(micro_s, _dy, _dx)
+        grain_s = _warp_apply(grain_s, _dy, _dx)
         if chip_mask is not None:
             chip_mask = _warp_apply(chip_mask, _dy, _dx)
 
@@ -481,14 +530,7 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         out["albedo"] = _to_u8(np.concatenate([albedo, alpha[..., None]], axis=-1))
 
     if grammar.emit.get("roughness", True):
-        r = grammar.roughness or {}
-        rough = (r.get("base", 0.7) + r.get("variation", 0.2) * meso_s)
-        if chip_mask is not None:
-            rough = rough + chip_mask * 0.2                  # bare/worn is rougher
-        rough = np.clip(rough, 0.0, 1.0)
-        if grammar.posterize:
-            rough = ps.posterize(rough, max(4, grammar.posterize // 2))  # stepped
-        out["roughness"] = _to_u8(rough)
+        out["roughness"] = _to_u8(_roughness(grammar, meso_s, chip_mask, grain_s))
 
     if grammar.emit.get("normal", False):
         hf = height - height.min()

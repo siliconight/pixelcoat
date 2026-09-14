@@ -8,7 +8,7 @@
       "emissive": false,
       "hf_energy": 0.032709976416060306,
       "kind": "asphalt",
-      "rough_mean": 1.0,
+      "rough_mean": 0.9499688840379902,
       "tier": null,
       "value_range": 0.118133954994807
     },
@@ -20,7 +20,7 @@
       "emissive": false,
       "hf_energy": 0.046834404762822156,
       "kind": "concrete",
-      "rough_mean": 1.0,
+      "rough_mean": 0.9509860768037683,
       "tier": null,
       "value_range": 0.15731532473188314
     },
@@ -32,7 +32,7 @@
       "emissive": false,
       "hf_energy": 0.10102695859472793,
       "kind": "brick",
-      "rough_mean": 0.6819696164598652,
+      "rough_mean": 0.7216094970703125,
       "tier": null,
       "value_range": 0.2750042275922171
     },
@@ -44,7 +44,7 @@
       "emissive": false,
       "hf_energy": 0.11755673434497321,
       "kind": "brick",
-      "rough_mean": 0.8777466418696385,
+      "rough_mean": 0.9007667691099878,
       "tier": null,
       "value_range": 0.2961180096037459
     },
@@ -56,7 +56,7 @@
       "emissive": false,
       "hf_energy": 0.17838208250999335,
       "kind": "brick",
-      "rough_mean": 0.2,
+      "rough_mean": 0.200018310546875,
       "tier": null,
       "value_range": 0.4315452783555903
     },
@@ -68,7 +68,7 @@
       "emissive": false,
       "hf_energy": 0.07354628072982099,
       "kind": "brick",
-      "rough_mean": 0.6699640012254902,
+      "rough_mean": 0.6993316052006741,
       "tier": null,
       "value_range": 0.20118908668975466
     },
@@ -80,7 +80,7 @@
       "emissive": false,
       "hf_energy": 0.036949561122114186,
       "kind": "canvas",
-      "rough_mean": 0.896875,
+      "rough_mean": 0.8996936274509804,
       "tier": null,
       "value_range": 0.09909535988573792
     },
@@ -92,7 +92,7 @@
       "emissive": false,
       "hf_energy": 0.008753666296684842,
       "kind": "carbon",
-      "rough_mean": 0.3632110595703125,
+      "rough_mean": 0.3209814931832108,
       "tier": null,
       "value_range": 0.018827287908398993
     },
@@ -104,7 +104,7 @@
       "emissive": false,
       "hf_energy": 0.028570846478147293,
       "kind": "carpet",
-      "rough_mean": 0.9997272566253064,
+      "rough_mean": 0.9500458960439645,
       "tier": null,
       "value_range": 0.10134877715892271
     },
@@ -116,7 +116,7 @@
       "emissive": false,
       "hf_energy": 0.054644234075939734,
       "kind": "ceiling_tile",
-      "rough_mean": 0.9033138499540441,
+      "rough_mean": 0.9196217854817709,
       "tier": null,
       "value_range": 0.1596961385368385
     },
@@ -128,7 +128,7 @@
       "emissive": false,
       "hf_energy": 0.08754721080344458,
       "kind": "concrete",
-      "rough_mean": 0.8364697624655331,
+      "rough_mean": 0.8797104181027879,
       "tier": null,
       "value_range": 0.2720804499761854
     },
@@ -140,7 +140,7 @@
       "emissive": false,
       "hf_energy": 0.08886202685022265,
       "kind": "concrete",
-      "rough_mean": 0.7997731526692708,
+      "rough_mean": 0.8004086961933211,
       "tier": null,
       "value_range": 0.30019964784356057
     },
@@ -152,7 +152,7 @@
       "emissive": false,
       "hf_energy": 0.07065361314615341,
       "kind": "concrete",
-      "rough_mean": 0.8802991081686581,
+      "rough_mean": 0.9006533155254289,
       "tier": null,
       "value_range": 0.19479433708453675
     },
@@ -164,7 +164,7 @@
       "emissive": false,
       "hf_energy": 0.05528760602928257,
       "kind": "concrete",
-      "rough_mean": 0.8800336052389706,
+      "rough_mean": 0.9002523983226103,
       "tier": null,
       "value_range": 0.1726750418848918
     },
@@ -176,7 +176,7 @@
       "emissive": false,
       "hf_energy": 0.04630255631296812,
       "kind": "concrete",
-      "rough_mean": 0.878994571461397,
+      "rough_mean": 0.9006415872012867,
       "tier": null,
       "value_range": 0.17132077012454416
     },
@@ -188,7 +188,7 @@
       "emissive": false,
       "hf_energy": 0.049732060343210246,
       "kind": "concrete",
-      "rough_mean": 0.9029143688725491,
+      "rough_mean": 0.9201149136412378,
       "tier": null,
       "value_range": 0.15580749273197386
     },
@@ -200,7 +200,7 @@
       "emissive": false,
       "hf_energy": 0.10666405963100477,
       "kind": "concrete",
-      "rough_mean": 0.8802991081686581,
+      "rough_mean": 0.9006533155254289,
       "tier": null,
       "value_range": 0.33090494600145204
     },
@@ -212,7 +212,7 @@
       "emissive": false,
       "hf_energy": 0.02706128386072586,
       "kind": "concrete",
-      "rough_mean": 0.3966107536764706,
+      "rough_mean": 0.39999305874693625,
       "tier": null,
       "value_range": 0.09530708775933394
     },
@@ -224,7 +224,7 @@
       "emissive": false,
       "hf_energy": 0.10066293789068316,
       "kind": "concrete",
-      "rough_mean": 0.9315724092371324,
+      "rough_mean": 0.9304665359796263,
       "tier": null,
       "value_range": 0.29629906835896924
     },
@@ -236,7 +236,7 @@
       "emissive": false,
       "hf_energy": 0.09329151897334875,
       "kind": "metal",
-      "rough_mean": 0.6081188725490196,
+      "rough_mean": 0.6,
       "tier": null,
       "value_range": 0.18939157654594208
     },
@@ -248,7 +248,7 @@
       "emissive": false,
       "hf_energy": 0.04416149035821125,
       "kind": "dirt",
-      "rough_mean": 0.9972828584558824,
+      "rough_mean": 0.9497787774777879,
       "tier": null,
       "value_range": 0.1384835347757587
     },
@@ -260,7 +260,7 @@
       "emissive": false,
       "hf_energy": 0.027646227269992774,
       "kind": "drywall",
-      "rough_mean": 0.8588235294117647,
+      "rough_mean": 0.8503240847120098,
       "tier": null,
       "value_range": 0.10083821756504574
     },
@@ -272,7 +272,7 @@
       "emissive": false,
       "hf_energy": 0.039692834304010646,
       "kind": "drywall",
-      "rough_mean": 0.8653743968290442,
+      "rough_mean": 0.8793188356885723,
       "tier": null,
       "value_range": 0.11914006576804115
     },
@@ -284,7 +284,7 @@
       "emissive": false,
       "hf_energy": 0.048006870606266405,
       "kind": "drywall",
-      "rough_mean": 0.8321599025352329,
+      "rough_mean": 0.8513965681487439,
       "tier": null,
       "value_range": 0.12740689140551342
     },
@@ -296,7 +296,7 @@
       "emissive": false,
       "hf_energy": 0.03303907834705793,
       "kind": "drywall",
-      "rough_mean": 0.8588235294117647,
+      "rough_mean": 0.8503240847120098,
       "tier": null,
       "value_range": 0.14041457805708146
     },
@@ -308,7 +308,7 @@
       "emissive": false,
       "hf_energy": 0.05343361736145697,
       "kind": "stone",
-      "rough_mean": 0.8202707926432292,
+      "rough_mean": 0.8198100370519301,
       "tier": null,
       "value_range": 0.20619011664100367
     },
@@ -320,7 +320,7 @@
       "emissive": false,
       "hf_energy": 0.05158043615412884,
       "kind": "concrete",
-      "rough_mean": 0.819442808861826,
+      "rough_mean": 0.8196634330001532,
       "tier": null,
       "value_range": 0.2057194641590499
     },
@@ -332,7 +332,7 @@
       "emissive": false,
       "hf_energy": 0.04651432189965989,
       "kind": "foliage",
-      "rough_mean": 0.8275399002374387,
+      "rough_mean": 0.7999353745404412,
       "tier": null,
       "value_range": 0.1963152592024216
     },
@@ -380,7 +380,7 @@
       "emissive": false,
       "hf_energy": 0.013177044724615481,
       "kind": "glass",
-      "rough_mean": 0.14011661305147058,
+      "rough_mean": 0.1000518798828125,
       "tier": null,
       "value_range": 0.04362904298744885
     },
@@ -464,7 +464,7 @@
       "emissive": false,
       "hf_energy": 0.03680753661822284,
       "kind": "concrete",
-      "rough_mean": 0.24752981148514094,
+      "rough_mean": 0.2506563672832414,
       "tier": null,
       "value_range": 0.1358567014236422
     },
@@ -476,7 +476,7 @@
       "emissive": false,
       "hf_energy": 0.030148761209174327,
       "kind": "wood",
-      "rough_mean": 0.38207720588235294,
+      "rough_mean": 0.4071844362745098,
       "tier": null,
       "value_range": 0.06778556223485482
     },
@@ -488,7 +488,7 @@
       "emissive": false,
       "hf_energy": 0.01988683656768179,
       "kind": "laminate",
-      "rough_mean": 0.3084798177083333,
+      "rough_mean": 0.34050209195006126,
       "tier": null,
       "value_range": 0.05232461442371372
     },
@@ -500,7 +500,7 @@
       "emissive": false,
       "hf_energy": 0.027894222488257372,
       "kind": "leather",
-      "rough_mean": 0.6001800537109375,
+      "rough_mean": 0.5999842625038296,
       "tier": null,
       "value_range": 0.088293898355921
     },
@@ -512,7 +512,7 @@
       "emissive": false,
       "hf_energy": 0.049899201476481955,
       "kind": "concrete",
-      "rough_mean": 0.22035271139705884,
+      "rough_mean": 0.20008323519837623,
       "tier": null,
       "value_range": 0.17505936520162102
     },
@@ -524,7 +524,7 @@
       "emissive": false,
       "hf_energy": 0.030978089740849427,
       "kind": "metal_bare",
-      "rough_mean": 0.2868640376072304,
+      "rough_mean": 0.2789531632965686,
       "tier": null,
       "value_range": 0.06503640599564942
     },
@@ -536,7 +536,7 @@
       "emissive": false,
       "hf_energy": 0.04360949883918344,
       "kind": "metal",
-      "rough_mean": 0.3995391845703125,
+      "rough_mean": 0.39980325137867645,
       "tier": null,
       "value_range": 0.09565077216370943
     },
@@ -548,7 +548,7 @@
       "emissive": false,
       "hf_energy": 0.047932053693767074,
       "kind": "metal",
-      "rough_mean": 0.24340533088235294,
+      "rough_mean": 0.2002230775122549,
       "tier": null,
       "value_range": 0.17781279452305665
     },
@@ -560,7 +560,7 @@
       "emissive": false,
       "hf_energy": 0.07143848122560661,
       "kind": "metal",
-      "rough_mean": 0.497906494140625,
+      "rough_mean": 0.4999682856541054,
       "tier": null,
       "value_range": 0.1608029503210716
     },
@@ -572,7 +572,7 @@
       "emissive": false,
       "hf_energy": 0.022384444221040793,
       "kind": "metal_painted",
-      "rough_mean": 0.4,
+      "rough_mean": 0.4212001426547181,
       "tier": null,
       "value_range": 0.06900085843034043
     },
@@ -584,7 +584,7 @@
       "emissive": false,
       "hf_energy": 0.06447223370885515,
       "kind": "metal",
-      "rough_mean": 0.5605926513671875,
+      "rough_mean": 0.5631542729396446,
       "tier": null,
       "value_range": 0.2518116985070989
     },
@@ -596,7 +596,7 @@
       "emissive": false,
       "hf_energy": 0.051212188507782766,
       "kind": "metal",
-      "rough_mean": 0.5078826904296875,
+      "rough_mean": 0.5066053203507965,
       "tier": null,
       "value_range": 0.09222937603456705
     },
@@ -608,7 +608,7 @@
       "emissive": false,
       "hf_energy": 0.049232497002963956,
       "kind": "metal",
-      "rough_mean": 0.9061279296875,
+      "rough_mean": 0.9080143947227328,
       "tier": null,
       "value_range": 0.1096252166545808
     },
@@ -620,7 +620,7 @@
       "emissive": false,
       "hf_energy": 0.05415890178377216,
       "kind": "metal",
-      "rough_mean": 0.5605926513671875,
+      "rough_mean": 0.5631542729396446,
       "tier": null,
       "value_range": 0.19200705690622183
     },
@@ -632,7 +632,7 @@
       "emissive": false,
       "hf_energy": 0.020165493486763036,
       "kind": "paper",
-      "rough_mean": 0.8313725490196079,
+      "rough_mean": 0.8600661333869485,
       "tier": null,
       "value_range": 0.05783179129359517
     },
@@ -644,7 +644,7 @@
       "emissive": false,
       "hf_energy": 0.07153337085546896,
       "kind": "gravel",
-      "rough_mean": 0.9022790048636642,
+      "rough_mean": 0.9004506429036458,
       "tier": null,
       "value_range": 0.2417989416383573
     },
@@ -656,7 +656,7 @@
       "emissive": false,
       "hf_energy": 0.038094264552856354,
       "kind": "plaster",
-      "rough_mean": 0.8588235294117647,
+      "rough_mean": 0.850286984911152,
       "tier": null,
       "value_range": 0.14085130910781452
     },
@@ -668,7 +668,7 @@
       "emissive": false,
       "hf_energy": 0.02206294961462302,
       "kind": "plastic",
-      "rough_mean": 0.3336626838235294,
+      "rough_mean": 0.34934806075750613,
       "tier": null,
       "value_range": 0.05955378994400168
     },
@@ -680,7 +680,7 @@
       "emissive": false,
       "hf_energy": 0.024111894468461403,
       "kind": "plastic",
-      "rough_mean": 0.36822509765625,
+      "rough_mean": 0.33937790814568014,
       "tier": null,
       "value_range": 0.06900085843034043
     },
@@ -692,7 +692,7 @@
       "emissive": false,
       "hf_energy": 0.05067508567945511,
       "kind": "wood",
-      "rough_mean": 0.769732666015625,
+      "rough_mean": 0.7501032810585172,
       "tier": null,
       "value_range": 0.14636750203120852
     },
@@ -704,7 +704,7 @@
       "emissive": false,
       "hf_energy": 0.07588622602590224,
       "kind": "road_paint",
-      "rough_mean": 0.670196533203125,
+      "rough_mean": 0.751440190333946,
       "tier": null,
       "value_range": 0.1673910786845857
     },
@@ -716,7 +716,7 @@
       "emissive": false,
       "hf_energy": 0.008420497462961023,
       "kind": "rubber",
-      "rough_mean": 0.7490196078431373,
+      "rough_mean": 0.8471813725490196,
       "tier": null,
       "value_range": 0.0
     },
@@ -728,7 +728,7 @@
       "emissive": false,
       "hf_energy": 0.04619178570842791,
       "kind": "shingle",
-      "rough_mean": 0.8816794002757353,
+      "rough_mean": 0.9000418270335478,
       "tier": null,
       "value_range": 0.14029958146561683
     },
@@ -740,7 +740,7 @@
       "emissive": false,
       "hf_energy": 0.0623945826392481,
       "kind": "sidewalk",
-      "rough_mean": 0.9521747065525429,
+      "rough_mean": 0.9298452339920343,
       "tier": null,
       "value_range": 0.19985138841589167
     },
@@ -752,7 +752,7 @@
       "emissive": false,
       "hf_energy": 0.07000136873603797,
       "kind": "siding",
-      "rough_mean": 0.608355832567402,
+      "rough_mean": 0.6195846258425245,
       "tier": null,
       "value_range": 0.2286226257027011
     },
@@ -764,7 +764,7 @@
       "emissive": false,
       "hf_energy": 0.05469731961963303,
       "kind": "plaster",
-      "rough_mean": 0.808062744140625,
+      "rough_mean": 0.8509784773284313,
       "tier": null,
       "value_range": 0.1925459945077339
     },
@@ -776,7 +776,7 @@
       "emissive": false,
       "hf_energy": 0.10473491805416384,
       "kind": "tile",
-      "rough_mean": 0.12602251838235295,
+      "rough_mean": 0.14949466480928308,
       "tier": null,
       "value_range": 0.29109653525816515
     },
@@ -788,7 +788,7 @@
       "emissive": false,
       "hf_energy": 0.030989262339024198,
       "kind": "tar",
-      "rough_mean": 0.742156982421875,
+      "rough_mean": 0.7256375181908701,
       "tier": null,
       "value_range": 0.09655727846562037
     },
@@ -800,7 +800,7 @@
       "emissive": false,
       "hf_energy": 0.06022602142681872,
       "kind": "tile",
-      "rough_mean": 0.2999597886029412,
+      "rough_mean": 0.299995392444087,
       "tier": null,
       "value_range": 0.1510945624325537
     },
@@ -812,7 +812,7 @@
       "emissive": false,
       "hf_energy": 0.11791461316369826,
       "kind": "tile",
-      "rough_mean": 0.2862809723498774,
+      "rough_mean": 0.2999642166436887,
       "tier": null,
       "value_range": 0.3050515287790032
     },
@@ -824,7 +824,7 @@
       "emissive": false,
       "hf_energy": 0.028086358718383955,
       "kind": "concrete",
-      "rough_mean": 0.3764705882352941,
+      "rough_mean": 0.3494903564453125,
       "tier": null,
       "value_range": 0.09754411292807619
     },
@@ -836,7 +836,7 @@
       "emissive": false,
       "hf_energy": 0.04829928589067713,
       "kind": "tile",
-      "rough_mean": 0.33817306219362747,
+      "rough_mean": 0.349711638805913,
       "tier": null,
       "value_range": 0.19203651607408112
     },
@@ -848,7 +848,7 @@
       "emissive": false,
       "hf_energy": 0.045882725641990474,
       "kind": "vegetation",
-      "rough_mean": 0.8274921492034314,
+      "rough_mean": 0.7998979157092525,
       "tier": null,
       "value_range": 0.1858449706661251
     },
@@ -860,7 +860,7 @@
       "emissive": false,
       "hf_energy": 0.03574511405733516,
       "kind": "wood",
-      "rough_mean": 0.5859375,
+      "rough_mean": 0.5918351715686274,
       "tier": null,
       "value_range": 0.1096252166545808
     }

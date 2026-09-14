@@ -1,5 +1,85 @@
 # Changelog
 
+## [0.41.0] - bare metal stopped mirroring the room in stripes
+
+Zoo, 2026-09-14, on 0.85.0's vault door built with the delco_1997 packs:
+long black horizontal streaks across every bare-metal face wider than about
+half a metre, in Godot 4.7 GL Compatibility. Replacing only the roughness map
+with its flat mean removed them (upper surround vertical luma gradient 22.30
+-> 6.80), so it was the map. `metal_bare_neutral`'s roughness at the 128 px
+the library writes held exactly two values, 0.165 and 0.333, 27.2% of the
+tile at the glossy one, in runs averaging 64.6 px along x and 1.9 px across.
+Zoo gives `metal_bare` metallic 0.90; a glossy row at 0.165 is a mirror, and
+in a dark basement a mirror is a black stripe. Zoo 0.86.0 moved the vault
+door to paint. Eighteen species still wear bare metal, and every theme's
+`metal_bare` slot is this one grammar.
+
+THE QUANTISER, NOT THE METAL. `synthesize` stepped roughness with
+`posterize(base + variation * meso, max(4, posterize // 2))`: a grid of
+`1 / (levels - 1)` over the whole of [0, 1]. Every posterized grammar in the
+library declares a variation of 0.04-0.18 and the grid's step is 0.14-0.33,
+so the band a grammar asked for held one or two grid points and nothing
+between them. It was everywhere, and it only showed on a mirror:
+`metal_painted_neutral` (0.42 +- 0.07) shipped one value, 0.400;
+`rubber_delco` (0.85) shipped 0.749; `asphalt_delco` (0.95) shipped 1.000;
+`glass_delco` and `metal_chrome_casino` put pixels at 0.000.
+
+**The steps span the declared band.** Same level count, laid across
+`base +- variation` instead of the unit range, and chips add their +0.2 after
+quantising. Every chip-free stepped grammar now has at least three values
+and a mean within 0.025 of its base.
+
+NOT ENOUGH ON ITS OWN, measured before the grammar moved. With the band fix
+alone `metal_bare_neutral` had seven values and the same rows: its only
+roughness driver is the brushed meso, 2 cells along x, so a row keeps its
+value for half a metre. Bar std (windows 4 px tall x 64 px long) went 0.0324
+-> 0.0207, the glossiest 4 px patch 0.165 -> 0.207. Rows half a metre long at
++-0.11 are still rows.
+
+**`roughness.grain`** (0..1): the share of the variation that comes from
+per-texel grain instead of the meso. Grain varies the response at one texel,
+which reads up close and averages out in the mips before it can make a line.
+Opt-in; 0 draws no stream and a grammar that does not name it is unchanged.
+`metal_bare_neutral` is `0.28 +- 0.07, grain 0.7` -- the base stays Zoo's
+flat-path 0.28. At 128 px: seven values, mean 0.279, per-texel std 0.030,
+bar std 0.0041, glossiest 4 px patch 0.258, and still 1.8x longer along the
+brushing than across it.
+
+MEASURED DOWNSTREAM, Godot 4.7, on scratch copies of the vault_surface walk.
+Pixelcoat 0.40.0 rebuilt delco_1997 identical to cold run 9052's shipped
+packs in 96 of 97 files (the 97th is `glass_delco`'s manifest, which 0.40.0
+gave its transparency hint after that run); each tree built its own library, and Zoo 0.86.0 (main, read-only) built
+shelving x2, sign_post, payphone, water_tank and stop_sign from each with the
+same slots and seed 9052. The GLB pairs differ only in their roughness images.
+Before and after frames were shot with `look_shots.py` from the same given
+stations. On the water tank's highlight, luma |d/dy| / |d/dx| is 11.11 / 5.75
+before and 8.25 / 8.63 after; on the shelving's back panel it is 5.66 / 4.46
+and 5.46 / 5.36. The vault surround, which was not rebuilt, measures 22.96 /
+7.55 and 22.94 / 7.53, and streaks in both. The props were first added to
+the walk's `site.tscn`, and the first frames had none of them in:
+`mission.tscn` loads `presentation/lux.applied.tscn`, not `site.tscn`.
+
+WHAT ELSE MOVED. Roughness only: 63 of the 72 grammars (all but the nine
+unposterized glass grammars), 30 of the 97 files in a delco_1997 library.
+No albedo, normal, emissive or manifest byte changed. The art standard's
+`rough_mean` gate fired on 20 grammars that got glossier, and each of them
+moved from the quantiser's value to its declared base (asphalt 1.000 -> 0.950,
+chrome 0.243 -> 0.200). The baseline takes `rough_mean` for the 63 grammars
+and nothing else. `road_paint_delco`'s albedo drift from 0.39.0 is still in
+tolerance and still not absorbed.
+
+`tests/test_roughness_band.py`: the band over every chip-free stepped grammar,
+bar std and glossiest patch over every grammar a theme resolves for
+`metal_bare`, and a floor on its variation so the answer to a stripe cannot
+be a constant. Against 0.40.0 it fails 49 times: 47 of 53 band cases and both
+bare-metal tests.
+
+NOT CHANGED, and worth knowing. `metal_brass_casino` is the `metal` slot of
+bank and casino, which Zoo lights at metallic 0.85, and the band fix gives it
+MORE row structure than it had: bar std 0.0378 -> 0.0466, though its glossiest
+patch is 0.200 -> 0.280. `metal_chrome_casino`, in no theme, goes 0.0192 ->
+0.0311. Neither has been photographed. `pixelcoat/version.py` still says 0.16.0.
+
 ## [0.40.0] - Delco's windows are glass you can see through
 
 Walk 9050, delco_1997: every window, the teller line, the bus shelter, the
