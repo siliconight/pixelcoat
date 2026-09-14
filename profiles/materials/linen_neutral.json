@@ -1,0 +1,18 @@
+{
+  "id": "linen_neutral",
+  "kind": "cloth",
+  "tintable": true,
+  "base_colors": ["#d0cecb", "#d4d2cf", "#cdcbc8"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.35, "meso": 0.38, "micro": 0.16},
+  "macro": {"generator": "fbm", "cells": 2, "octaves": 2},
+  "meso": {"generator": "weave", "count": 72},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "detail_strength": 0.05,
+  "albedo_pattern": 0.45,
+  "posterize": 14,
+  "roughness": {"base": 0.82, "variation": 0.04},
+  "height_strength": 0.15,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "A tablecloth's linen (kind `cloth`, 0.43.0): a fine weave -- 72 threads per metre against canvas_neutral's 36 -- under a broad soft fold shading and almost no grain, on an achromatic ground, tintable. Zoo's cocktail_table asks for it in dark red or white; canvas_delco read as gold burlap over the same table. REFUTED on the way: a 0.6 m tile at 128 px/m rounds to a 64 px pack, under two pixels per thread, and 64 threads on a 128 px tile is exactly two pixels each -- a hard per-texel alternation that measured ac1 0.15; 72 is off the pixel grid and measures 0.53 with the weave still visible. At the pack size: chroma 0.006, L mean 0.86, no pixel blown, spread 9.2, hf 0.021. Tint lands at about 0.64 of the asked linear value."
+}

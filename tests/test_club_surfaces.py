@@ -50,7 +50,12 @@ CLUB = ("carpet_club_delco", "wallpaper_club_delco", "velvet_delco",
         "paint_block_brown_delco")
 SLOTS = {"carpet_club": "carpet_club_delco",
          "wallpaper_club": "wallpaper_club_delco",
-         "velvet": "velvet_delco",
+         # 0.43.0: the velvet slot is the TINTABLE grammar. velvet_delco and
+         # its purple and teal colourways stay in the library, unmapped by
+         # the delco themes, because a fixed dye cannot serve a chair, a
+         # stool seat and a couch that each ask for their own
+         # (tests/test_tintable_fabric.py holds the tinting).
+         "velvet": "velvet_neutral",
          "wood_stained": "wood_stained_delco",
          "paint_block": "paint_block_brown_delco"}
 MAGENTA = (1.0, 0.15, 0.85)

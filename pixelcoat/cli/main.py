@@ -364,10 +364,20 @@ def _preview_compression(args) -> int:
 # kind is outside this set produces a valid pack that Zoo's find_pack (exact
 # kind match) will never resolve unless a species explicitly requests it.
 _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
-              "canvas", "carbon", "glass", "paper", "concrete", "plaster",
-              "brick", "tile", "drywall", "ceiling_tile", "carpet", "dirt",
+              "canvas", "carbon", "glass", "glass_facade", "paper", "concrete",
+              "plaster", "brick", "tile", "drywall", "ceiling_tile", "carpet",
+              "dirt", "tar", "stone", "siding", "shingle", "gravel",
+              "vegetation",
               # foliage: the leaf-cluster cutout a tree's crown cards wear
-              "foliage")
+              "foliage",
+              # object-owned prop metals (Zoo 0.8x): the mesh supplies the hue
+              "metal_painted", "metal_bare",
+              # the club (Zoo 0.88.0 / 0.89.0): upholstery and a tablecloth's
+              # linen, both tintable, and 0.42.0's four club surfaces. This
+              # tuple had drifted eight kinds behind `skins.KNOWN_KINDS`
+              # (Zoo 0.88.0 CHANGELOG) and warned about kinds Zoo knew.
+              "velvet", "cloth", "carpet_club", "wallpaper_club",
+              "wood_stained", "paint_block")
 
 
 #: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks

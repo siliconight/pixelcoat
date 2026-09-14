@@ -1,0 +1,24 @@
+{
+  "id": "velvet_neutral",
+  "kind": "velvet",
+  "tintable": true,
+  "base_colors": ["#cdcacb", "#d1cecf", "#c9c6c7"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.2, "meso": 0.5, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "directional_grain", "axis": "y", "cells_along": 3, "cells_across": 40},
+  "micro": {"generator": "fbm", "cells": 160, "octaves": 2},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 4, "octaves": 3},
+     "coverage": 0.3, "feather": 0.7, "color": "#dbd8d9", "strength": 0.35, "roughness": -0.12},
+    {"generator": {"generator": "fbm", "cells": 6, "octaves": 5},
+     "coverage": 0.06, "feather": 0.6, "color": "#888486", "strength": 0.3}
+  ],
+  "detail_strength": 0.05,
+  "albedo_pattern": 0.5,
+  "posterize": 20,
+  "roughness": {"base": 0.85, "variation": 0.05},
+  "height_strength": 0.25,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "velvet_delco's structure -- a pile nap along y, crushed patches lighter and glossier where people sat, soft dark spills -- on an ACHROMATIC ground, so the mesh supplies the colour: Zoo multiplies the genome colour into a tintable pack and Godot draws albedo x baseColorFactor. Replaces velvet_delco in both delco themes (0.43.0): one grammar, every colour a club chair, a stool seat or a couch asks for. The crushed pass pulls toward a lighter grey and the spills toward a darker one, which under the tint reads as lighter and darker velvet of the same dye. A LIGHT GROUND AMPLIFIES EVERY BAND in Oklab L: the delco colours and amplitudes on a #d6 base measured value range 0.166 and 9 % blown against the dark original's 0.068 and none, so the base sits at #cd and albedo_pattern halves the meso/micro/grain tint. Measured at the pack size (128 px, seed 1999): chroma 0.004, L mean 0.85, p95 0.88, no pixel crushed or blown, hf 0.03, ac1 0.76 (velvet_delco 0.76); the tint lands at about 0.62 of the asked linear value (tests/test_tintable_fabric.py)."
+}

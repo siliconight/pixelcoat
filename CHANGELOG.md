@@ -1,5 +1,101 @@
 # Changelog
 
+## [0.43.0] - the upholstery takes the colour it is asked for
+
+Zoo 0.88.0, read against cold run 9052's delco_1997 build: `leather`
+(brown), `canvas` (beige), `plastic` (red-orange) and 0.42.0's `velvet`
+(burgundy) ignore the mesh colour. Every cocktail-table cloth rendered as
+gold burlap whatever colour the planner drew, every bar-stool seat was the
+plastic pack's red-orange, and a club chair read coloured only because no
+velvet pack existed in that build and it fell to the flat path. `laminate`,
+`paper`, `metal_bare` and `metal_painted` took the colour, because their
+packs say `tintable: true`.
+
+THE ONE MECHANISM THE CONSUMER CHAIN HONOURS is that flag, and nothing
+else: Zoo's `bpylayer/materials.make_material` reads `pack["tintable"]`,
+caches one material per (kind, theme, colour) and multiplies the genome
+colour into the albedo; the glTF exporter folds that multiply into
+`baseColorFactor` (Zoo's `tools/tint_probe.py`, measured), and Godot 4.7
+imports it as `albedo_color`. Level Factory's `zoo_worldskin.gd` switches
+vertex colour on only where COLOR_0 is tinted and never reads a pack. So a
+pack is tintable when its manifest says so, and its albedo has to be a
+SURFACE -- achromatic and light -- for the multiply to land on the asked
+colour. A fixed dye in the pack cannot be undone downstream.
+
+FOUR NEUTRAL FABRICS, each the delco grammar's structure on an achromatic
+ground, and one new kind:
+
+    grammar           kind     Cmean  Lmean  p95    hf     ac1   std   tint lands at
+    velvet_neutral    velvet   0.004  0.85   0.88   0.029  0.76  8.8   0.62
+    leather_neutral   leather  0.008  0.81   0.86   0.039  0.33  12.4  0.55
+    canvas_neutral    canvas   0.012  0.83   0.86   0.028  0.34  10.7  0.57
+    linen_neutral     cloth    0.006  0.86   0.88   0.021  0.53  9.2   0.64
+
+(pack size, seed 1999; L is Oklab; ac1 is roadmap 140's neighbour
+correlation and std the luma spread; the last column is the fraction of
+the asked LINEAR value that arrives, albedo x tint, which is the number a
+genome author needs -- an asked 0.22 oxblood renders at 0.14.) No pixel of
+any of them is crushed or blown. Both delco themes map `velvet`, `leather`
+and `canvas` to them, `plastic` to the existing tintable `plastic_neutral`
+(delco already did; delco_1997 had the red-orange `plastic_delco`), and the
+new `cloth` -- a tablecloth's linen, 72 threads per metre against canvas's
+36 -- to `linen_neutral`, because canvas is sackcloth and a tablecloth is
+not. The other ten themes keep their fixed-dye packs.
+
+`velvet_delco` and its purple and teal colourways stay in the library,
+unmapped by the delco themes. 0.42.0 wrote that "which couch wears which
+colour is a consumer's choice nobody makes yet"; the tint makes it, per
+mesh, from one grammar. `carpet_delco` and `wood_delco` are untouched, and
+`tests/test_tintable_fabric.py` holds them so.
+
+A LIGHT GROUND AMPLIFIES EVERY BAND IN OKLAB L, and this cost a round.
+The delco colours and amplitudes moved onto a #d6 base measured a value
+range of 0.166 with 9 % of the velvet's pixels blown against the dark
+original's 0.068 and none; the leather's creases at their delco strength
+put its spread at 20.6 against the audit's 16 ceiling. Each neutral sits
+at #c7-#d0, `albedo_pattern` halves the meso/micro/grain tint, and the
+leather's `edges.strength` is 0.10 (was 0.18). The multiply is what a
+light ground is for, and it is why these are new grammars rather than
+edits: the baseline gate (`tests/test_art_standard.py`, tolerance 0.002)
+would have called the value-range change on the originals a regression,
+and it would have been right to.
+
+REFUTED ON THE WAY, kept where they were found:
+- a 0.6 m linen tile at 128 px/m rounds to a 64 px pack, under two pixels
+  per thread; and 64 threads on a 128 px tile is exactly two pixels each --
+  a hard per-texel alternation that measured ac1 0.15. 72 is off the pixel
+  grid and measures 0.53 with the weave still visible;
+- the first structure clause held the fabrics to the drywall/carpet floor
+  (ac1 >= 0.5). A weave alternates texel by texel: the SHIPPED canvas_delco
+  measures 0.25 at its pack size and leather_delco's worley hide 0.26. The
+  clause now compares each neutral with the delco grammar it copies;
+- the canvas's warm cast (#c8c5c0) skewed the per-channel tint ratio by
+  0.062 across R, G and B; the base is neutral now (#c7c6c4) and the
+  clause that caught it is the one that catches a cast.
+
+`plastic_neutral` ships 19 % of its pixels over Oklab L 0.94 and has since
+0.13. Harmless to a tint FACTOR -- it only sets how much of the asked colour
+arrives (0.83) -- and not this release's to move; the four fabrics authored
+here are held to zero and the test says which one is exempt and why.
+
+`cli/main.py`'s `_ZOO_KINDS` mirror was eight kinds behind Zoo's
+`skins.KNOWN_KINDS` (Zoo 0.88.0 CHANGELOG) and warned about kinds Zoo knew;
+it lists them now, with `velvet`, `cloth` and 0.42.0's four.
+
+MEASURED DOWNSTREAM, Godot 4.7, GL Compatibility, RTX 2060, on a scratch
+copy of the club walk with Zoo 0.89.0's kit built from this library: the
+import keeps `albedo_color` at the genome colour exactly (plum 0.12/0.03/0.12
+linear reads back 0.381/0.190/0.381 sRGB, oxblood-red cloth 0.30/0.03/0.05
+reads 0.584/0.190/0.248), the albedo textures' linear means are 0.61-0.65,
+and every fabric material the readback listed draws its vertex colour. The
+tables are dark red and white, the stool seats red and black vinyl and
+plum velvet, the couch is leather on wood legs. Frames and the readback
+are Zoo 0.89.0's CHANGELOG.
+
+`tests/test_tintable_fabric.py`, 35 tests. Against 0.42.0 it fails 31.
+Suite: 448 passed (0.42.0: 410). The art-standard baseline takes rows for
+the four new grammars and nothing else.
+
 ## [0.42.0] - a club with a figure in its carpet
 
 The walker, 2026-09-14, with two frames of GTA IV's Triangle Club: strip

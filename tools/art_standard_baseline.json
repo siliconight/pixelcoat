@@ -84,6 +84,18 @@
       "tier": null,
       "value_range": 0.09909535988573792
     },
+    "canvas_neutral": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.004694562319969247,
+      "chroma_p95": 0.03238153359900866,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.03127240914237009,
+      "kind": "canvas",
+      "rough_mean": 0.8996936274509804,
+      "tier": null,
+      "value_range": 0.07493014394503517
+    },
     "carbon_neutral": {
       "blown_frac": 0.0,
       "chroma_mean": 0.003173293359906738,
@@ -516,6 +528,30 @@
       "tier": null,
       "value_range": 0.088293898355921
     },
+    "leather_neutral": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.0044939503835943,
+      "chroma_p95": 0.03238153359900866,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.03794442637269912,
+      "kind": "leather",
+      "rough_mean": 0.5999842625038296,
+      "tier": null,
+      "value_range": 0.07493014394503517
+    },
+    "linen_neutral": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.006158965065976906,
+      "chroma_p95": 0.026890134634739916,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.021032495287644018,
+      "kind": "cloth",
+      "rough_mean": 0.8196078431372549,
+      "tier": null,
+      "value_range": 0.06191948997111463
+    },
     "marble_bank_floor": {
       "blown_frac": 0.0002288818359375,
       "chroma_mean": 0.020229812515002426,
@@ -887,6 +923,18 @@
       "rough_mean": 0.8458687576593137,
       "tier": null,
       "value_range": 0.06847303242651115
+    },
+    "velvet_neutral": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.004020530277121362,
+      "chroma_p95": 0.023006491130954827,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.028939324807584682,
+      "kind": "velvet",
+      "rough_mean": 0.8458687576593137,
+      "tier": null,
+      "value_range": 0.08394374728910592
     },
     "velvet_purple_delco": {
       "blown_frac": 0.0,

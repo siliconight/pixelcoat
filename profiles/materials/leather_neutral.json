@@ -1,0 +1,19 @@
+{
+  "id": "leather_neutral",
+  "kind": "leather",
+  "tintable": true,
+  "base_colors": ["#cbc8c5", "#d0cdca", "#c6c3c0"],
+  "meters_per_tile": 1.2,
+  "bands": {"macro": 0.15, "meso": 0.4, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "worley_f1", "cells": 30},
+  "micro": {"generator": "fbm", "cells": 150, "octaves": 2},
+  "edges": {"cells": 26, "thr": 0.8, "strength": 0.10},
+  "detail_strength": 0.06,
+  "albedo_pattern": 0.4,
+  "posterize": 12,
+  "roughness": {"base": 0.6, "variation": 0.1},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "leather_delco's grain -- worley cells for the hide, edge creases, a broad fbm -- on an achromatic ground, tintable: the booth or sofa's genome colour is the dye. leather_delco (a fixed brown) stays for the ten themes that map it; both delco themes take this one (0.43.0), because Zoo's booth_seat, boots and briefcase each carry their own leather colour and were rendering the pack's brown regardless. The creases are the term a light ground amplifies most: at the delco strength (0.18) the spread measured 20.6 against the dark original's 6.7 and the audit's 16 ceiling; at 0.10 it is 12.4, hf 0.039, no pixel blown, ac1 0.33 (leather_delco 0.26). Tint lands at about 0.52 of the asked linear value."
+}
