@@ -604,6 +604,51 @@ def pack_size_for(meters_per_tile, density: float = DEFAULT_DENSITY,
     return int(min(max(size, bounds[0]), bounds[1]))
 
 
+# WHAT A KIND PROMISES ABOUT LIGHT. The consumer's contract, not a style:
+# Zoo glazes every enterable window, teller screen and shelter pane in `glass`
+# and every hollow-facade window in `glass_facade` (zoo `recipes/_arch.py`),
+# and blends a material only when its pack carries
+# `import_hints.transparency` with opacity below 1. So the kind is the
+# question "can you see through this" and this field is the answer, and the
+# two must agree or the answer is silently wrong.
+#
+# It was, for a whole theme. `glass_delco` was written with no `transparency`
+# block and sat orphaned (0.17.0 noted it); 0.27.0 put it in delco_1997's
+# `glass` slot, and every window, teller line, bus shelter and car of that
+# theme exported alphaMode OPAQUE -- a dark teal-grey slab across every
+# opening. Measured on walk 9050: `M_Skin_glass_delco_1997` OPAQUE on 12
+# GLBs, 7 of them window modules. Nothing refused it, because the grammar
+# was a legal grammar and the theme a legal theme.
+SEE_THROUGH_KINDS = ("glass",)
+OPAQUE_GLAZING_KINDS = ("glass_facade",)
+
+
+def see_through_fault(grammar: "MaterialGrammar") -> str | None:
+    """Why ``grammar`` breaks its kind's see-through contract, or None.
+
+    A ``glass`` grammar must blend (``transparency.opacity`` below 1, not a
+    ``scissor`` cutout); a ``glass_facade`` grammar must not declare
+    transparency at all. Every other kind is unconstrained.
+    """
+    t = grammar.transparency or {}
+    if grammar.kind in SEE_THROUGH_KINDS:
+        if not t:
+            return (f"grammar '{grammar.id}' is kind '{grammar.kind}', which "
+                    f"consumers glaze see-through, and declares no "
+                    f"transparency -- it would ship opaque")
+        if t.get("alpha_mode", "blend") != "blend":
+            return (f"grammar '{grammar.id}' is kind '{grammar.kind}' and asks "
+                    f"for alpha_mode '{t.get('alpha_mode')}'; glass blends")
+        if not 0.0 < float(t.get("opacity", 0.6)) < 1.0:
+            return (f"grammar '{grammar.id}' is kind '{grammar.kind}' with "
+                    f"opacity {t.get('opacity')}; see-through glass needs "
+                    f"0 < opacity < 1")
+    if grammar.kind in OPAQUE_GLAZING_KINDS and t:
+        return (f"grammar '{grammar.id}' is kind '{grammar.kind}', the opaque "
+                f"glazing of a hollow facade, and declares transparency")
+    return None
+
+
 def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
                         size=None, density: float = DEFAULT_DENSITY,
                         seed: int = DEFAULT_SEED) -> dict:
@@ -619,7 +664,9 @@ def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
     <theme>``; the vocabulary a building wears is entirely the theme profile.
 
     Raises if a curated grammar's ``kind`` doesn't match the slot it's mapped to
-    (a theme can't put a brick grammar in the ``glass`` slot).
+    (a theme can't put a brick grammar in the ``glass`` slot), and if the
+    grammar disagrees with what its kind promises about light (see
+    ``see_through_fault``).
     """
     if isinstance(profile, str):
         with open(profile, encoding="utf-8") as f:
@@ -633,6 +680,9 @@ def build_theme_library(profile, grammars_dir: str, out_dir: str, *,
             raise ValueError(
                 f"theme '{theme}': grammar '{gram_id}' is kind '{g.kind}', "
                 f"but the profile maps it to the '{kind}' slot")
+        fault = see_through_fault(g)
+        if fault:
+            raise ValueError(f"theme '{theme}': {fault}")
         pack_dir = os.path.join(out_dir, f"{kind}_{theme}")
         # size=None means "hold texel density flat"; an explicit size is the
         # escape hatch and reproduces the old fixed-size behaviour exactly.

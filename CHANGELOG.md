@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.40.0] - Delco's windows are glass you can see through
+
+Walk 9050, delco_1997: every window, the teller line, the bus shelter, the
+newspaper box, the parking meter and the car glazed in
+`M_Skin_glass_delco_1997`, alphaMode OPAQUE -- 12 GLBs, 7 of them window
+modules -- and rendered as a dark teal-grey slab over every opening. The pack
+the build used (`bank_block_001.pixelcoat_build/out/glass_delco_1997/
+glass_delco.pack.json`) has no `import_hints.transparency`, because
+`profiles/materials/glass_delco.json` never declared one, and Zoo blends a
+material only when that hint is there.
+
+NOT A DESIGN CHOICE, checked before changing it. 0.17.0 recorded
+`glass_delco.json` as orphaned content with "NO transparency block at all"
+and left it alone because adopting it would change colour and gloss as well.
+0.27.0 then adopted it into delco_1997's `glass` slot as "plain storefront
+glazing" and checked each grammar's `kind` against its slot -- and nothing
+about light. Every other `glass` grammar in the library declares a
+transparency; Zoo's kind contract is that `glass` is the see-through kind and
+`glass_facade` the opaque one (`dna.OPAQUE_FOR`, `recipes/_arch.py`).
+
+**`glass_delco` declares `transparency: {opacity: 0.38, ior: 1.5}`.** Albedo,
+roughness, tile and seed are unchanged, and the regenerated albedo is
+byte-identical to cold run 9050's (sha256 `2b7e82137725...`); only the
+manifest moves. 0.38 by evidence: `glass_frosted` went from 0.68 to 0.34 on
+the walker's "can't see through very well"; the pale rockay glasses sit at 0.5
+because a light pane at 0.5 still reads, and this pane is dark (#2b3a3d), so it
+dims a view more at the same opacity; and Zoo 0.79.0 measured its car glass
+at 0.38 with the cabin readable through it. One opacity for the street keeps
+the car and the shopfront the same glass, which they now share as one
+material.
+
+**A theme can no longer ship opaque windows.** `see_through_fault` holds the
+kind's contract and `build_theme_library` raises on it: a `glass` grammar must
+blend at 0 < opacity < 1 (not a scissor cutout), and a `glass_facade` grammar
+must declare no transparency. Road paint, foliage and every other kind are
+unconstrained. `tests/test_see_through_glass.py` asserts it over every shipped
+grammar and theme, through a written pack (the hint reaches the manifest Zoo
+reads), and at the library builder for all four refusals. Against the 0.39.0
+grammar, three of its tests fail: `glass_delco`, the delco_1997 theme, and the
+round trip.
+
+MEASURED DOWNSTREAM, on a scratch copy of walk 9050 with the glass modules
+rebuilt from this library by Zoo 0.80.0: alphaMode BLEND, baseColorFactor
+alpha 0.38 on all 12 (11 have node names and accessor counts identical to the
+shipped GLBs; the car is Zoo 0.79.0's new car and was left out of the walk
+copy). Godot 4.7 imports the 11 at BaseMaterial3D transparency 4, albedo alpha
+0.380. The panes were still not windows to look through -- Lux's
+emissive window quad and the importer's shadow mode were each in the way, and
+are Lux 0.36.0 and Level Factory 0.84.0.
+
+NOT CHANGED, and worth knowing. `glass` is also the kind of four prop
+SCREENS -- `crt_tv`, `atm`, `vending_machine`, `security_camera` -- which
+every rockay theme already blends; none ships in any delco_1997 build on disk
+today, and the next one that does will show the box behind its screen.
+`pixelcoat/version.py` still says 0.16.0 (the manifests' `tool_version`), as
+it did before this release.
+
 ## [0.39.0] - the paint stopped wearing in identical blotches
 
 The walker, on a generated street: why does the paint on the pavement have

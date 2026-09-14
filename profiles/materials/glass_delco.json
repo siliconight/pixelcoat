@@ -11,5 +11,6 @@
   "posterize": 16,
   "roughness": {"base": 0.1, "variation": 0.04},
   "height_strength": 0.15,
-  "emit": {"roughness": true, "normal": false}
+  "emit": {"roughness": true, "normal": false},
+  "transparency": {"opacity": 0.38, "ior": 1.5}
 }
