@@ -101,9 +101,15 @@ TIER_SCALE = {
 }
 
 # sect.2: which kinds are environment-tier at all, when no tier is declared.
+#
+# A kind missing from here is not judged at all -- `judge` returns no faults
+# -- so a new floor or wall kind has to be named or the budget silently
+# stops applying to it. 0.42.0's club and exterior kinds are floors, walls
+# and trim; `velvet` is upholstery and, like `leather`, is not.
 TERTIARY_KINDS = {
     "brick", "concrete", "drywall", "plaster", "ceiling_tile",
     "tile", "carpet", "wood", "glass_facade", "metal",
+    "carpet_club", "wallpaper_club", "wood_stained", "paint_block",
 }
 # sect.2 secondary: "moderate saturation, controlled accent lighting, localized
 # emissive strips or signage". Judged, but on a looser budget.

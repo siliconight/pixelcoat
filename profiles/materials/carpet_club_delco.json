@@ -1,0 +1,27 @@
+{
+  "id": "carpet_club_delco",
+  "kind": "carpet_club",
+  "base_colors": ["#2c2436", "#30283b", "#282031"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.4, "meso": 0.6, "micro": 0.3},
+  "macro": {"generator": "fbm", "cells": 4, "octaves": 3},
+  "meso": {"generator": "fbm", "cells": 48, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 200, "octaves": 2},
+  "motif": {"count": 2, "petals": 8, "radius": 0.30, "arms": 6, "swirl": 0.9,
+            "scroll": 0.3, "corner": 0.12, "line": 0.035, "wobble": 0.006,
+            "colors": ["#6a2a38", "#2e5652"], "strength": 1.0, "relief": 0.2},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 2, "octaves": 3},
+     "coverage": 0.3, "feather": 0.8, "color": "#4a3e44", "strength": 0.45},
+    {"generator": {"generator": "fbm", "cells": 10, "octaves": 3},
+     "coverage": 0.05, "feather": 0.15, "color": "#1d1619", "strength": 0.55},
+    {"generator": {"generator": "fbm", "cells": 14, "octaves": 3},
+     "coverage": 0.02, "feather": 0.2, "color": "#5c4d45", "strength": 0.35}
+  ],
+  "detail_strength": 0.05,
+  "posterize": 20,
+  "roughness": {"base": 0.95, "variation": 0.04},
+  "height_strength": 0.2,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "The club floor (walker, 2026-09-14, on a strip club reference: dingy, lived in, dark with coloured lights, couches and bars). A casino-style medallion repeat, 1 m, in a burgundy and a muted teal on a dark plum ground; a trodden lane that flattens the figure toward grey-brown pile, dark spills and a few bleached ones. The ground is dark but not black, because the room is lit magenta and blue and a black carpet under coloured light is a hole. carpet_delco is unchanged; this is a second carpet, not a replacement."
+}

@@ -79,6 +79,28 @@ class MaterialGrammar:
     veins: dict = field(default_factory=dict)   # flowing veins (marble/stone)
     masonry: dict = field(default_factory=dict)  # brick/tile bond + mortar/grout
     aggregate: dict = field(default_factory=dict)  # filled Voronoi stones/chips
+    #: A PRINTED REPEAT poured in colour: carpet medallions, flocked damask.
+    #: `{count, petals, radius, arms, swirl, scroll, corner, aspect, line,
+    #: ogee, wobble}` go to `procedural_surface.medallion`; `colors` is
+    #: [primary ink, secondary ink] (secondary defaults to primary);
+    #: `strength` how far the ink replaces the ground (1.0 = fully);
+    #: `relief` how much the ink raises the height field; `roughness` a
+    #: response offset on the ink (flock is matte against a satin ground),
+    #: added after quantising, like chips' wear. The ink keeps the ground's
+    #: meso/micro/grain modulation, so a printed figure is still carpet pile.
+    motif: dict = field(default_factory=dict)
+    #: WORN AND STAINED AREAS, a spec or a list of them, each
+    #: `{generator, coverage, color, strength, feather, roughness}`. The
+    #: generator (default fbm 3 cells x 3 octaves) is cut at its own quantile
+    #: so `coverage` is the fraction of the tile touched -- the reason
+    #: `cutout.coverage` and `edges.sparsity` are quantiles. `feather` (0..1)
+    #: ramps the edge over that share of the field above the cut, so a
+    #: traffic lane fades out and a stain can be hard. Pulls albedo toward
+    #: `color`; `roughness` offsets the response in the same mask (crushed
+    #: pile is glossier). Irregular by construction: a thresholded fbm is not
+    #: a round cell, which is the walker's standing complaint about Worley
+    #: blotches on walls.
+    wear: Any = field(default_factory=dict)
     detail_strength: float = 0.15               # crisp per-texel grain (anti-smear)
     albedo_pattern: float = 1.0                 # how much meso/micro/grain tint albedo
     posterize: int = 0                          # albedo value steps (Q2 crispness); 0 = off
@@ -212,7 +234,7 @@ def roughness_levels(grammar) -> int:
     return max(4, int(grammar.posterize) // 2) if grammar.posterize else 0
 
 
-def _roughness(grammar, meso_s, chip_mask, grain_s=None):
+def _roughness(grammar, meso_s, chip_mask, grain_s=None, extra=None):
     """The response rule: ``base + variation * meso``, stepped when the
     grammar posterizes, plus the chips' wear.
 
@@ -252,6 +274,8 @@ def _roughness(grammar, meso_s, chip_mask, grain_s=None):
     rough = base + var * v
     if chip_mask is not None:
         rough = rough + chip_mask * 0.2                      # bare/worn is rougher
+    if extra is not None:
+        rough = rough + extra             # motif ink / wear offsets, unstepped
     return np.clip(rough, 0.0, 1.0)
 
 
@@ -423,6 +447,32 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = albedo * (1.0 - gm) + mcol * gm
         height = height - gapm * 0.5
 
+    # A printed repeat. The ink is poured over the ground but keeps the
+    # ground's `value_mod`, so the figure is pile or flock with the same
+    # grain as what it is printed on, not a decal lying across it.
+    rough_extra = None
+    if grammar.motif:
+        mo = grammar.motif
+        keys = ("count", "petals", "radius", "arms", "swirl", "scroll",
+                "corner", "aspect", "line", "ogee", "wobble")
+        ink = ps.medallion((h, w), mo.get("count", 2),
+                           ps.stream_seed(seed, "motif"), label="motif",
+                           **{k: mo[k] for k in keys[1:] if k in mo})
+        cols = [ps.hex_to_rgb(c) for c in (mo.get("colors") or ["#808080"])]
+        primary = cols[0]
+        secondary = cols[1] if len(cols) > 1 else cols[0]
+        st = float(mo.get("strength", 1.0))
+        p_m = (ink == 1.0).astype(np.float32)
+        s_m = (ink == 0.5).astype(np.float32)
+        tinted = value_mod[..., None]
+        albedo = (albedo * (1.0 - st * (p_m + s_m))[..., None]
+                  + primary * tinted * (st * p_m)[..., None]
+                  + secondary * tinted * (st * s_m)[..., None])
+        inked = np.clip(p_m + s_m, 0.0, 1.0)
+        height = height + inked * float(mo.get("relief", 0.3))
+        if mo.get("roughness"):
+            rough_extra = inked * float(mo["roughness"])
+
     # Form-board seams (concrete formwork lines) — subtle dark bands.
     #
     # `axis` DEFAULTS TO "y", which is where this started and what every
@@ -462,6 +512,32 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = albedo * (1.0 - st * sv)[..., None]
         height = height - sv * 0.15
 
+    # Worn and stained areas. Pass 0 keeps the plain "wear" label, later
+    # passes draw "wear:i", the convention `veins` set so adding a pass never
+    # moves the ones before it.
+    if grammar.wear:
+        passes = grammar.wear if isinstance(grammar.wear, list) else [grammar.wear]
+        for i, wp in enumerate(passes):
+            label = "wear" if i == 0 else f"wear:{i}"
+            fld = _generator(wp.get("generator") or
+                             {"generator": "fbm", "cells": 3, "octaves": 3},
+                             (h, w), ps.stream_seed(seed, label), label)
+            cov = min(max(float(wp.get("coverage", 0.3)), 0.0), 1.0)
+            cut = float(np.quantile(fld, 1.0 - cov))
+            top = float(fld.max())
+            feather = min(max(float(wp.get("feather", 0.5)), 0.0), 1.0)
+            if feather > 0.0 and top > cut:
+                m = np.clip((fld - cut) / ((top - cut) * feather), 0.0, 1.0)
+            else:
+                m = (fld >= cut).astype(np.float32)
+            m = (m * float(wp.get("strength", 0.5))).astype(np.float32)
+            col = ps.hex_to_rgb(wp.get("color", "#808080"))
+            albedo = albedo * (1.0 - m)[..., None] + col * m[..., None]
+            height = height - m * 0.1
+            if wp.get("roughness"):
+                off = m * float(wp["roughness"])
+                rough_extra = off if rough_extra is None else rough_extra + off
+
     # Crisp chips: hard-edged clustered damage exposing undercoat then cavity.
     if grammar.chips:
         damage = ps.worley_f1((h, w), grammar.chips.get("cells", 10),
@@ -492,6 +568,8 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         grain_s = _warp_apply(grain_s, _dy, _dx)
         if chip_mask is not None:
             chip_mask = _warp_apply(chip_mask, _dy, _dx)
+        if rough_extra is not None:
+            rough_extra = _warp_apply(rough_extra, _dy, _dx)
 
     albedo = np.clip(albedo, 0.0, 1.0)
     if grammar.posterize:
@@ -530,7 +608,8 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         out["albedo"] = _to_u8(np.concatenate([albedo, alpha[..., None]], axis=-1))
 
     if grammar.emit.get("roughness", True):
-        out["roughness"] = _to_u8(_roughness(grammar, meso_s, chip_mask, grain_s))
+        out["roughness"] = _to_u8(_roughness(grammar, meso_s, chip_mask, grain_s,
+                                             rough_extra))
 
     if grammar.emit.get("normal", False):
         hf = height - height.min()

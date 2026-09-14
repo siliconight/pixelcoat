@@ -7,6 +7,7 @@
     "canvas": "canvas_delco",
     "carbon": "carbon_neutral",
     "carpet": "carpet_delco",
+    "carpet_club": "carpet_club_delco",
     "ceiling_tile": "ceiling_tile_delco",
     "concrete": "concrete_delco",
     "dirt": "dirt_delco",
@@ -20,6 +21,7 @@
     "metal": "metal_rusted_street",
     "metal_bare": "metal_bare_neutral",
     "metal_painted": "metal_painted_neutral",
+    "paint_block": "paint_block_brown_delco",
     "paper": "paper_neutral",
     "plaster": "plaster_delco",
     "plastic": "plastic_neutral",
@@ -32,6 +34,9 @@
     "tar": "tar_neutral",
     "tile": "tile_delco",
     "vegetation": "vegetation_neutral",
-    "wood": "wood_delco"
+    "velvet": "velvet_delco",
+    "wallpaper_club": "wallpaper_club_delco",
+    "wood": "wood_delco",
+    "wood_stained": "wood_stained_delco"
   }
 }

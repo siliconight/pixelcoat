@@ -1,0 +1,27 @@
+{
+  "id": "wallpaper_club_delco",
+  "kind": "wallpaper_club",
+  "base_colors": ["#5a1f2a", "#5f232e", "#551c26"],
+  "meters_per_tile": 1.0,
+  "bands": {"macro": 0.35, "meso": 0.3, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 20, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 120, "octaves": 2},
+  "motif": {"count": 2, "petals": 8, "radius": 0.2, "aspect": 1.35, "arms": 0,
+            "corner": 0.14, "ogee": 0.5, "line": 0.05, "wobble": 0.01,
+            "colors": ["#3e131c", "#471822"], "strength": 1.0, "relief": 0.4,
+            "roughness": 0.1},
+  "scratches": {"axis": "x", "density": 0.015, "length_cells": 3, "strength": 0.22, "color": "#7b5a52"},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 3, "octaves": 3},
+     "coverage": 0.35, "feather": 0.9, "color": "#6e3b40", "strength": 0.25},
+    {"generator": {"generator": "fbm", "cells": 6, "octaves": 4},
+     "coverage": 0.06, "feather": 0.4, "color": "#2a1a1b", "strength": 0.4}
+  ],
+  "detail_strength": 0.05,
+  "posterize": 20,
+  "roughness": {"base": 0.62, "variation": 0.05},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": true},
+  "notes": "Club wallpaper: burgundy paper with a darker flocked damask in an ogee lattice, 0.5 m repeat. The flock is matte (+0.1 roughness) against a satin ground. Smoke-faded patches, grime, a few horizontal scuffs. SCUFFS TOWARD THE FLOOR ARE NOT HERE: a tiling pack cannot know where the floor is, and anything placed low on the tile repeats every metre up the wall. That belongs to a dado or chair rail in geometry, or to Patina's mesh-aware grime."
+}

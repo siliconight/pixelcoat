@@ -1,0 +1,25 @@
+{
+  "id": "paint_block_brown_delco",
+  "kind": "paint_block",
+  "base_colors": ["#6a5541", "#705a45", "#645040"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.12, "micro": 0.08},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 30, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 60, "octaves": 2},
+  "masonry": {"rows": 10, "cols": 5, "offset": 0.5, "mortar": 0.025,
+              "mortar_color": "#433529", "mortar_strength": 1.0, "brick_variation": 0.05},
+  "streaks": {"density": 0.2, "decay": 0.97, "strength": 0.16},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 2, "octaves": 3},
+     "coverage": 0.4, "feather": 0.9, "color": "#8a7866", "strength": 0.18},
+    {"generator": {"generator": "fbm", "cells": 10, "octaves": 5},
+     "coverage": 0.02, "feather": 0.3, "color": "#8f8c85", "strength": 0.5}
+  ],
+  "detail_strength": 0.03,
+  "posterize": 14,
+  "roughness": {"base": 0.88, "variation": 0.05},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "Muddy brown paint over 8x16 cinderblock: the windowless one-storey box a Delco club is. The paint levels the block (unit variation 0.05 against cinderblock_delco's 0.16) and sinks into the joints, which stay dark enough to read as block from across the lot (the art standard measured the lighter joint as a value step off plaster_delco with nothing else changing); sun-faded chalky patches, run-down grime from the parapet, and a few irregular spots peeled back to the grey block. The painted grey patch and the white block letters on it are a sign, not a wall."
+}

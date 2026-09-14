@@ -96,6 +96,18 @@
       "tier": null,
       "value_range": 0.018827287908398993
     },
+    "carpet_club_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.04277334127972367,
+      "chroma_p95": 0.09629078914559495,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.06078950924752027,
+      "kind": "carpet_club",
+      "rough_mean": 0.9499964695350797,
+      "tier": null,
+      "value_range": 0.16495776525791156
+    },
     "carpet_delco": {
       "blown_frac": 0.0,
       "chroma_mean": 0.06424579226299101,
@@ -612,6 +624,18 @@
       "tier": null,
       "value_range": 0.1096252166545808
     },
+    "paint_block_brown_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.04368304227215665,
+      "chroma_p95": 0.06187959446619368,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.05038500905694538,
+      "kind": "paint_block",
+      "rough_mean": 0.8797061695772059,
+      "tier": null,
+      "value_range": 0.1638410199927523
+    },
     "painted_metal_industrial": {
       "blown_frac": 0.0,
       "chroma_mean": 0.05137596701450679,
@@ -852,6 +876,54 @@
       "tier": null,
       "value_range": 0.1858449706661251
     },
+    "velvet_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.09820583234485944,
+      "chroma_p95": 0.11232247848523605,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.02058492801875441,
+      "kind": "velvet",
+      "rough_mean": 0.8458687576593137,
+      "tier": null,
+      "value_range": 0.06847303242651115
+    },
+    "velvet_purple_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.08528014426171578,
+      "chroma_p95": 0.10114082836148028,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.022139633269579552,
+      "kind": "velvet",
+      "rough_mean": 0.8458687576593137,
+      "tier": null,
+      "value_range": 0.07697742863946694
+    },
+    "velvet_teal_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.05253680360325851,
+      "chroma_p95": 0.059519778552685546,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.023968605263782267,
+      "kind": "velvet",
+      "rough_mean": 0.8458687576593137,
+      "tier": null,
+      "value_range": 0.05108512884194144
+    },
+    "wallpaper_club_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.07995196008885937,
+      "chroma_p95": 0.09738017277703565,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.032485063328675054,
+      "kind": "wallpaper_club",
+      "rough_mean": 0.6556015912224264,
+      "tier": null,
+      "value_range": 0.09641310655232566
+    },
     "wood_delco": {
       "blown_frac": 0.0,
       "chroma_mean": 0.06998017448831159,
@@ -863,6 +935,18 @@
       "rough_mean": 0.5918351715686274,
       "tier": null,
       "value_range": 0.1096252166545808
+    },
+    "wood_stained_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.04729691936221703,
+      "chroma_p95": 0.058886441581547155,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.019634329938936095,
+      "kind": "wood_stained",
+      "rough_mean": 0.49955019483379287,
+      "tier": null,
+      "value_range": 0.0670272249886193
     }
   },
   "seed": 1999,

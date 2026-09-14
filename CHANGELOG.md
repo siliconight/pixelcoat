@@ -1,5 +1,140 @@
 # Changelog
 
+## [0.42.0] - a club with a figure in its carpet
+
+The walker, 2026-09-14, with two frames of GTA IV's Triangle Club: strip
+clubs should have a dingy lived-in feel, dark with coloured lights, couches
+and bars. The surfaces in those frames are a busy medallion carpet with worn
+paths and stains, burgundy flocked wallpaper, dark stained wood on the bar
+and the stage skirt, and worn velvet. The library could draw none of the
+first two. Every primitive in `procedural_surface` is a material's
+STRUCTURE -- grain, cells, bond, cracks -- and a noise pushed until it reads
+as a figure is a blotch, which is the walker's standing complaint about
+Worley cells on walls. A hotel carpet is a figure somebody drew, repeated on
+a grid.
+
+**`ps.medallion`**, a printed repeat returned as ink levels {0, 0.5, 1}:
+a lobed rosette with a star inside it, spiral scrolls that taper to a point
+at both ends, an eight-lobed fleuron on every repeat corner (the half-drop a
+carpet's eye reads as a second motif), and an optional ogee frame that turns
+a spot repeat into a damask. Tileable for integer `count` by construction;
+`wobble` displaces the sampling by a wrapped value noise so a repeat is
+hand-printed rather than stamped, and 0 draws no stream.
+
+**`motif`** pours colours into those levels. The ink keeps the ground's
+meso/micro/grain modulation, so the figure is pile with the same grain as
+the pile it is printed on, and `motif.roughness` offsets the response on the
+ink only. **`wear`**, a spec or a list, pulls albedo toward a colour over a
+generator cut at its own quantile, so `coverage` is the fraction touched;
+`feather` ramps the edge. Pass 0 keeps the plain "wear" label and later
+passes draw "wear:i", the convention `veins` set. A grammar naming neither
+is byte-identical: all 72 grammars that exist at 0.41.0 synthesize the same
+164 maps at their pack sizes.
+
+SEVEN GRAMMARS, five kinds, mapped into both `delco` and `delco_1997`:
+
+    grammar                   kind            Cmean  C95   L p5-p95   hf     rgh
+    carpet_club_delco         carpet_club     0.043  0.096 0.28-0.45  0.061  0.95
+    wallpaper_club_delco      wallpaper_club  0.080  0.097 0.26-0.36  0.032  0.66
+    velvet_delco              velvet          0.098  0.112 0.31-0.38  0.021  0.85
+    velvet_purple_delco       velvet          0.085  0.101 0.28-0.36  0.022  0.85
+    velvet_teal_delco         velvet          0.053  0.060 0.35-0.41  0.024  0.85
+    wood_stained_delco        wood_stained    0.047  0.059 0.27-0.34  0.020  0.50
+    paint_block_brown_delco   paint_block     0.044  0.062 0.35-0.51  0.050  0.88
+
+(art standard audit, 256 px, seed 1999; L is Oklab.) No pixel of any of them
+is crushed or blown, and each one's p5 stays at or above Oklab L 0.18 with
+its albedo multiplied by a magenta (1, 0.15, 0.85) or blue (0.25, 0.35, 1.0)
+light in linear space -- a stand-in for a lit surface, not a render. Under
+magenta the carpet's burgundy ink sits at 0.346 over a 0.243 ground and the
+teal falls to 0.272, which is what dye does under that light; under blue
+the teal carries the figure instead.
+
+The wood is a new kind because `wood_delco` is a mid-brown plank and the
+theme holds one grammar per kind. The velvet colourways are three grammars
+and ONE theme slot: nothing in the pipeline chooses a colour per couch yet,
+so purple and teal build into no library. `paint_block_brown_delco` is the
+exterior of a windowless one-storey club -- muddy brown paint over 8x16
+block, sun-faded, run-down grime, a few spots peeled to grey block; the
+painted grey patch with the name on it is a sign, not a wall.
+
+`carpet_delco` is unchanged and keeps the `carpet` slot. The walker likes it.
+
+THE CHROMA BUDGET IS NOT MET, and is not chased. Four of the new
+environment-tier grammars sit over 0.030 (wallpaper 0.080, wood 0.047,
+paint 0.044, carpet 0.043). A burgundy wall is over that budget by
+construction; `carpet_delco` at 0.064 is the standing lesson about which of
+the two wins. The club grammars' TESTS assert value, crush, blow,
+roughness, emissive, surface-not-static and lit-value clauses and leave
+chroma to the report.
+
+A KIND MISSING FROM `TERTIARY_KINDS` IS NOT JUDGED AT ALL: `judge` returns no
+faults for it, so every new floor or wall kind silently leaves the budget.
+`carpet_club`, `wallpaper_club`, `wood_stained` and `paint_block` are named
+there now; `velvet` is upholstery and, like `leather`, is not. The baseline
+takes rows for the seven new grammars and nothing else --
+`road_paint_delco`'s drift from 0.39.0 is still in tolerance and still not
+absorbed.
+
+REFUTED ON THE WAY, each by looking at a swatch:
+- the carpet's first trodden lane was a `directional_grain` band, and a 2 m
+  tile turned it into a stripe every 2 m across the room; it is an fbm now;
+- the velvet's first threadbare pass put a few pale texels per bald spot,
+  which at 128 px/m is speckle, not wear; it is gone, and its dark spills
+  went from round-edged to five-octave and feathered;
+- the first `paint_block_brown_delco` drew its joints in a brown close to
+  the paint, and the neighbour-pair gate called it against `plaster_delco`:
+  value step 0.359, structure 0.005, chroma 0.011, hue 22 deg -- nothing to
+  justify the step. Darker joints at full strength (hf 0.033 -> 0.050) clear
+  it without adding chroma; the pair-fault count is 8 before and 8 after.
+
+A SEAM CHECK WITH A BLIND SPOT, found writing its own test. The club
+grammars' wrap test compares the mean step across the wrap to the worst
+interior row, not the average, because an ogee line or a mortar joint that
+lands on the wrap is a boundary the tile also has inside. A hard-edged
+figure cut off at the tile edge measured 255.0 against 255.0 and passed. The
+medallion's own test compares its first repeat to its last texel for texel,
+which that case cannot pass.
+
+MEASURED DOWNSTREAM, Godot 4.7, GL Compatibility, RTX 2060, on scratch
+copies of the vault_surface walk. `country_club_a01`'s grand lounge (a
+40 x 17 m room) had its floor module's embedded carpet maps swapped for
+this library's `carpet_club_delco`, and every concrete and orange-peel wall
+kit module of that building for `wallpaper_club_delco` (transform rescaled
+for the 1 m tile), then `--import` and `look_shots.py` from five given
+stations. Luma over the near floor and the left wall of `lounge_long`:
+
+                                 floor mean/std   wall mean/std
+    0.41.0 walk, unswapped            30.2 / 6.1     98.1 / 8.0
+    0.42.0, the walk's own light      23.8 / 6.7     21.6 / 6.4
+    0.42.0, 8 magenta omnis added     31.7 / 8.7     30.4 / 7.5
+
+The figure reads at eye height across the room and the damask reads on the
+walls under both lights. The walls are DARK under the walk's fluorescents --
+a mean luma of 21.6 is a room you can barely see the walls of, and whether
+that is a club or a problem is a walk, not a number. A second copy put
+`paint_block_brown_delco` on the same building's exterior modules.
+
+WHAT A CLUB ROOM CANNOT DO YET, read (not run) through the consumers. A room
+reaches a pack only through a kind Zoo knows: `zoo_keeper/core/dna.py` keeps
+a slot's material only `if override in skins.KNOWN_KINDS`, and none of the
+five kinds is in that list, so today a club floor asking for `carpet_club`
+builds in its species' default material instead, with no error. Deli
+Counter would need the ids in `material_kind.py` and a room or role that
+asks for them (`Room.floor_material` exists; no spec sets it). WALLS DO
+NOT VARY PER ROOM: Deli Counter has no room wall material, and a partition
+is one slot and one module with one material on both faces. The frames
+above could only paper the lounge by papering every wall module of that
+material, outside faces included. `pixelcoat/version.py` still says 0.16.0.
+
+`tests/test_club_surfaces.py`, 69 tests. Against 0.41.0 it fails 64 of them.
+With the seven grammar files copied onto 0.41.0 it still fails 25, and
+passes 44 -- because `MaterialGrammar.from_dict` drops keys it does not
+know, and a grammar naming a `motif` the code cannot draw builds quietly
+without it. `test_roughness_band` skips grammars whose motif or wear
+declares a response offset, the same reason it skips chips, and
+`test_posterize_palette` checks `motif` palettes as a flat fill.
+
 ## [0.41.0] - bare metal stopped mirroring the room in stripes
 
 Zoo, 2026-09-14, on 0.85.0's vault door built with the delco_1997 packs:

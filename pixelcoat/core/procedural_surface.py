@@ -41,6 +41,7 @@ __all__ = [
     "masonry",
     "ribs",
     "wave",
+    "medallion",
     "posterize",
     "hex_to_rgb",
 ]
@@ -433,6 +434,119 @@ def wave(size, count: int, seed: int = 0, *, axis: str = "x", warp: float = 0.15
     warpf = value_noise((h, w), max(1, int(warp_cells)), seed, label=label + "_warp")
     phase = base + warp * count * (warpf.astype(np.float64) - 0.5) * 2.0
     return (0.5 + 0.5 * np.cos(phase * 2.0 * np.pi)).astype(np.float32)
+
+
+def medallion(size, count: int, seed: int, *, petals: int = 8,
+              radius: float = 0.30, arms: int = 4, swirl: float = 0.6,
+              scroll: float = 0.25, corner: float = 0.12, aspect: float = 1.0,
+              line: float = 0.035, ogee: float = 0.0, wobble: float = 0.0,
+              label: str = "medallion") -> np.ndarray:
+    """A printed repeat -- carpet medallion, flocked damask -- as INK LEVELS.
+
+    Returns float32 in ``{0.0, 0.5, 1.0}``: 0 is the ground, 1.0 the primary
+    ink (the rosette's lobed rim, its eye, the fleurons' eyes), 0.5 the
+    secondary ink (the star inside the rim, the halo outside it, the swirling
+    scrolls, the corner fleurons). A grammar pours a colour into each level;
+    nothing here is a colour.
+
+    WHY A PATTERN AND NOT A NOISE. Every other primitive in this module is a
+    material's *structure* -- grain, cells, bond, cracks -- and a noise pushed
+    hard enough to read as a figure is a blotch, which is the walker's
+    complaint about Worley cells on walls. A hotel carpet or a flocked paper
+    is a figure somebody DREW, repeated on a grid, so it is built as one:
+    ``count`` repeats per tile axis, each the same motif.
+
+    One repeat, in its own units (u, v in [-0.5, 0.5), v divided by
+    ``aspect`` so a damask can stand taller than it is wide):
+
+    - a rosette of ``petals`` lobes, ``radius`` from centre to lobe tip: a
+      rim 2.5 ``line`` thick following the lobes, a star pointing between
+      them, an eye, ground between rim and star, and a halo ``line`` wide;
+    - ``arms`` tapering spiral scrolls in the band outside the halo,
+      ``swirl`` turns across that band, ``scroll`` of a turn thick at their
+      root and pointed at both ends, so no scroll stops on a hard cut;
+    - an eight-lobed fleuron ``corner`` across on every repeat corner, which
+      is where four repeats meet -- the half-drop a carpet's eye reads as a
+      second motif between the medallions;
+    - with ``ogee`` > 0, an onion-shaped frame round each motif, ``line``
+      thick, which is what turns a spot repeat into a damask.
+    ``arms`` 0 draws no scrolls.
+
+    TILEABLE for integer ``count``: each repeat is a function of its own
+    (u, v) with period 1, the corner fleuron is built from ``0.5 - |u|`` so
+    it is continuous across the repeat edge, and the body and scrolls stay
+    inside the repeat's inscribed circle. ``wobble`` (repeat units) displaces
+    the sampling by a wrapped value noise at two cells per repeat, so a
+    repeat is hand-printed rather than stamped and the tile still wraps; 0
+    draws no stream. Sampled at texel centres, so a repeat that is a whole
+    number of texels is exactly mirror-symmetric.
+    """
+    h, w = _as_hw(size)
+    count = max(1, int(count))
+    ys = (np.arange(h, dtype=np.float64) + 0.5) / h
+    xs = (np.arange(w, dtype=np.float64) + 0.5) / w
+    gy, gx = np.meshgrid(ys, xs, indexing="ij")
+    if wobble:
+        cells = 2 * count
+        gx = gx + float(wobble) / count * (
+            value_noise((h, w), cells, seed, label=label + "_wx") - 0.5) * 2.0
+        gy = gy + float(wobble) / count * (
+            value_noise((h, w), cells, seed, label=label + "_wy") - 0.5) * 2.0
+    ty, tx = gy * count, gx * count
+    u = tx - np.floor(tx) - 0.5
+    v = ty - np.floor(ty) - 0.5
+    vs = v / max(float(aspect), 1e-6)
+
+    r = np.hypot(u, vs)
+    th = np.arctan2(vs, u)
+    r0 = float(radius)
+    lobes = 0.5 * int(petals) * th
+    edge = r0 * (0.62 + 0.38 * np.abs(np.cos(lobes)) ** 0.7)
+    rim = (r < edge) & (r >= edge - 2.5 * line)
+    # The star sits between the rim's lobes, so the rosette reads as two
+    # layers rather than one filled flower.
+    star = r < 0.5 * r0 * (0.45 + 0.55 * np.abs(np.sin(lobes)) ** 2)
+    eye = r < 0.16 * r0
+    halo = (r >= edge) & (r < edge + line)
+
+    # Scrolls: a spiral phase across the band between the halo and the
+    # inscribed circle, thickest mid-band and pointed at both ends.
+    # `r` is measured with v divided by aspect, so the repeat's inscribed
+    # circle is r < 0.5 / aspect when the motif stands taller than wide.
+    rin = edge + 2.0 * line
+    rout = 0.48 * min(1.0, 1.0 / max(float(aspect), 1e-6))
+    span = np.maximum(rout - rin, 1e-6)
+    t = (r - rin) / span
+    inband = (t > 0.0) & (t < 1.0)
+    phase = int(arms) * th + 2.0 * np.pi * float(swirl) * t
+    width = float(scroll) * np.clip(1.0 - (2.0 * t - 1.0) ** 2, 0.0, 1.0)
+    frac = (phase / (2.0 * np.pi)) % 1.0
+    dist = np.minimum(frac, 1.0 - frac)          # turns from the arm's spine
+    scrolls = inband & (dist < 0.5 * width) & (int(arms) > 0)
+
+    # Ogee frame: |u| = 0.5 - ogee * (1 - cos 2 pi v) / 2 -- on the repeat
+    # edge at mid-height, `ogee` in from it at the top and bottom -- so each
+    # motif stands in an onion-shaped frame and the frames of neighbouring
+    # repeats close into a lens across the edge. The damask lattice. Built
+    # from |u| and cos(2 pi v), so it is continuous across both repeat edges.
+    if ogee:
+        curve = 0.5 - float(ogee) * 0.5 * (1.0 - np.cos(2.0 * np.pi * v))
+        frame = np.abs(np.abs(u) - curve) < 0.5 * line
+    else:
+        frame = np.zeros_like(scrolls)
+
+    # Corner fleuron, shared by the four repeats that meet there.
+    cu, cv = 0.5 - np.abs(u), 0.5 - np.abs(v)
+    rc = np.hypot(cu, cv)
+    thc = np.arctan2(cv, cu)
+    c0 = float(corner)
+    fleur = rc < c0 * (0.55 + 0.45 * np.abs(np.cos(4.0 * thc)))
+    fleur_eye = rc < 0.28 * c0
+
+    out = np.zeros((h, w), np.float32)
+    out[halo | scrolls | fleur | star | frame] = 0.5
+    out[rim | eye | fleur_eye] = 1.0
+    return out
 
 
 def posterize(arr: np.ndarray, levels: int) -> np.ndarray:

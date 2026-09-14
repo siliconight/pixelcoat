@@ -40,14 +40,27 @@ def _load(path):
         return json.load(f)
 
 
+def _declares_a_response_offset(raw):
+    """A motif's ink or a wear pass that names `roughness` offsets part of
+    the tile after quantising -- the flock is matte, the crushed pile is
+    glossy -- which moves the mean by design, exactly as a chip does.
+    `tests/test_club_surfaces.py` checks those offsets land."""
+    wear = raw.get("wear") or []
+    wear = wear if isinstance(wear, list) else [wear]
+    return bool((raw.get("motif") or {}).get("roughness")
+                or any(w.get("roughness") for w in wear))
+
+
 def _stepped_paths():
     """Grammars whose roughness is posterized, varies, and has no chips (a
-    chip adds +0.2 over part of the tile, which moves the mean by design)."""
+    chip adds +0.2 over part of the tile, which moves the mean by design)
+    and no motif or wear response offset (same reason)."""
     out = []
     for path in sorted(glob.glob(os.path.join(_MATERIALS, "*.json"))):
         raw = _load(path)
         if (raw.get("posterize") and raw.get("emit", {}).get("roughness", True)
                 and not raw.get("chips")
+                and not _declares_a_response_offset(raw)
                 and float((raw.get("roughness") or {}).get("variation", 0.2)) > 0):
             out.append(path)
     return out

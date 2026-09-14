@@ -21,7 +21,8 @@ mean colour survives; 35 of the library's grammars have palettes finer than
 their own step and look correct for that reason. Where a palette colour is
 POURED FLAT into a region -- `aggregate`'s Voronoi cells, `masonry`'s units
 -- there is nothing to dither with, and the error is the whole cell. So the
-rule is asserted exactly where it bites.
+rule is asserted exactly where it bites. `motif` (0.42.0) pours its inks the
+same way: a medallion's rim is one colour from edge to edge.
 """
 import glob
 import json
@@ -33,7 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pixelcoat.core import procedural_surface as ps   # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FLAT_FILL = ("aggregate", "masonry")
+FLAT_FILL = ("aggregate", "masonry", "motif")
 
 
 def _spread(hex_color):

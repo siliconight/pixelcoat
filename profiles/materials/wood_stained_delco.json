@@ -1,0 +1,23 @@
+{
+  "id": "wood_stained_delco",
+  "kind": "wood_stained",
+  "base_colors": ["#3b2519", "#432a1c", "#332015"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.35, "meso": 0.45, "micro": 0.2},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "stripes", "axis": "x", "count": 8, "seam": 0.6, "jitter": 0.14},
+  "micro": {"generator": "directional_grain", "axis": "y", "cells_along": 4, "cells_across": 60},
+  "scratches": {"axis": "y", "density": 0.02, "length_cells": 4, "strength": 0.3, "color": "#6b4a34"},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 3, "octaves": 3},
+     "coverage": 0.3, "feather": 0.9, "color": "#5a3c28", "strength": 0.3, "roughness": 0.08},
+    {"generator": {"generator": "fbm", "cells": 8, "octaves": 5},
+     "coverage": 0.05, "feather": 0.6, "color": "#1f140e", "strength": 0.25}
+  ],
+  "detail_strength": 0.03,
+  "posterize": 16,
+  "roughness": {"base": 0.5, "variation": 0.1},
+  "height_strength": 0.45,
+  "emit": {"roughness": true, "normal": true},
+  "notes": "Dark stained, varnished bar wood: bar fronts, rails, stage skirts and trim. Narrower boards than wood_delco, and darker -- wood_delco is a mid-brown plank and does not cover this. The varnish is worn dull and lighter where hands and feet go (+0.08 roughness), with dark sticky spills and scratches through to paler wood."
+}
