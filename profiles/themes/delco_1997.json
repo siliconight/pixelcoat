@@ -31,6 +31,7 @@
     "shingle": "shingle_delco",
     "sidewalk": "sidewalk_delco",
     "siding": "siding_delco",
+    "slatwall": "slatwall_retail",
     "stone": "fieldstone_delco",
     "tar": "tar_neutral",
     "tile": "vct_floor_beige",
@@ -38,6 +39,7 @@
     "velvet": "velvet_neutral",
     "wallpaper_club": "wallpaper_club_delco",
     "wood": "wood_delco",
+    "wood_panel": "wood_panel_delco",
     "wood_stained": "wood_stained_delco"
   }
 }

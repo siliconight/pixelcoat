@@ -1,5 +1,200 @@
 # Changelog
 
+## [0.45.0] - the two panels reach a theme a level can be built in
+
+0.44.0 drew `wood_panel_delco` and `slatwall_retail`, measured them, priced
+them, and mapped them in exactly one place: a new `card_shop.json`. Every
+level this pipeline generates runs on `delco` or `delco_1997`, and neither
+mapped either kind. Cold run 9061 shipped the result.
+
+WHAT THAT COST, measured in the shipped walk copy
+(`_runs/walk_export_card_block_001`, read not remembered):
+`lot/card_shop_a01/site.tscn` instances 21 modules whose stems end
+`_mwood_panel` or `_mslatwall` -- 19 and 2, which is exactly what
+`card_shop_a01.slots.json` asks for. Zoo's `find_pack` looked for
+`wood_panel_delco_1997/` and `slatwall_delco_1997/`, found neither, and fell
+back to flat vertex colour. Of the 11 material kinds that package's GLBs
+carry, those two are THE ONLY ones whose kind-named material has no
+`baseColorTexture`: `M_Wall_wood_panel` at baseColorFactor
+[0.50, 0.49, 0.46] and `M_PackWall_back_slatwall` at [0.78, 0.76, 0.71],
+against `M_Skin_brick_delco_1997`, `M_Skin_drywall_delco_1997` and 17 others
+that all carry one. The walker photographed a white wall at world
+(-35.5, 1.6, 1.0); the three nearest modules, 2.1-2.9 m ahead, are
+`int_0_0_open1`, `int_0_0_seg7` and `int_0_0_seg6`, all `_mwood_panel`. The
+package passed every gate it has.
+
+### Added -- `wood_panel` and `slatwall` in the themes levels are built in
+
+`delco.json` and `delco_1997.json` each map two more kinds, 37 -> 39:
+
+    wood_panel  ->  wood_panel_delco
+    slatwall    ->  slatwall_retail
+
+Neither grammar changed. `wood_panel_delco` is already the delco panelling by
+name and `slatwall_retail` is a retail product with no region in it, so the
+same two answer both themes; a `delco` card shop and a `delco_1997` card shop
+wear the same wainscot, which is what they would.
+
+THE AUDIT, at 256 px / seed 1999, and what it says about the room they land
+in. Neither grammar's own row moved -- they are the 0.44.0 numbers, including
+`wood_panel_delco`'s one standing fault, `chroma_mean 0.049 > 0.030`, which
+0.44.0 recorded and this release does not re-litigate. What is new is the
+company they now keep: 29 neighbour pairs appear in `delco_1997` that could
+not exist before, and NOT ONE of them is over budget. The pair list is the
+same 8 items it was at 0.44.0, none of them involving either pack.
+
+    delco_1997 pair                              dValue   dHF  dChroma  dHue
+    wood_panel_delco / drywall_orangepeel_delco   0.473 0.007   0.031    31
+    wood_panel_delco / ceiling_tile_delco         0.433 0.022   0.031    42
+    wood_panel_delco / vct_floor_beige            0.472 0.016   0.026    24
+    wood_panel_delco / carpet_delco               0.011 0.004   0.015    50
+    slatwall_retail  / carpet_delco               0.425 0.037   0.060     -
+    slatwall_retail  / drywall_orangepeel_delco   0.037 0.026   0.014     -
+    slatwall_retail  / ceiling_tile_delco         0.003 0.011   0.014     -
+
+TWO OF THOSE ROWS ARE THE ONES TO LOOK AT, and the budget cannot see either,
+because it only judges a step that is too BIG to be unexplained.
+
+`wood_panel_delco / carpet_delco` is dValue 0.011. The wainscot and the floor
+it stands on are the same lightness to three decimal places, and everything
+separating them is hue -- 50 degrees of it, brown against the walker's
+burgundy. That will read in colour and vanish in a value-only read: a
+grayscale frame, a dark room, a player with a low-chroma display. Recorded
+rather than fixed, because the fix is to move `carpet_delco`, which the walker
+has asked in as many words not to move.
+
+`slatwall_retail / ceiling_tile_delco` is dValue 0.003 and
+`/ drywall_orangepeel_delco` is 0.037. The slatwall does not separate from the
+wall it hangs on or the ceiling above it by lightness at all; it separates by
+STRUCTURE, dHF 0.011 and 0.026, which is the 16 grooves. Looked at: the
+grooves carry it, and the panel is legible as a panel. But a pack wall reads
+against its own frame (`metal_painted`) and its product, not against the wall,
+and that is the honest description of what shipped.
+
+AND UNDER THE ROOM'S OWN LIGHT IT IS NOT WHITE. The card shop's fixtures in
+the 9061 package are SpotLight3D `light_color` Color(0.965, 0.874, 0.646) at
+energy 0.997 -- a warm fluorescent. `slatwall_retail` is achromatic by
+measurement, chroma_mean 0.004 with hue below `HUE_FLOOR`, so it takes the
+light's colour entire and reads khaki rather than white. That is a correct
+rendering of a white panel under a warm tube and not a defect in the pack; it
+is written down because "white/grey retail board" is what the spec says and
+tan is what the eye gets, and the next person to compare the two should not
+have to re-derive why.
+
+### Added -- the check that would have caught it, in `tests/test_theme_profiles.py`
+
+`test_every_kind_any_theme_maps_is_mapped_by_every_level_theme`. RED on
+0.44.0, with all four faults named:
+
+    delco maps no 'slatwall' (mapped by card_shop);
+    delco maps no 'wood_panel' (mapped by card_shop);
+    delco_1997 maps no 'slatwall' (mapped by card_shop);
+    delco_1997 maps no 'wood_panel' (mapped by card_shop)
+
+A KIND, NOT A GRAMMAR, and the distinction is the whole reason this gate can
+stay green. A theme holds one grammar per kind, so `brick_buff_civic` losing
+the `brick` slot to `brick_delco` is a style choice; 32 of the 86 shipped
+grammars are in that position today and a rule demanding all of them be mapped
+would be a permanently red gate that nobody could act on. A KIND is the slot
+itself: a kind no level theme maps is a surface no level can ever show,
+whichever grammar it would have chosen. Exactly two were in that position, and
+they are the two that shipped flat.
+
+WHICH THEMES COUNT AS "LEVEL" THEMES IS DERIVED, NOT LISTED. Level Factory's
+`GROUND_SKIN_KINDS` points Lot's six outdoor families at four kinds --
+`asphalt` (ground, road), `sidewalk` (path, sidewalk), `concrete` (courtyard),
+`road_paint` (markings). A theme that cannot answer all four cannot dress a
+site's outdoors. On the shipped tree that selects `delco` and `delco_1997` and
+nothing else, out of 13; `test_the_level_theme_derivation_separates_something`
+refuses both degenerate answers, none and all.
+
+IT ALSO NAMES THE REAL MISTAKE BEHIND 9061, which was not a forgotten line in
+a profile. `card_shop.json` was authored as a THEME, and a brief carries ONE
+theme for a whole mission (`schemas/mission.brief.schema.json`). The card shop
+is one building on a street. `card_shop` maps no `asphalt`, no `sidewalk` and
+no `road_paint`, so a mission run on it would have had no road, no pavement
+and no markings -- it could never have been the mission's theme, and its
+surfaces therefore had to live in the street's theme or nowhere. It stays in
+the tree as a room palette, which is what it is and what `bank` and `casino`
+already are.
+
+### Not done -- `carpet_tournament` is still unreachable, and here is why
+
+`carpet_tournament` is kind `carpet`. A theme holds one grammar per kind and
+`delco_1997`'s carpet is `carpet_delco`, so the card shop's play floor gets
+the burgundy and the tournament loop reaches no surface in any level that can
+be built. It is not fixed here, and it is not fixed by mapping it into the
+level themes either -- that would swap the walker's burgundy out of every
+delco room in the game to put a grey-green in one shop.
+
+`material_kind.py` in Deli Counter states the opposite in a comment --
+"`carpet_tournament` is NOT here and must not be: a pack directory is
+`<kind>_<theme>`, so the play area's carpet is kind `carpet` and the
+`card_shop` THEME is what makes it the tournament loop". THAT IS THE CALL THAT
+SHIPPED THE DEFECT. It is correct about the mechanism and wrong about the
+premise: there is no level whose theme is `card_shop`, and by the paragraph
+above there cannot be one.
+
+THE KIND VOCABULARY CANNOT EXPRESS "THIS ROOM'S CARPET DIFFERS FROM THE
+LEVEL'S CARPET". Expressing it needs a kind of its own, which is exactly how
+the club floor was done in 0.42.0 -- kind `carpet_club`, grammar
+`carpet_club_delco`, beside `carpet` rather than instead of it. The same shape
+works here and costs four files in four repos:
+
+  * Pixelcoat -- `carpet_tournament.json` declares `kind: "carpet_tournament"`,
+    and `delco`, `delco_1997` and `card_shop` map the slot;
+  * Zoo -- the name in `zoo_keeper.core.skins.KNOWN_KINDS`, without which
+    `dna.resolve_module_plan` drops the slot's material silently, which is the
+    failure `carpet_club` had and 0.44.0's own comment describes;
+  * Deli Counter -- `material_kind.KIND_BY_MATERIAL` and
+    `level_design._CARD_SHOP_FINISHES`, so the play area asks for it;
+  * Level Factory -- nothing; the pre-flight added in 0.92.0 picks it up on
+    its own the moment the slot manifest names it.
+
+Not started here because this branch is two repos and that is four, and
+because it is the walker's call whether the card shop's floor is worth a kind.
+`test_carpet_tournament_is_still_unreachable_and_that_is_recorded` is a
+tripwire on the decision: it goes red the day a level theme maps the grammar,
+and points its reader at this paragraph instead of at a surprise.
+
+### What it costs -- every frame is spent on somebody else's machine
+
+BUILD: `theme-library --theme delco_1997` writes 39 packs instead of 37,
+2.97 MiB on disk against 2.95. The two are the cheapest packs in the library:
+`wood_panel_delco_1997` is 9.8 KiB on disk and `slatwall_delco_1997` 11.3 KiB
+(9.2 and 10.6 KiB of that is PNG), 21.1 KiB together, 0.69% of the library. Both build at 128 px, from
+`pack_size_for(1.2192 m)` at the library's 128 px/m -- 105 px/m, the same
+density 0.44.0 measured its groove widths at.
+
+RUNTIME: 170.7 KiB of RGBA8 with mips per pack, 341.3 KiB for the two --
+128 px, albedo and roughness, the same accounting 0.44.0 used. No normal map,
+for the reason 0.44.0 gave and this release has no new evidence against.
+
+AND IT IS PAID ONLY BY A PACKAGE WITH THE SURFACE IN IT, which is measurable
+rather than assertable. A theme library is not shipped; a package carries
+Lot's ground skins as loose PNGs and everything else EMBEDDED per module GLB.
+Counted in 9061's package: `skins/` holds 3 packs (asphalt, road_paint,
+sidewalk -- `GROUND_SKIN_KINDS`), there are 0 loose PNGs under `lot/`, and its
+152 module GLBs embed 16.13 MiB of image across 19 distinct kinds. The
+delco_1997 library after this release holds 39. EIGHTEEN of the other twenty
+reached no module GLB because nothing asked for them -- `velvet`,
+`carpet_club`, `wallpaper_club`, `siding`, `shingle`, `stone`, `foliage`,
+`dirt`, `gravel`, `tar` and the rest -- and cost that package nothing. The
+remaining two are `wood_panel` and `slatwall`, which 21 modules DID ask for
+and which had no pack to answer with. A pack is paid for when a slot asks for
+it and not before, and that is the whole reason this release's cost is small.
+
+SO THE DELTA IS PER-PACKAGE AND SMALL. Across Deli Counter's 132 source
+shells, ONE asks for `wood_panel` and ONE for `slatwall` (`card_shop_a01`,
+19 slots and 2). Every other delco or delco_1997 package embeds nothing new,
+to the byte. A card-shop package embeds the two packs into the 9 GLBs that
+carry them -- 7 `_mwood_panel` and 2 `_mslatwall` -- at 9.2 and 10.6 KiB of
+PNG each, 85.4 KiB of payload; each GLB carries its own copy, as every
+other kind in the package already does (`ceiling_tile` is embedded twice in
+this one), so the worst case at import is 9 texture pairs, 1.50 MiB, and the
+best is 2, 341.3 KiB. Whether Godot dedupes identical embedded images across
+GLBs is NOT measured here and is the number to take if this ever matters.
+
 ## [0.44.0] - the card shop's lower walls
 
 The walker, 2026-09-15, with nine photos of trading-card shops

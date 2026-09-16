@@ -88,6 +88,112 @@ def test_theme_covers_the_exterior_kinds(path):
     assert not missing, f"{theme.get('theme')}: no {sorted(missing)}"
 
 
+# --------------------------------------------------------------------------- #
+# A kind no LEVEL theme maps is a material nothing can ever wear
+# --------------------------------------------------------------------------- #
+#
+# 0.44.0 shipped `wood_panel_delco` and `slatwall_retail` and mapped them in
+# `card_shop` only. Every level this pipeline generates runs on `delco` or
+# `delco_1997`, neither of which had the kinds -- so cold run 9061's package
+# instanced 21 modules whose stems end `_mwood_panel` or `_mslatwall`, Zoo's
+# `find_pack` returned None for both, and the card shop's whole intended look
+# shipped as flat grey. Measured in that package
+# (`_runs/walk_export_card_block_001`): of the 11 kinds its GLBs carry, the
+# only two whose kind-named material has no `baseColorTexture` are those two;
+# every other kind resolved to an `M_Skin_<pack>_<theme>` with a texture on it.
+#
+# WHY THAT IS A KIND-LEVEL RULE AND NOT A GRAMMAR-LEVEL ONE. A theme holds one
+# grammar per kind, so picking `brick_buff_civic` over `brick_delco` is a style
+# choice and the other grammar is not "unreachable" -- it is simply not this
+# theme's brick. 32 of the 86 shipped grammars sit in that bucket today and
+# demanding they all be mapped would be a gate nobody could keep green. A KIND,
+# though, is the slot itself: a kind no level theme maps is a surface no level
+# can ever show, whatever grammar it would have chosen.
+#
+# WHICH THEMES ARE "LEVEL" THEMES IS DERIVED, NOT LISTED. Level Factory's
+# `GROUND_SKIN_KINDS` (apps/cli/commands/__init__.py) points Lot's six outdoor
+# families at four kinds -- ground and road at `asphalt`, path and sidewalk at
+# `sidewalk`, courtyard at `concrete`, the markings at `road_paint`. A theme
+# that cannot answer all four cannot dress a site's outdoors and is a palette
+# for rooms, not a theme a brief can name. On the shipped tree that picks out
+# `delco` and `delco_1997` and nothing else -- including `card_shop`, which is
+# the actual mistake behind 9061: the card shop is one building on a street,
+# and a brief carries ONE theme for the whole mission
+# (`schemas/mission.brief.schema.json`), so its surfaces have to live in the
+# street's theme or not at all.
+LEVEL_GROUND_KINDS = frozenset({"asphalt", "sidewalk", "concrete", "road_paint"})
+
+
+def _level_themes():
+    """Theme name -> materials map, for the themes that can dress a whole site."""
+    out = {}
+    for path in _theme_paths():
+        theme = _load(path)
+        if LEVEL_GROUND_KINDS <= set(theme.get("materials", {})):
+            out[theme["theme"]] = theme["materials"]
+    return out
+
+
+def test_the_level_theme_derivation_separates_something():
+    """The rule below is only worth anything if it does not classify every
+    theme as a level theme, and is not vacuous if it classifies none. Both
+    failure modes read as a green suite, which is the shape this whole file
+    exists to refuse."""
+    level = set(_level_themes())
+    every = {_load(p)["theme"] for p in _theme_paths()}
+    assert level, f"no theme maps all of {sorted(LEVEL_GROUND_KINDS)}"
+    assert every - level, ("every theme qualifies as a level theme; the "
+                           "derivation has stopped separating anything")
+
+
+def test_every_kind_any_theme_maps_is_mapped_by_every_level_theme():
+    """RED on 0.44.0 with `wood_panel` and `slatwall`, on both level themes.
+
+    The direction matters: a partial theme is allowed to be partial -- `bank`
+    maps 24 kinds and is a room palette -- but it is not allowed to be the ONLY
+    place a kind is answered, because then that kind reaches no level.
+    """
+    every = {t["theme"]: t.get("materials", {})
+             for t in (_load(p) for p in _theme_paths())}
+    level = _level_themes()
+    wanted = set().union(*(set(m) for m in every.values()))
+    faults = []
+    for name in sorted(level):
+        for kind in sorted(wanted - set(level[name])):
+            where = sorted(t for t, m in every.items() if kind in m)
+            faults.append(f"{name} maps no '{kind}' (mapped by "
+                          f"{', '.join(where)})")
+    assert not faults, "; ".join(faults)
+
+
+def test_carpet_tournament_is_still_unreachable_and_that_is_recorded():
+    """A TRIPWIRE, not an endorsement -- read the 0.45.0 changelog entry.
+
+    `carpet_tournament` is kind `carpet`, and a theme holds one grammar per
+    kind. `delco_1997`'s carpet is `carpet_delco`, the burgundy the walker
+    asked in as many words to keep (see that grammar's own notes), so the card
+    shop's play floor gets the burgundy and the tournament loop reaches no
+    surface in any level. The kind vocabulary CANNOT express "this room's
+    carpet differs from the level's carpet"; expressing it needs a kind of its
+    own, exactly the way `carpet_club` was added for the club floor, and that
+    is a four-repo change this branch did not make (Pixelcoat's kind and theme
+    maps, Zoo's `KNOWN_KINDS`, Deli Counter's `material_kind.KIND_BY_MATERIAL`
+    and `level_design._CARD_SHOP_FINISHES`).
+
+    Deliberately NOT fixed by mapping the grammar into the level themes: that
+    would add a 682.7 KiB pack to every delco and delco_1997 library for a
+    surface nothing asks for, which is the performance rule paying for a look
+    that does not exist yet. When the kind lands, this test goes red and its
+    reader is pointed at the decision rather than at a surprise.
+    """
+    level = _level_themes()
+    assert level, "derivation broken; see the test above"
+    for name, materials in level.items():
+        assert materials.get("carpet") != "carpet_tournament", (
+            f"{name} now maps the tournament carpet -- if the `carpet_tournament` "
+            f"KIND landed, delete this test and say so in the changelog")
+
+
 def _rockay_family():
     """Every theme in the family INCLUDING the base `rockay`.
 
