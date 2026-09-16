@@ -1,0 +1,18 @@
+{
+  "id": "carpet_tournament",
+  "kind": "carpet",
+  "base_colors": ["#585c56", "#5f635c", "#51554f"],
+  "meters_per_tile": 2.0,
+  "bands": {"macro": 0.25, "meso": 0.55, "micro": 0.35},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "fbm", "cells": 64, "octaves": 2},
+  "micro": {"generator": "fbm", "cells": 92, "octaves": 2},
+  "wear": {"generator": {"generator": "fbm", "cells": 3, "octaves": 3},
+           "coverage": 0.30, "feather": 0.9, "color": "#4c4f4a", "strength": 0.22},
+  "detail_strength": 0.05,
+  "posterize": 16,
+  "roughness": {"base": 0.96, "variation": 0.03},
+  "height_strength": 0.15,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "Commercial low-pile loop broadloom for the play area -- the floor a folding table and eight chairs stand on (walker, 2026-09-15, card-shop references). DRAB ON PURPOSE, and that is the whole difference from the other two carpets: carpet_delco is the walker's burgundy at chroma_mean 0.064, carpet_club_delco is a burgundy-and-teal medallion figure at 0.043, and both are a room's subject. This one is a stage for a pack wall and a table of cards, so it is a grey-green under the 0.030 environment budget with no figure at all, a flatter response (roughness 0.96 +- 0.03 against 0.95 +- 0.04) and a single broad soil pass instead of the club's three trodden and spilled ones. THE LOOP IS NOT DRAWN. A 1/10 in gauge is 2.54 mm, which at the pack's 128 px/m is 0.33 of a texel -- below the grid, so `weave` would draw a hard per-texel alternation and not a loop (Pixelcoat 0.43.0 measured exactly that on linen: 64 threads on a 128 px tile read ac1 0.15). The pile is carried by the micro band and the grain instead."
+}

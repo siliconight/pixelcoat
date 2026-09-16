@@ -110,6 +110,11 @@ TERTIARY_KINDS = {
     "brick", "concrete", "drywall", "plaster", "ceiling_tile",
     "tile", "carpet", "wood", "glass_facade", "metal",
     "carpet_club", "wallpaper_club", "wood_stained", "paint_block",
+    # 0.44.0's card-shop surfaces. Both are broad wall planes a person
+    # stands a metre from -- wainscot below the drywall and a slatwall the
+    # product hangs off -- so both are foundation tier by the same reading
+    # that put `paint_block` here.
+    "wood_panel", "slatwall",
 }
 # sect.2 secondary: "moderate saturation, controlled accent lighting, localized
 # emissive strips or signage". Judged, but on a looser budget.

@@ -1,0 +1,22 @@
+{
+  "id": "slatwall_retail",
+  "kind": "slatwall",
+  "base_colors": ["#c4c4c1", "#c9c9c6", "#c0c0bd"],
+  "meters_per_tile": 1.2192,
+  "bands": {"macro": 0.18, "meso": 0.90, "micro": 0.25},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "stripes", "axis": "y", "count": 16, "seam": 0.55, "jitter": 0.05},
+  "micro": {"generator": "fbm", "cells": 46, "octaves": 2},
+  "wear": [
+    {"generator": {"generator": "ribs", "count": 16, "axis": "y"},
+     "coverage": 0.12, "feather": 0.0, "color": "#8e8b83", "strength": 0.45},
+    {"generator": {"generator": "fbm", "cells": 6, "octaves": 3},
+     "coverage": 0.12, "feather": 0.8, "color": "#b0aea6", "strength": 0.20}
+  ],
+  "detail_strength": 0.02,
+  "posterize": 16,
+  "roughness": {"base": 0.55, "variation": 0.06, "grain": 0.35},
+  "height_strength": 0.35,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "White melamine retail slatwall -- the grooved panel a blister pack's hook hangs from (walker, 2026-09-15, card-shop references). The tile is one 4 ft panel (1.2192 m) carrying 16 horizontal grooves at exactly 3 in on centre, which is the industry pitch and the one the reference photos hang at; 6 in exists for heavy-duty racking and hangs half as much product. THE DIRT IS IN THE GROOVE AND NOT BESIDE IT: the first wear pass draws its mask from `ribs` at the SAME count and axis as the meso stripes, and a rib peaks exactly where a stripe seam falls (both are keyed on the band fraction reaching 0), so a 12% coverage cut lands on the one texel in eight that is the groove. A wear pass over fbm would have put grime in random blotches across the face, which is what a slatwall never has. `roughness.grain` is 0.35 because a two-population meso makes a two-population response: with the meso alone the stepped roughness held exactly two values, 0.506 on the groove and 0.557 on the face, and `tests/test_roughness_band.py` refused it. At 0.35 it holds six across the declared band, the mean is still the declared 0.550, and the groove is still the duller half (0.516 against 0.555)."
+}

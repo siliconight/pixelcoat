@@ -1,0 +1,32 @@
+{
+  "theme": "card_shop",
+  "description": "A 1990s trading-card shop in a Delco strip mall: dark wood-veneer wainscot under orange-peel drywall, white slatwall for the blister packs, a drab commercial loop carpet in the play area and beige VCT on the sales floor, drop ceiling above, laminate counter tops. Bronze shopfront glazing and red brick outside, the same street as delco_1997. The concrete slot is the unit's bare block rather than delco_1997's poured concrete: concrete_delco carries a value step against this theme's ceiling tile, drywall, plaster and VCT with nothing to justify it (four pair faults, art_standard_audit --pairs), and the block's courses are the reason the eye can see. The drywall is orange peel rather than bank's scuffed grammar for roadmap 140's two numbers: spread 11.6 and neighbour correlation 0.70, against 15.7 and 0.15.",
+  "materials": {
+    "brick": "brick_delco",
+    "canvas": "canvas_neutral",
+    "carbon": "carbon_neutral",
+    "carpet": "carpet_tournament",
+    "ceiling_tile": "ceiling_tile_delco",
+    "concrete": "cinderblock_delco",
+    "dirt": "dirt_delco",
+    "drywall": "drywall_orangepeel_delco",
+    "glass": "glass_delco",
+    "glass_facade": "glass_facade_bronze",
+    "gravel": "pebble_gravel",
+    "laminate": "laminate_neutral",
+    "leather": "leather_neutral",
+    "metal": "metal_rusted_street",
+    "metal_bare": "metal_bare_neutral",
+    "metal_painted": "metal_painted_neutral",
+    "paper": "paper_neutral",
+    "plaster": "plaster_delco",
+    "plastic": "plastic_neutral",
+    "rubber": "rubber_delco",
+    "slatwall": "slatwall_retail",
+    "tar": "tar_neutral",
+    "tile": "vct_floor_beige",
+    "vegetation": "vegetation_neutral",
+    "wood": "wood_delco",
+    "wood_panel": "wood_panel_delco"
+  }
+}

@@ -132,6 +132,18 @@
       "tier": null,
       "value_range": 0.10134877715892271
     },
+    "carpet_tournament": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.013144256777058671,
+      "chroma_p95": 0.03379013937867249,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.027375114851520985,
+      "kind": "carpet",
+      "rough_mean": 0.9606618843826593,
+      "tier": null,
+      "value_range": 0.06074516101100641
+    },
     "ceiling_tile_delco": {
       "blown_frac": 0.001800537109375,
       "chroma_mean": 0.018139688545872272,
@@ -816,6 +828,18 @@
       "tier": null,
       "value_range": 0.2286226257027011
     },
+    "slatwall_retail": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.0044167122553332855,
+      "chroma_p95": 0.023127946873855516,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.06593133118050434,
+      "kind": "slatwall",
+      "rough_mean": 0.5497685451133578,
+      "tier": null,
+      "value_range": 0.16713431232925802
+    },
     "stucco_warm": {
       "blown_frac": 0.0091400146484375,
       "chroma_mean": 0.034301214093272886,
@@ -983,6 +1007,18 @@
       "rough_mean": 0.5918351715686274,
       "tier": null,
       "value_range": 0.1096252166545808
+    },
+    "wood_panel_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.04926805634357756,
+      "chroma_p95": 0.0636539768940114,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.03256157295790989,
+      "kind": "wood_panel",
+      "rough_mean": 0.5467647776884191,
+      "tier": null,
+      "value_range": 0.14225256743331216
     },
     "wood_stained_delco": {
       "blown_frac": 0.0,

@@ -1,0 +1,23 @@
+{
+  "id": "wood_panel_delco",
+  "kind": "wood_panel",
+  "base_colors": ["#4e3626", "#5a402d", "#452f21"],
+  "meters_per_tile": 1.2192,
+  "bands": {"macro": 0.30, "meso": 0.85, "micro": 0.30},
+  "macro": {"generator": "fbm", "cells": 3, "octaves": 2},
+  "meso": {"generator": "stripes", "axis": "x", "count": 6, "seam": 0.5, "jitter": 0.12},
+  "micro": {"generator": "directional_grain", "axis": "y", "cells_along": 5, "cells_across": 46},
+  "wear": [
+    {"generator": {"generator": "fbm", "cells": 5, "octaves": 4},
+     "coverage": 0.18, "feather": 0.7, "color": "#6a5138", "strength": 0.25},
+    {"generator": {"generator": "fbm", "cells": 6, "octaves": 3},
+     "coverage": 0.07, "feather": 0.55, "color": "#705a3f", "strength": 0.32,
+     "roughness": 0.12}
+  ],
+  "detail_strength": 0.10,
+  "posterize": 14,
+  "roughness": {"base": 0.55, "variation": 0.12},
+  "height_strength": 0.4,
+  "emit": {"roughness": true, "normal": false},
+  "notes": "Dark wood-veneer sheet panelling -- the WAINSCOT on the lower wall of a room finished around 1980 and still there in 1997 (walker, 2026-09-15, card-shop references). The tile is one 4 ft sheet (1.2192 m) carrying 6 score grooves at 8 in on centre, the standard random-plank pitch. The joint is `stripes`' own seam, 6% of a band either side of it, so it is 12% of the 203.2 mm pitch: 24.4 mm, 2.6 texels at the pack's 105 px/m, against a real V-groove of about 6 mm. 6 mm is 0.63 of a texel at this density and cannot be drawn. hardwood_plank does not cover it: that is kind 'wood', a mid-brown FLOOR plank 0.3333 m between joints against this one's 0.2032 m, at roughness 0.407 and with no wear pass of any kind, and a theme holds one grammar per kind -- a card shop needs plank wood on its shelving at the same time as panelling on its wall. Scuffing is IRREGULAR, not floor-anchored: Zoo cube-projects world-metre UVs, so the tile's phase follows the wall's world position and a gradient authored at the bottom of the tile lands at an arbitrary height. A skirting-height scuff belongs to a mesh-aware pass (Patina) or to a separate trim module, not to a tiling texture."
+}

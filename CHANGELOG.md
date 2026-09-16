@@ -1,5 +1,200 @@
 # Changelog
 
+## [0.44.0] - the card shop's lower walls
+
+The walker, 2026-09-15, with nine photos of trading-card shops
+(`docs/SET_DRESSING_REFERENCES.md`, "The walker's trading card shop
+references"). The Pixelcoat line in that spec is one sentence -- "wood
+panelling for the lower walls, slatwall, and a tournament carpet" -- and the
+library could draw none of the three. It has two plank woods and they are
+floors; it has two carpets and both are a room's SUBJECT, a burgundy the
+walker asked to keep and a medallion figure. A shop whose subject is the
+product on the wall needs a floor that is a stage.
+
+THREE GRAMMARS, THREE KINDS, two of them new:
+
+    grammar            kind        mpt      px  Cmean  Lrng   hf    rgh   std  ac1
+    wood_panel_delco   wood_panel  1.2192  128  0.049  0.142  .033  0.55   7.8  .47
+    slatwall_retail    slatwall    1.2192  128  0.004  0.167  .066  0.55  18.6  .43
+    carpet_tournament  carpet      2.0000  256  0.013  0.061  .027  0.96   7.5  .57
+
+(art standard audit at 256 px, seed 1999; L is Oklab; `px` is the size
+`build_theme_library` writes at the library's 128 px/m, and `std`/`ac1` --
+roadmap 140's luminance spread and neighbour correlation -- are measured
+there.) No pixel of any of them is crushed or blown.
+
+THE PITCH IS THE MATERIAL. Both panels tile one 4 ft sheet, 1.2192 m, because
+that is the dimension a real groove count divides exactly and a fractional
+band count cuts a band in half at the wrap. `slatwall_retail` carries 16
+grooves at exactly 3.00 in on centre -- the industry pitch, and the one the
+reference photos' blister hooks hang at; 6 in exists for heavy racking and
+hangs half as much product. `wood_panel_delco` carries 6 score grooves at
+8.00 in, the random-plank pitch of a 1970s sheet. Measured off the albedo at
+the pack size: the slatwall's groove sits 53.4/255 below its face and the
+panelling's 12.1/255, and in both every groove line is darker than every
+face line.
+
+THE GROOVE IS AS NARROW AS THE DENSITY ALLOWS, NOT AS NARROW AS THE REAL ONE.
+`procedural_surface.stripes` puts its seam at 6% of a band either side of the
+joint and `_generator` never passes `seam_width` through, so a groove is 12%
+of its pitch: 9.1 mm on the slatwall against a real 1/4 in (6.35 mm), and
+24.4 mm on the panelling against a real V-groove of about 6 mm. Exposing the
+knob would not have bought the real number, which is why it stays unexposed:
+at 128 px/m a 6 mm groove is 0.63 of a texel. What ships is 1.0 texel and
+2.6 texels, the narrowest line this density can hold. Recorded, not closed --
+a denser pack makes it real, and costs what the next paragraph costs.
+
+TWO MAPS EACH, AND WHAT THE THIRD WOULD HAVE BOUGHT. Every frame is spent on
+somebody else's machine, and for a texture the price is bytes and samplers:
+each panel pack is 170.7 KiB of RGBA8 with mips (128 px, albedo + roughness)
+and the carpet is 682.7 KiB (256 px), 1.00 MiB for the three. A normal map is
+the obvious want for a grooved panel and it is NOT shipped: it would add
+85.3 KiB to each panel and 341.3 KiB to the carpet -- 50% on every pack and a
+third sampler -- and by this repo's own reading it "pays off on Lux's pc2000
+lightmapped path, and is inert on the default per-vertex path"
+(`core/material_grammar` module docstring), which is the path the packages
+ship on. 64 of the 86 shipped grammars emit no normal map and these three
+join them; the groove is carried by the albedo, at the step measured above.
+Reopen it when there is runtime telemetry from a lightmapped session.
+
+THE DIRT IS IN THE GROOVE, and it took a coincidence rather than a feature.
+`wear` cuts its mask at a quantile of whatever generator it names, and an
+fbm would have put grime in blotches across a face that never has any. The
+first wear pass draws from `ribs` at the meso stripes' OWN count and axis:
+`ribs` peaks where `stripes` seams, because both are keyed on the band
+fraction reaching zero, so a hard 12% cut selects the one texel in eight that
+is the groove and nothing else. Neither file can show that, so
+`tests/test_card_shop_surfaces.py` asserts the two masks are equal texel for
+texel -- if either primitive moves its phase the grime silently moves onto
+the face.
+
+A TWO-POPULATION MESO MAKES A TWO-POPULATION RESPONSE. `slatwall_retail`'s
+stepped roughness first held exactly two values, 0.506 on the groove rows and
+0.557 on the face, and `tests/test_roughness_band.py` refused it -- the gate
+0.41.0 built after bare metal mirrored a dark room in stripes. A stripes meso
+is two populations (seam, face) whatever its jitter, so the level count has
+nothing to spread over. The fix is the dial that release added:
+`roughness.grain` 0.35 mixes per-texel grain into the response, giving six
+values across the declared band, a mean still on the declared 0.550, and the
+groove still the duller half (0.516 against 0.555). Declaring a wear response
+offset would have cleared the test as well -- by EXCLUDING the grammar from
+it (`_declares_a_response_offset`), which is not the same thing.
+
+WHAT THE TOURNAMENT CARPET IS FOR, in the three numbers that say it:
+chroma_mean 0.013 against `carpet_delco` 0.064 and `carpet_club_delco` 0.043,
+the only one of the three inside the 0.030 environment budget; roughness
+0.961 against both of theirs at 0.950, a flatter response for a loop than for
+a cut pile; hf 0.027 against the club's 0.061, one broad soil pass to three
+trodden and spilled ones. THE LOOP IS NOT DRAWN: a 1/10 in gauge is 2.54 mm,
+which at 128 px/m is 0.33 of a texel, so `weave` would draw an alternation
+and not a loop -- 0.43.0 measured exactly that on linen (64 threads on a
+128 px tile, ac1 0.15). The pile is the micro band and the grain.
+
+WHY THE PANELLING IS NOT `hardwood_plank` IN A NEW COLOUR. That grammar is
+kind `wood`, a 0.3333 m (13.12 in) floor plank at roughness 0.407 with no
+wear pass of any kind, measured L 0.507 / C 0.074; this is a 0.2032 m (8 in)
+wainscot board at 0.547 with a deeper joint and two wear passes, L 0.382 /
+C 0.049. The colour is the smallest of the differences. It is a new KIND for
+the same reason `wood_stained` was in 0.42.0: a theme holds one per kind, and
+a card shop needs plank wood on its shelving at the same time as panelling on
+its wall -- `card_shop` maps `wood` to `wood_delco` and `wood_panel` to this,
+and a test holds them apart.
+
+A KIND NOBODY NAMES IS A KIND NOBODY JUDGES, which 0.42.0 learned and this
+release re-measured. With `wood_panel` and `slatwall` absent from
+`TERTIARY_KINDS`, the audit returned no verdict for either grammar AND the
+neighbour-pair gate saw 45 pairs in `card_shop`; with them named it sees 66.
+Twenty-one pairs involving the two biggest wall surfaces in the room were not
+being looked at. Both are named now.
+
+`profiles/themes/card_shop.json` is `bank`'s 24 slots exactly, plus those
+two. Two of its values are chosen against measurements rather than against
+`delco_1997`'s habits, and both are recorded in the profile:
+
+- `concrete` is `cinderblock_delco`, not `concrete_delco`. With the poured
+  concrete in the slot this theme carried four pair faults -- value steps of
+  0.147 to 0.186 against the ceiling tile, the drywall, the plaster and the
+  VCT with nothing to justify them (structure 0.002-0.008, chroma
+  0.000-0.015, hue 2-13 deg). None of the four was new to the library:
+  `delco` carries three of them today and `delco_1997` the fourth.
+  `concrete_delco` is the only one of the library's 14 `concrete` grammars
+  that faults against all four -- `asphalt_street` faults against the ceiling
+  tile and the drywall, `flagstone` against those two and the VCT, and the
+  other eleven against none of them. The block's courses are a reason the eye
+  can see (hf 0.088
+  against 0.046), and a strip-mall unit's side wall is block.
+- `drywall` is `drywall_orangepeel_delco`, not `bank`'s
+  `drywall_scuffed_delco`. Roadmap 140's two numbers: 11.6 / 0.70 against
+  15.7 / 0.15. The scuffed grammar is the fizzy shape that release named, and
+  orange peel is the 1997 wall anyway.
+
+`card_shop` builds 26 packs, 56 maps, 1281.4 KiB on disk and 14.67 MiB of
+RGBA8-with-mips, against `bank`'s 24 / 51 / 1076.0 KiB / 13.25 MiB and
+`delco_1997`'s 37 / 80 / 2995.8 KiB / 35.92 MiB. It carries no pair fault
+over its 66 pairs. Nothing in these three grammars draws a name: every brand
+surface in the shop -- the banner, the bay headers, the pack art -- is
+signage, and the invented-Delco rule lives with it.
+
+REFUTED ON THE WAY, kept where they were found:
+
+- "SCUFFED NEAR THE FLOOR" CANNOT BE A TILING TEXTURE. Zoo cube-projects
+  world-metre UVs, so a tile's phase follows the wall's world position: a
+  gradient authored at the bottom of the tile lands at whatever height the
+  wall happens to start at, and repeats every 1.2192 m up it. The panelling's
+  scuffing is irregular instead, and a skirting-height scuff belongs to a
+  mesh-aware pass (Patina owns placement) or to a separate trim module.
+- `bands.macro` IS NOT THE DIAL FOR A MOTTLED BASE. The slatwall's face was
+  blotchy; sweeping `bands.macro` over 0.18 / 0.10 / 0.05 moved the face's
+  spread by 0.35 of a luma level (5.49 / 5.42 / 5.77) and moved its min, p5,
+  median, p95 and max not at all. That band scales only the value drift; the
+  macro field ALSO selects between `base_colors`, at full strength, whatever
+  the band says. The dial was the palette: narrowing three greys from an
+  18-level spread to 9 took the face from std 5.49 to 4.82, and one grey flat
+  takes it to a p5-to-p95 range of a single level.
+- NOR WAS THE MICRO LATTICE THE DIAL FOR A FIZZY FACE. The slatwall's micro
+  was authored at 150 cells and its pack is 128 px -- 0.85 texels per cell,
+  a lattice finer than the grid it is sampled on. Fixing it to 46 cells moved
+  the face's neighbour correlation from 0.16 to 0.18. `detail_strength` was
+  the dial, as `tests/test_theme_profiles.py` said in 2026-09-11: sweeping it
+  alone gave 0.00 -> std 4.70 / ac1 0.72, 0.02 -> 5.49 / 0.45, 0.04 -> 7.38 /
+  0.31, 0.07 -> 10.47 / 0.18, 0.12 -> 14.90 / 0.07. It ships at 0.02. The
+  cell counts are still correct and still corrected.
+- EIGHT SHIPPED GRAMMARS HAVE THAT LATTICE PROBLEM AND ARE NOT TOUCHED HERE:
+  `paper_neutral` 0.61 texels per micro cell, `carbon_neutral` 0.67,
+  `laminate_neutral` 0.75, `metal_painted_neutral`, `vegetation_neutral` and
+  the three velvets 0.80. Their micro band is per-texel noise rather than
+  structure. Reported; moving them is a baseline change that belongs to
+  whoever is looking at those materials.
+
+`tools/art_standard_baseline.json` takes rows for the three new grammars and
+nothing else. `road_paint_delco` still measures 0.0193 lower on blown pixels,
+0.0009 higher on chroma and 0.0008 higher on hf than its committed row on
+this machine -- inside the 0.002 tolerance, unabsorbed since 0.39.0, and
+restored by hand after the re-snapshot, because absorbing a drift nobody has
+looked at inside a card-shop commit is how it stops being visible.
+
+`wood_panel_delco` is over the chroma budget at 0.049 against 0.030, and that
+is reported rather than chased: it is the lowest of the four wood grammars
+bar `wood_stained_delco` (0.047), against `hardwood_plank` 0.074 and
+`wood_delco` 0.070. A brown wall is over that budget by construction, and
+`carpet_delco` is the standing lesson about which of the two wins.
+
+WHAT A CARD SHOP CANNOT WEAR YET, read through the consumers rather than run.
+`wood_panel` and `slatwall` are not in Zoo's `skins.KNOWN_KINDS`, and
+`dna.resolve_module_plan` keeps a slot's material only when the kind is
+listed there -- so a wall asking for either builds in its species' default
+material and says nothing, exactly as `carpet_club` did. They also need
+`bpylayer/materials.ROUGHNESS` and `METALLIC` rows, and Deli Counter needs
+the ids in `material_kind.py` plus a room or role that asks for them. The
+kinds are deliberately NOT added to `cli/main._ZOO_KINDS`, which mirrors
+Zoo's vocabulary: listing them would turn a true "this pack will reach no
+mesh" warning into a false reassurance, and a test says so.
+
+`tests/test_card_shop_surfaces.py`, 31 tests. Against 0.43.0 it fails 30 of
+them; with the three grammar files and the theme copied onto 0.43.0 it still
+fails 2, and those 2 are the audit's kind list and the baseline. Suite: 485
+passed (0.43.0: 448).
+
 ## [0.43.0] - the upholstery takes the colour it is asked for
 
 Zoo 0.88.0, read against cold run 9052's delco_1997 build: `leather`
