@@ -43,5 +43,11 @@
     "roughness": true,
     "normal": false
   },
-  "tintable": false
+  "tintable": false,
+  "wet": {
+    "responds_like": "concrete",
+    "amount": 0.95,
+    "floor": 0.8
+  },
+  "notes": "WET VARIANT: the glossiest wet surface on a street -- tar is impermeable and flat, so it wets nearly whole."
 }

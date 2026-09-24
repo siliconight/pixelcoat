@@ -33,6 +33,8 @@ import numpy as np
 from PIL import Image
 
 from . import maps, procedural_surface as ps
+from . import material_response as mr
+from . import weathering
 from ..version import __version__, DEFAULT_SEED
 
 __all__ = ["MaterialGrammar", "synthesize", "build_material_pack",
@@ -134,6 +136,42 @@ class MaterialGrammar:
     #: edge stops being a ruler. Everything this pipeline shipped before
     #: it was laid by a machine, which is what the walker kept seeing.
     warp: dict = field(default_factory=dict)
+    #: WET VARIANT: a second albedo and roughness for the same surface with
+    #: water on it, written into the same pack as `wet_albedo`,
+    #: `wet_roughness` and `wetness`.
+    #:
+    #: `{"responds_like": <material_response preset>, "amount": 0..1,
+    #:   "floor": 0..1, "cavity_bias": 0..1}`.
+    #:
+    #: `amount` is the saturation ceiling and `floor` is the fraction of it the
+    #: DRIEST texel gets, with the pooling spending what is left. A ground
+    #: plane under rain needs a floor and a wall does not: measured on the
+    #: first build, `asphalt_delco` at `amount 0.9` and no floor came out 17%
+    #: darker on average, mask mean 0.36 -- damp, not raining. That is
+    #: `weathering.wetness_mask` working correctly for what it was written
+    #: for, water that has run down a surface and collected; it normalises to
+    #: its own maximum, so its mass sits near 0.4 whatever `amount` says, and
+    #: raising `amount` scales that distribution rather than moving it.
+    #: `floor: 0.0` reproduces the old behaviour to the float.
+    #:
+    #: A SECOND MATERIAL, NOT A SECOND PASS, and that is the whole reason it
+    #: exists. LF 0.110.0 priced a wet `next_pass` on a real package at
+    #: 2.27-4.29 us per ADDED DRAW CALL -- flat per submission, not per pixel
+    #: -- which is +8.05 ms at the worst station of `crossroads_9600`. A
+    #: variant material draws the same triangles once.
+    #:
+    #: `responds_like` names a `material_response.PRESETS` family and the
+    #: response is read from it: this repo's wetness model lives there and the
+    #: gen7 pipeline already uses it. Deriving the response from the grammar's
+    #: own dry roughness was tried and refused: `wet_darken / dry_roughness` is
+    #: 0.50 concrete, 0.44 brick, 0.83 wood, 0.71 painted metal, because
+    #: darkening tracks porosity and wood is smoother than brick and darkens
+    #: more. A grammar declares no porosity, so it declares the family.
+    #:
+    #: Refuses a grammar that emits no roughness -- there would be nothing for
+    #: the water to smooth, and a wet material with a dry response is a
+    #: material that looks wet and lights dry.
+    wet: dict = field(default_factory=dict)
     emit: dict = field(default_factory=lambda: {"roughness": True, "normal": False})
     # ACHROMATIC-BY-INTENT. True means "my albedo is a surface, not a paint
     # job -- the consumer supplies the hue". Zoo multiplies the mesh's own
@@ -576,6 +614,7 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         albedo = ps.posterize(albedo, grammar.posterize)   # hard value steps (Q2)
 
     out: dict[str, Any] = {"albedo": _to_u8(albedo)}
+    rough_f = None
 
     if grammar.cutout:
         co = grammar.cutout
@@ -608,8 +647,8 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
         out["albedo"] = _to_u8(np.concatenate([albedo, alpha[..., None]], axis=-1))
 
     if grammar.emit.get("roughness", True):
-        out["roughness"] = _to_u8(_roughness(grammar, meso_s, chip_mask, grain_s,
-                                             rough_extra))
+        rough_f = _roughness(grammar, meso_s, chip_mask, grain_s, rough_extra)
+        out["roughness"] = _to_u8(rough_f)
 
     if grammar.emit.get("normal", False):
         hf = height - height.min()
@@ -635,7 +674,85 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
             glow = np.clip(glow, 0.0, 1.0) ** float(g)
         out["emissive"] = _to_u8(np.clip(glow * em.get("strength", 1.0), 0.0, 1.0))
 
+    if grammar.wet:
+        out.update(_wet_maps(grammar, albedo, rough_f, height, seed,
+                             out.get("albedo")))
+
     return out
+
+
+def _wet_maps(grammar, albedo, rough_f, height, seed, albedo_u8):
+    """`wetness`, `wet_albedo` and `wet_roughness` for a grammar's wet block.
+
+    WATER POOLS IN THE LOW PLACES, so the mask comes from the height field the
+    rest of the pack was built from, inverted: `weathering.wetness_mask` is the
+    same function the gen7 path uses, called with the same meaning of its first
+    argument (1 where the surface is recessed). Reusing it keeps one wetness in
+    Pixelcoat instead of two that drift.
+
+    `bottom_bias` IS ZERO HERE AND THAT IS NOT A CHOICE. Every grammar pack
+    tiles on both axes (`build_material_pack` writes `tileable: ["x", "y"]`), and
+    the mask function's own comment says a y-tiling surface has no bottom and a
+    linear ramp would cut a seam by construction; it folds the bias into the
+    cavity term itself when `wrap_y`. Passing a nonzero value would be asking
+    for a term the function is about to discard.
+
+    A CUTOUT GRAMMAR KEEPS ITS ALPHA. `road_paint_delco` is worn through to the
+    road by an alpha channel, and a wet albedo without it would hand the
+    importer an opaque road marking -- wet paint covering the whole tile.
+    """
+    w = grammar.wet
+    family = str(w.get("responds_like", ""))
+    if family not in mr.PRESETS:
+        raise ValueError(
+            f"grammar '{grammar.id}': wet.responds_like is {family!r}, which "
+            f"names no material_response preset; have "
+            f"{', '.join(mr.PRESET_NAMES)}")
+    if rough_f is None:
+        raise ValueError(
+            f"grammar '{grammar.id}' declares wetness but emits no roughness. "
+            f"Water smooths a surface's response; a wet albedo over a dry "
+            f"roughness is a material that looks wet and lights dry.")
+    preset = mr.PRESETS[family]
+    amount = float(w.get("amount", 0.0))
+    if not 0.0 < amount <= 1.0:
+        raise ValueError(
+            f"grammar '{grammar.id}': wet.amount is {amount}, which is outside "
+            f"(0, 1]. A wet block that wets nothing is a pack carrying three "
+            f"maps nobody can use.")
+
+    floor = float(w.get("floor", 0.0))
+    if not 0.0 <= floor < 1.0:
+        raise ValueError(
+            f"grammar '{grammar.id}': wet.floor is {floor}, which is outside "
+            f"[0, 1). A floor of 1 is a flat mask and the pooling would have "
+            f"nothing to spend.")
+
+    recess = height.max() - height
+    recess = recess / max(float(recess.max()), 1e-6)
+    # THE POOLING IS ASKED FOR AT FULL STRENGTH AND SPENT AFTERWARDS. Passing
+    # `amount` into the mask would scale the distribution before the floor is
+    # applied, and the floor would then be a fraction of a fraction.
+    pooling = weathering.wetness_mask(
+        recess.astype(np.float32), 1.0,
+        float(w.get("cavity_bias", 0.65)), 0.0,
+        ps.stream_seed(seed, "wet"), True, True)
+    wmask = (amount * (floor + (1.0 - floor) * pooling)).astype(np.float32)
+
+    wet_albedo = np.clip(
+        albedo * (1.0 - preset.wet_darken * wmask[..., None]), 0.0, 1.0)
+    if albedo_u8 is not None and albedo_u8.ndim == 3 \
+            and albedo_u8.shape[-1] == 4:
+        alpha = albedo_u8[..., 3:].astype(np.float32) / 255.0
+        wet_albedo = np.concatenate([wet_albedo, alpha], axis=-1)
+
+    # Gloss is 1 - roughness (the response model's own relationship), so a
+    # gloss boost is a roughness cut of the same size inside the mask.
+    wet_rough = np.clip(rough_f - preset.wet_gloss_boost * wmask, 0.0, 1.0)
+
+    return {"wetness": _to_u8(wmask),
+            "wet_albedo": _to_u8(wet_albedo),
+            "wet_roughness": _to_u8(wet_rough)}
 
 
 # --------------------------------------------------------------------------- #
@@ -680,7 +797,15 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
         "seed": int(seed),
         "tintable": bool(grammar.tintable),
         "import_hints": {
-            "color_space": {k: ("srgb" if k in ("albedo", "emissive") else "linear")
+            # `wet_albedo` IS A COLOUR MAP AND MUST SAY SO. The gen7 pack
+            # writer has always listed it here
+            # (`pipeline_generation_7.py:545`); this comprehension predates
+            # wetness on the grammar path and would have hinted a colour map
+            # as linear data, which an importer obeys silently -- a wet road
+            # that is a different colour from the dry one for no reason a
+            # frame could explain.
+            "color_space": {k: ("srgb" if k in ("albedo", "wet_albedo",
+                                                "emissive") else "linear")
                             for k in map_files},
             "normal_format": "opengl",
             "generate_mipmaps": True,

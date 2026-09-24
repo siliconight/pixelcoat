@@ -1,5 +1,83 @@
 # Changelog
 
+## [0.46.0] - a wet street is a second material, not a second pass
+
+Ten ground grammars grow a `wet` block and their packs now carry `wet_albedo`,
+`wet_roughness` and `wetness` beside the dry maps: `asphalt_delco`,
+`asphalt_street`, `sidewalk_delco`, `concrete_sidewalk_street`, `cobblestone`,
+`flagstone`, `pebble_gravel`, `tar_neutral`, `dirt_delco`, `road_paint_delco`.
+On `delco_1997` that is 6 of the theme's 39 packs; walls and roofs stay dry on
+purpose.
+
+WHY A VARIANT AND NOT A `next_pass`, WHICH IS A MEASUREMENT AND NOT A
+PREFERENCE. LF 0.110.0 priced a wet `next_pass` on a real cold-run package
+(`LF_crossroads_9600`, GL Compatibility, 1280x720, 3 rounds x 300 samples per
+station, 4 arms): 2.27-4.29 us per ADDED DRAW CALL, median 3.5, FLAT across 18
+station-arm pairs spanning 26 to 3,551 added draws and 1.17 to 19.16 ms of
+baseline. Flat per submission and not per pixel -- the station where road fills
+the frame is the CHEAPEST per draw and a distant aerial the dearest -- so the
+pass bills for re-rasterising the same triangles, +8.05 ms at the worst
+station. A variant material submits them once.
+
+WHERE IT HAD TO GO, and it is not where the wetness already was. Two pipelines
+exist. `pipeline_generation_7.py` has carried `wet_albedo` / `wet_roughness` /
+`wetness` for a long time and both importers wire them. The factory never
+touches it: LF's adapter calls `theme-library`, which is
+`material_grammar.build_theme_library` -> `build_material_pack` ->
+`synthesize`, and that path had no wetness at all. Measured: 0 of 86 shipped
+material profiles enabled wetness, and the gen7 wetness code was unreachable
+from a level build. So the grammar path grew it, emitting the SAME map names --
+the contract `integrations/godot/.../pack_importer.gd:62` already reads to build
+a second StandardMaterial3D.
+
+THE RESPONSE IS READ, NOT INVENTED. A grammar names a
+`material_response.PRESETS` family in `wet.responds_like` and the darkening and
+gloss boost come from that table, so Pixelcoat has one wetness model rather than
+two that drift. Deriving the response from the grammar's own dry roughness was
+tried and refused on the numbers: `wet_darken / dry_roughness` is 0.50 concrete,
+0.44 brick, 0.83 wood, 0.71 painted metal -- wood is smoother than brick and
+darkens more, because darkening tracks porosity and a grammar declares none.
+
+`wet.floor` EXISTS BECAUSE THE FIRST BUILD MEASURED WRONG. `asphalt_delco` at
+`amount: 0.9` came out 17% darker on average, mask min 0.04 max 0.90 MEAN 0.36
+-- damp, not raining. `weathering.wetness_mask` normalises to its own maximum,
+so its mass sits near 0.4 whatever `amount` says: the right distribution for
+water that has run down a wall and collected, the wrong one for a horizontal
+surface with rain falling on all of it, and raising `amount` scales that
+distribution rather than moving it. `floor` is how much of the saturation
+ceiling the DRIEST texel gets, with the pooling spending the rest:
+
+    pooling = wetness_mask(recess, 1.0, cavity_bias, 0.0, ...)
+    mask    = amount * (floor + (1 - floor) * pooling)
+
+`floor: 0.0` is `amount * pooling` to the float, so nothing that does not ask
+for a floor changes. With floors authored, the ten read 23-37% darker and
+18-52% less rough.
+
+A BUG CAUGHT ON THE WAY. `build_material_pack`'s colour-space hint said
+`srgb if k in ("albedo", "emissive")`, so `wet_albedo` would have been hinted
+LINEAR -- a colour map an importer obeys silently, giving a wet road a different
+colour from the dry one for no reason a frame could explain. The gen7 pack
+writer has always listed it (`pipeline_generation_7.py:545`); this comprehension
+predated wetness on this path.
+
+INERT UNTIL SOMETHING CHOOSES IT. `zoo/zoo_keeper/core/skins.py:35` resolves a
+pack through a fixed allow-list (`MAP_KEYS = albedo, normal, roughness,
+emissive, height`), so every consumer that exists today ignores the new maps.
+`tests/test_wet_variant.py` holds that as byte equality: declaring wetness
+leaves every dry map bit-for-bit what it was. 72 new tests; the suite is 560.
+
+REFUSALS, because a wet block that cannot work should say so. An unknown
+`responds_like`; an `amount` outside (0, 1]; a `floor` of 1 (a flat mask leaves
+the pooling nothing to spend); and wetness on a grammar that emits no roughness
+-- a wet albedo over a dry response is a material that looks wet and lights dry.
+
+WHAT IS CHOSEN AND UNVERIFIED, said plainly. `amount`, `floor` and
+`cavity_bias` per material. Nobody has looked at a frame of a wet street yet;
+each profile's `notes` says what its numbers were reasoning about, and they are
+the knob to turn after the first look. Whether a wet Delco street LOOKS right is
+not settled by anything here.
+
 ## [0.45.0] - the two panels reach a theme a level can be built in
 
 0.44.0 drew `wood_panel_delco` and `slatwall_retail`, measured them, priced

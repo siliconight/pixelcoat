@@ -50,5 +50,12 @@
   "emit": {
     "roughness": true,
     "normal": false
-  }
+  },
+  "wet": {
+    "responds_like": "concrete",
+    "amount": 0.85,
+    "floor": 0.65,
+    "cavity_bias": 0.75
+  },
+  "notes": "WET VARIANT: as cobblestone but shallower joints -- the mask still leans on the recesses, less hard."
 }
