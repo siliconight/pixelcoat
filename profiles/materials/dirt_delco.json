@@ -46,7 +46,12 @@
   "wet": {
     "responds_like": "wood",
     "amount": 0.75,
-    "floor": 0.4,
+    "floor": 0.24,
+    "pooling": {
+      "coverage": 0.26,
+      "span_m": 1.2,
+      "feather": 0.6
+    },
     "saturation": 0.35
   },
   "notes": "WET VARIANT: dirt ABSORBS, which is why it responds like wood and not like concrete -- the wood preset darkens hardest (0.50) and gloss-boosts least (0.35), which is wet earth. Amount is held below the paved surfaces because soaked ground drains and goes patchy rather than sheeting."

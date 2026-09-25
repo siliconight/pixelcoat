@@ -151,6 +151,14 @@ class MaterialGrammar:
     #:   "floor": 0..1, "cavity_bias": 0..1, "saturation": 0..1,
     #:   "water_roughness": 0..1}`.
     #:
+    #: `pooling` makes the water ACCUMULATE rather than spread:
+    #: `{"coverage": 0..1, "span_m": metres, "feather": 0..1}` fills the
+    #: surface's hollows to a level (`weathering.pooling_mask`) instead of
+    #: blending a dampness field. Without it the mask is unimodal and a floor
+    #: flattens it further -- the shipped road read p5 0.71, median 0.75, p95
+    #: 0.80, ninety percent of it inside a 0.09 band, which is a uniform sheen
+    #: and not a wet street.
+    #:
     #: `saturation` is how far toward WATER a fully wet texel's roughness
     #: travels, and 1 means it arrives. Omitted, it falls back to the preset's
     #: `wet_gloss_boost`. The response used to subtract that boost instead,
@@ -748,10 +756,28 @@ def _wet_maps(grammar, albedo, rough_f, height, seed, albedo_u8):
     # THE POOLING IS ASKED FOR AT FULL STRENGTH AND SPENT AFTERWARDS. Passing
     # `amount` into the mask would scale the distribution before the floor is
     # applied, and the floor would then be a fraction of a fraction.
-    pooling = weathering.wetness_mask(
-        recess.astype(np.float32), 1.0,
-        float(w.get("cavity_bias", 0.65)), 0.0,
-        ps.stream_seed(seed, "wet"), True, True)
+    pool_cfg = w.get("pooling")
+    if pool_cfg:
+        # WATER THAT FILLS, not water that is spread. `wetness_mask` is a
+        # dampness field -- unimodal, every texel somewhat wet -- which is
+        # right for a wall that water has run down and wrong for a road,
+        # where the eye reads the CONTRAST between standing water and the dry
+        # crown beside it. Measured on asphalt: the dampness term is p5 0.24 /
+        # med 0.40 / p95 0.60, and through a floor it flattened to a road that
+        # was p5 0.71 / med 0.75 / p95 0.80 -- a uniform sheen, which is what
+        # cold run 9080's walk showed.
+        pooling = weathering.pooling_mask(
+            (1.0 - recess).astype(np.float32),
+            float(pool_cfg.get("coverage", 0.25)),
+            float(pool_cfg.get("span_m", 1.5)),
+            float(grammar.meters_per_tile or 1.0),
+            True, True,
+            float(pool_cfg.get("feather", 0.6)))
+    else:
+        pooling = weathering.wetness_mask(
+            recess.astype(np.float32), 1.0,
+            float(w.get("cavity_bias", 0.65)), 0.0,
+            ps.stream_seed(seed, "wet"), True, True)
     wmask = (amount * (floor + (1.0 - floor) * pooling)).astype(np.float32)
 
     wet_albedo = np.clip(

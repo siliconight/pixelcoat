@@ -55,7 +55,12 @@
   "wet": {
     "responds_like": "concrete",
     "amount": 0.8,
-    "floor": 0.45,
+    "floor": 0.22,
+    "pooling": {
+      "coverage": 0.2,
+      "span_m": 0.7,
+      "feather": 0.6
+    },
     "saturation": 0.9,
     "cavity_bias": 0.8
   },

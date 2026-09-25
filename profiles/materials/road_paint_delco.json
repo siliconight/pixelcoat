@@ -53,7 +53,12 @@
   "wet": {
     "responds_like": "painted_metal",
     "amount": 0.9,
-    "floor": 0.85,
+    "floor": 0.3,
+    "pooling": {
+      "coverage": 0.28,
+      "span_m": 1.6,
+      "feather": 0.6
+    },
     "saturation": 1.0,
     "cavity_bias": 0.4
   }

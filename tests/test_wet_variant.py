@@ -184,7 +184,13 @@ def test_a_floor_of_zero_reproduces_the_plain_pooling_mask():
     from pixelcoat.core import weathering
     from pixelcoat.core import procedural_surface as ps
 
+    # THE LEGACY PATH, which is what this test is about. `asphalt_delco` now
+    # declares `wet.pooling` and so takes `weathering.pooling_mask` instead --
+    # a different field with a different shape, measured and deliberate. The
+    # backward-compatible claim below is about a grammar that does NOT pool,
+    # so the fixture drops it rather than the assertion being relaxed.
     g = _grammar("asphalt_delco")
+    g.wet = {k: v for k, v in g.wet.items() if k != "pooling"}
     g.wet = dict(g.wet, floor=0.0)
     out = mg.synthesize(g, size=96)
 
@@ -363,3 +369,94 @@ def test_the_paved_surfaces_are_the_ones_that_reach_water():
         assert sat(paved) == 1.0, paved
     assert sat("dirt_delco") < 0.5
     assert sat("pebble_gravel") < 1.0
+
+
+# --------------------------------------------------------------------------- #
+# Pooling: water that ACCUMULATES rather than spreads
+# --------------------------------------------------------------------------- #
+
+def _mask(name, size=256):
+    return mg.synthesize(_grammar(name), size=size)["wetness"].astype(
+        np.float64) / 255.0
+
+
+@pytest.mark.parametrize("name", ["asphalt_delco", "tar_neutral",
+                                  "cobblestone", "sidewalk_delco"])
+def test_a_pooling_grammar_has_dry_ground_and_wet_pools(name):
+    """THE DEFECT THIS CLOSES, as a distribution. Before pooling the shipped
+    road read p5 0.71, median 0.75, p95 0.80 -- ninety percent of it inside a
+    0.09-wide band, every texel equally wet. That is a uniform sheen, and it
+    is what cold run 9080's walk showed. A wet road is the CONTRAST between
+    standing water and the dry crown beside it."""
+    m = _mask(name)
+    p5, med, p95 = np.percentile(m, [5, 50, 95])
+    assert p95 - p5 > 0.25, (
+        f"{name}: p5 {p5:.2f} to p95 {p95:.2f} is still a band, not pools")
+    assert med < p95 - 0.2, (
+        f"{name}: the median sits at {med:.2f} against a p95 of {p95:.2f}; "
+        f"most of the surface should be the dry baseline")
+
+
+@pytest.mark.parametrize("name", ["asphalt_delco", "tar_neutral"])
+def test_the_pools_are_a_minority_of_the_surface(name):
+    """A road under rain is not mostly puddle. `coverage` is the fraction
+    under water and the mask should respect it."""
+    m = _mask(name)
+    wet_share = float((m > (m.max() + m.min()) / 2).mean())
+    assert 0.02 < wet_share < 0.45, wet_share
+
+
+def test_pooling_beats_the_dampness_field_on_variation():
+    """Measured, not asserted in the abstract: the same grammar through the
+    old dampness term against the new pooling one."""
+    g = _grammar("asphalt_delco")
+    pooled = mg.synthesize(g, size=256)["wetness"].astype(np.float64) / 255.0
+    g.wet = {k: v for k, v in g.wet.items() if k != "pooling"}
+    g.wet = dict(g.wet, floor=0.72)          # the shipped setting before this
+    damp = mg.synthesize(g, size=256)["wetness"].astype(np.float64) / 255.0
+    assert damp.std() < 0.06, damp.std()      # the flat band it used to be
+    assert pooled.std() > 3 * damp.std(), (
+        f"pooling sd {pooled.std():.3f} against dampness sd {damp.std():.3f}")
+
+
+def test_a_grammar_without_pooling_is_unchanged():
+    """`wet.pooling` is opt-in, so nothing nobody has looked at moves."""
+    g = _grammar("asphalt_delco")
+    g.wet = {k: v for k, v in g.wet.items() if k != "pooling"}
+    out = mg.synthesize(g, size=64)
+    assert set(("wetness", "wet_albedo", "wet_roughness")) <= set(out)
+
+
+def test_pooling_fills_hollows_rather_than_blending_noise():
+    """The shape of the field, at the source. A pool is depth below a fill
+    level: mostly nothing, with connected regions of real depth."""
+    from pixelcoat.core import weathering
+    h = weathering.value_noise((256, 256), 5, 1999, True, True)
+    m = weathering.pooling_mask(h, 0.25, 1.5, 3.0, True, True)
+    assert float(np.median(m)) == 0.0, "most of a surface holds no water"
+    assert m.max() > 0.9
+    assert 0.05 < float((m > 0.5).mean()) < 0.30
+
+
+def test_a_flat_surface_holds_no_puddles():
+    """Said as zeros rather than as noise: nothing is lower than anything
+    else, so there is no hollow to fill."""
+    from pixelcoat.core import weathering
+    flat = np.full((64, 64), 0.5, np.float32)
+    assert float(weathering.pooling_mask(flat, 0.3, 1.5, 3.0, True, True).max()) == 0.0
+
+
+def test_zero_coverage_is_no_water():
+    from pixelcoat.core import weathering
+    h = weathering.value_noise((64, 64), 5, 7, True, True)
+    assert float(weathering.pooling_mask(h, 0.0, 1.5, 3.0, True, True).max()) == 0.0
+
+
+def test_the_span_is_read_in_METRES_not_pixels():
+    """`span_m` against `meters_per_tile` is what makes a puddle the same size
+    on a 1 m tile and an 8 m one. A wider span must pool more broadly."""
+    from pixelcoat.core import weathering
+    h = weathering.value_noise((256, 256), 9, 11, True, True)
+    tight = weathering.pooling_mask(h, 0.25, 0.4, 3.0, True, True)
+    broad = weathering.pooling_mask(h, 0.25, 2.5, 3.0, True, True)
+    assert broad.std() > tight.std()

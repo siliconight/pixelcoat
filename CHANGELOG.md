@@ -1,5 +1,68 @@
 # Changelog
 
+## [0.49.0] - the water accumulates, instead of being spread evenly over everything
+
+`weathering.pooling_mask` fills a surface's hollows to a level, and
+`wet.pooling` on a grammar switches the wet mask onto it.
+
+THE DEFECT, MEASURED ON THE SHIPPED ROAD. Cold run 9080 put wet asphalt in a
+walkable package and it read as a pale uniform sheen. The mask says why:
+
+    asphalt wetness, 0.48.0:  p5 0.71  median 0.75  p95 0.80  sd 0.028
+
+Ninety percent of a road inside a 0.09-wide band. No pools, no dry crowns,
+every texel the same amount of wet. AND IT WAS MY OWN DOING: `floor` was added
+in 0.47.0 because the first build measured "damp, not raining", and setting it
+to 0.62-0.85 raised the mean while flattening the variation. The figures were
+in front of me at the time -- mean 0.36 to 0.75 -- and I quoted only the mean.
+
+TWO HYPOTHESES THAT WERE WRONG, each kept because it cost a measurement.
+First, the wrong spatial frequency: it is not, 81% of the mask's power is
+below 1 cycle/m and its features are ~1.5 m. Second, a gamma to concentrate
+the pooling: it does not concentrate, it pushes the body of the distribution
+onto the floor -- at floor 0.45 and pooling^3 the mask reads p5 0.41, median
+0.44, p95 0.51, sd 0.037. Still a band.
+
+THE CAUSE IS UPSTREAM. `wetness_mask` blends cavity recess with value noise
+and normalises, giving a unimodal field centred at 0.40 -- a DAMPNESS
+VARIATION, which is what it was written for: water that has run down a wall
+and collected in places. A puddle map is a different shape of field, mostly
+nothing with a few connected regions of real depth.
+
+`pooling_mask` FILLS RATHER THAN BLENDS. Water finds a level; everything below
+it is submerged and depth grows toward the bottom. `coverage` is the fraction
+of the tile under water, taken as a quantile so it does not depend on a height
+field's arbitrary range -- the same reason `cutout.coverage` and
+`edges.sparsity` are quantiles.
+
+AND IT LOW-PASSES THE HEIGHT FIRST, which is what makes it a puddle rather
+than wet gravel. Water spans small bumps and responds to the broad slope;
+`asphalt_delco` carries 150-cell aggregate on a 3 m tile -- 2 cm stones -- and
+filling against the raw field would put a puddle in every gap. `span_m` is how
+far a pool reaches in the world, derived against `meters_per_tile` so it means
+the same on a 1 m tile and an 8 m one.
+
+WHAT IT BOUGHT, same grammar, same seed, 256 px:
+
+    asphalt   p5 0.71 / med 0.75 / p95 0.80  sd 0.028   ->
+              p5 0.27 / med 0.27 / p95 0.80  sd 0.183
+    darkening 34% flat  ->  17% mean and up to 68% in a pool
+
+Six and a half times the variation, and the floors come back down (0.22-0.34)
+because the pools carry the wetness now: the eye reads the CONTRAST between
+standing water and the dry crown beside it, not every texel being soaked.
+
+Ten ground grammars declare pooling. A grammar that does not is unchanged.
+
+12 new tests; the one existing test that broke did so correctly -- its helper
+spied on `wetness_mask`, which a pooling grammar no longer calls -- and its
+fixture now drops the pooling config rather than its assertion being relaxed.
+Suite 612.
+
+WHAT THIS DOES NOT DO. Drops that run DOWN a vertical surface and bead under
+gravity are a different mechanism -- animated, per-material, and priced as a
+`next_pass` -- and are not in this release.
+
 ## [0.48.0] - a soaked road reaches water, not a mirror
 
 `wet.saturation`: how far toward WATER a fully wet texel's roughness travels,

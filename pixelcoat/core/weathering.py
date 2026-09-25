@@ -157,6 +157,57 @@ def _scan(src: np.ndarray, decay: float) -> np.ndarray:
 
 # ------------------------------------------------------------- wetness
 
+def pooling_mask(height: np.ndarray, coverage: float, span_m: float,
+                 meters_per_tile: float, wrap_x: bool, wrap_y: bool,
+                 feather: float = 0.6) -> np.ndarray:
+    """(H, W) standing-water depth 0..1: water FILLS, it does not spread.
+
+    `wetness_mask` beside this answers a different question -- how damp is
+    each texel -- and its field is unimodal, every texel somewhat wet. That
+    is right for water that has run down a wall and collected in places, and
+    wrong for a road, where the eye reads the CONTRAST between standing water
+    and the dry crowns around it. Measured on the shipped asphalt, the wet
+    mask built from it came out p5 0.71, median 0.75, p95 0.80, sd 0.028: a
+    uniform sheen, which is what cold run 9080's walk showed.
+
+    THE HEIGHT IS LOW-PASSED FIRST, and that is what makes this a puddle
+    rather than wet gravel. Water spans small bumps and responds to the broad
+    slope; `asphalt_delco` carries 150-cell aggregate on a 3 m tile, so
+    filling against the raw field would put a puddle in every 2 cm gap
+    between stones. `span_m` is how far a puddle reaches in the world, and
+    the radius is derived from it against `meters_per_tile` so it means the
+    same thing whatever the tile's scale.
+
+    `coverage` is the fraction of the tile under water, applied as a QUANTILE
+    of the smoothed height -- so it does not depend on a height field's
+    arbitrary range, the same reason `cutout.coverage` and `edges.sparsity`
+    are quantiles.
+
+    `feather` shapes the depth ramp: 1.0 is linear depth, below 1 widens the
+    shallow margin so a pool has an edge rather than a step. Returns zeros
+    where nothing is under water, which is a real answer and not a failure --
+    a surface with no hollows holds no puddles.
+    """
+    if coverage <= 0.0:
+        return np.zeros(height.shape[:2], np.float32)
+    coverage = float(min(max(coverage, 0.0), 1.0))
+
+    h = height.astype(np.float32)
+    px_per_m = h.shape[0] / max(float(meters_per_tile), _EPS)
+    radius = int(round(max(1.0, float(span_m) * px_per_m * 0.5)))
+    low = frequency.smooth_blur(h, radius, wrap_x=wrap_x, wrap_y=wrap_y)
+
+    level = float(np.quantile(low, coverage))
+    depth = np.clip(level - low, 0.0, None)
+    peak = float(depth.max())
+    if peak <= _EPS:
+        # a perfectly flat surface: nothing is lower than anything else, so
+        # there is no hollow to fill. Said as zeros rather than as noise.
+        return np.zeros(h.shape[:2], np.float32)
+    depth = depth / peak
+    return np.clip(depth ** max(0.05, float(feather)), 0.0, 1.0).astype(np.float32)
+
+
 def wetness_mask(cavity_recess: np.ndarray, amount: float,
                  cavity_bias: float, bottom_bias: float, seed: int,
                  wrap_x: bool, wrap_y: bool) -> np.ndarray:
