@@ -56,6 +56,7 @@
     "responds_like": "concrete",
     "amount": 0.8,
     "floor": 0.45,
+    "saturation": 0.9,
     "cavity_bias": 0.8
   },
   "notes": "WET VARIANT: the stones are impermeable and the voids between them hold the water, so the mask is almost entirely the cavity term and the stone crowns stay dry-looking."

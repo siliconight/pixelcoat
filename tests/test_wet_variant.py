@@ -275,3 +275,91 @@ def test_the_wet_maps_tile_on_both_axes(name):
             np.abs(f[0].astype(np.int32) - f[-1].astype(np.int32)).max(),
             np.abs(f[:, 0].astype(np.int32) - f[:, -1].astype(np.int32)).max())
         assert seam <= interior * 1.3 + 2, f"{name}/{key} seams"
+
+
+# --------------------------------------------------------------------------- #
+# Saturation: a soaked surface reaches WATER, not a mirror
+# --------------------------------------------------------------------------- #
+
+def test_a_fully_wet_texel_lands_on_the_water_roughness(tmp_path):
+    """THE POINT OF `saturation`. At `saturation * mask == 1` the roughness is
+    the water target exactly, by construction -- no clip, no overshoot.
+
+    The shipped model could not do this. It subtracted the preset's gloss
+    boost, so a boost of 1 on asphalt gave 0.95 - 1.0 = -0.05, clipped to
+    roughness 0 -- a perfect mirror, when standing water is around 0.05-0.10.
+    """
+    g = _grammar("asphalt_delco")
+    # amount and floor at their maxima put the whole mask at 1.0
+    g.wet = dict(g.wet, amount=1.0, floor=0.999, saturation=1.0)
+    out = mg.synthesize(g, size=64)
+    wet = out["wet_roughness"].astype(np.float64) / 255.0
+    mask = out["wetness"].astype(np.float64) / 255.0
+    assert mask.min() > 0.99, "the fixture did not saturate the mask"
+    assert abs(wet.mean() - mg.WATER_ROUGHNESS) < 1.5 / 255.0, (
+        f"a fully wet texel reads {wet.mean():.4f}, not the water target "
+        f"{mg.WATER_ROUGHNESS}")
+
+
+def test_saturation_defaults_to_the_preset_so_a_grammar_need_not_declare_one():
+    """`material_response.PRESETS` stays the authority. A wet block with no
+    `saturation` travels the preset's `wet_gloss_boost` of the way to water."""
+    g = _grammar("brick_delco")
+    g.wet = {"responds_like": "brick", "amount": 1.0, "floor": 0.999}
+    out = mg.synthesize(g, size=64)
+    wet = out["wet_roughness"].astype(np.float64) / 255.0
+    dry = out["roughness"].astype(np.float64) / 255.0
+    boost = mr.PRESETS["brick"].wet_gloss_boost
+    expect = dry + (mg.WATER_ROUGHNESS - dry) * boost
+    assert np.abs(wet - expect).max() <= 2.0 / 255.0
+
+
+def test_wetness_never_makes_a_surface_rougher(tmp_path):
+    """A material already glossier than water would be lerped UP toward it.
+    `marble_bank_floor` sits at 0.20 dry and the library holds grammars below
+    that, so the floor is `min(dry, lerped)` and this is what holds it."""
+    g = _grammar("marble_bank_floor")
+    g.wet = {"responds_like": "concrete", "amount": 1.0, "floor": 0.999,
+             "saturation": 1.0, "water_roughness": 0.9}
+    out = mg.synthesize(g, size=64)
+    dry = out["roughness"].astype(np.int32)
+    wet = out["wet_roughness"].astype(np.int32)
+    assert (wet <= dry).all(), (
+        "a water target rougher than the surface made the wet variant "
+        "ROUGHER than the dry one")
+
+
+@pytest.mark.parametrize("bad", [-0.1, 1.4])
+def test_a_saturation_outside_its_range_refuses(bad):
+    g = _grammar("asphalt_delco")
+    g.wet = dict(g.wet, saturation=bad)
+    with pytest.raises(ValueError, match="wet.saturation"):
+        mg.synthesize(g, size=32)
+
+
+def test_a_water_roughness_outside_its_range_refuses():
+    g = _grammar("asphalt_delco")
+    g.wet = dict(g.wet, water_roughness=1.4)
+    with pytest.raises(ValueError, match="wet.water_roughness"):
+        mg.synthesize(g, size=32)
+
+
+@pytest.mark.parametrize("name", WET_PROFILES)
+def test_every_shipped_saturation_is_in_range(name):
+    with open(os.path.join(_PROFILES, f"{name}.json"), encoding="utf-8") as fh:
+        block = json.load(fh)["wet"]
+    assert 0.0 <= block.get("saturation", 0.0) <= 1.0
+
+
+def test_the_paved_surfaces_are_the_ones_that_reach_water():
+    """An impermeable surface open to the sky reaches water; absorbent earth
+    does not, because soaked ground is dark and matte rather than reflective.
+    Asserted so a later tuning pass has to mean it."""
+    def sat(n):
+        with open(os.path.join(_PROFILES, f"{n}.json"), encoding="utf-8") as fh:
+            return json.load(fh)["wet"].get("saturation")
+    for paved in ("asphalt_delco", "tar_neutral", "sidewalk_delco",
+                  "road_paint_delco", "cobblestone"):
+        assert sat(paved) == 1.0, paved
+    assert sat("dirt_delco") < 0.5
+    assert sat("pebble_gravel") < 1.0

@@ -1,5 +1,58 @@
 # Changelog
 
+## [0.48.0] - a soaked road reaches water, not a mirror
+
+`wet.saturation`: how far toward WATER a fully wet texel's roughness travels,
+and 1 means it arrives. The ten ground grammars declare it -- 1.0 on every
+paved surface, 0.9 on gravel, 0.35 on dirt.
+
+WHY THE OLD FORM COULD NOT DO THIS. It was gen7's model rearranged,
+`wet = dry - wet_gloss_boost * mask`, a SHIFT. Pushing the boost to 1 on
+asphalt gives 0.95 - 1.0 = -0.05, which clips to roughness 0 -- a perfect
+mirror. Standing water is not a mirror; it sits around 0.05-0.10 once ripples
+and road dirt are in it. The shift cannot land on water, only overshoot past it
+into a clip, losing every bit of variation on the way.
+
+So the roughness now LERPS toward a water target:
+
+    wet_roughness = min(dry, dry + (water - dry) * saturation * mask)
+
+which lands on `water` exactly at `saturation * mask == 1`, by construction.
+Measured at 192 px, the wettest texel of each paved surface: asphalt 0.165,
+tar 0.118, road paint 0.137, cobblestone 0.145, sidewalk 0.204 -- against
+0.950, 0.726, 0.751, 0.800 and 0.930 dry. They stop short of 0.08 because the
+mask's own ceiling is `amount` (0.85-0.95), which is deliberate: the pooled
+hollows approach water while the crowns stay rougher, and an `amount` of 1
+would make the whole surface one uniform mirror.
+
+THE FLOOR, because a lerp has a direction. A material already glossier than
+water would be lerped UP toward it -- wetness making a surface ROUGHER.
+`marble_bank_floor` is 0.20 dry and the library holds glossier still, so the
+result is `min(dry, lerped)`. A test holds it with a deliberately rough water
+target.
+
+PRESETS STAYS THE AUTHORITY. `saturation` omitted falls back to the preset's
+`wet_gloss_boost`, so a grammar that does not opt in travels the same fraction
+it always did and Pixelcoat still has one wetness model rather than two.
+`water_roughness` overrides the target per grammar, because silt in a dirt
+hollow is not a puddle on tar.
+
+`WATER_ROUGHNESS` = 0.08 is CHOSEN, not derived, and says so where it is
+defined: the middle of the 0.05-0.10 band usually quoted for outdoor standing
+water in a microfacet model. Nobody here has measured a puddle. It is named and
+overridable precisely because it is a guess that should be cheap to move.
+
+WHAT THIS DOES NOT DO, stated because the previous entry measured it. Raising
+saturation does not narrow the roughness spread -- it widens it, because the
+mask's own variation now multiplies a larger `(water - dry)`. Asphalt's
+roughness sd goes 0.0192 dry to 0.0262 wet, where the old shift gave 0.0258 and
+a lerp at the preset's 0.45 would have given 0.0193. Whether a wet surface
+should be more or less varied than a dry one is the open question recorded in
+RAIN_WETNESS.md, and this change is orthogonal to it rather than an answer.
+
+17 new tests; 5 fail against the old response, checked by stashing it.
+Suite 600.
+
 ## [0.47.0] - a pack manifest says what is in the files it names
 
 Every pack now carries `map_sha256`: `{map key: sha256 of the file}`, read back

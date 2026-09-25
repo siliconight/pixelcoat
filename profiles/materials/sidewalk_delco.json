@@ -73,6 +73,7 @@
   "wet": {
     "responds_like": "concrete",
     "amount": 0.85,
-    "floor": 0.68
+    "floor": 0.68,
+    "saturation": 1.0
   }
 }

@@ -55,7 +55,8 @@
   "wet": {
     "responds_like": "concrete",
     "amount": 0.85,
-    "floor": 0.68
+    "floor": 0.68,
+    "saturation": 1.0
   },
   "notes": "WET VARIANT: as sidewalk_delco -- drains to the slab joints, so a little less than the road."
 }

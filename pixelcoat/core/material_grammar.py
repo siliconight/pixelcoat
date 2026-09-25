@@ -42,6 +42,13 @@ __all__ = ["MaterialGrammar", "synthesize", "build_material_pack",
 
 _DEFAULT_BANDS = {"macro": 0.4, "meso": 0.4, "micro": 0.2}
 
+#: What a fully wet surface's roughness converges to. CHOSEN, not derived: the
+#: middle of the 0.05-0.10 band usually quoted for outdoor standing water in a
+#: microfacet model, and nobody here has measured a puddle. Named, and
+#: overridable per grammar through `wet.water_roughness`, because it is a guess
+#: that should be cheap to move after the first look at a lit street.
+WATER_ROUGHNESS = 0.08
+
 
 @dataclass
 class MaterialGrammar:
@@ -141,7 +148,15 @@ class MaterialGrammar:
     #: `wet_roughness` and `wetness`.
     #:
     #: `{"responds_like": <material_response preset>, "amount": 0..1,
-    #:   "floor": 0..1, "cavity_bias": 0..1}`.
+    #:   "floor": 0..1, "cavity_bias": 0..1, "saturation": 0..1,
+    #:   "water_roughness": 0..1}`.
+    #:
+    #: `saturation` is how far toward WATER a fully wet texel's roughness
+    #: travels, and 1 means it arrives. Omitted, it falls back to the preset's
+    #: `wet_gloss_boost`. The response used to subtract that boost instead,
+    #: which could not reach water at all -- at 1 it clipped to roughness 0, a
+    #: mirror -- so the roughness now lerps toward `water_roughness`
+    #: (`WATER_ROUGHNESS` by default) and lands on it by construction.
     #:
     #: `amount` is the saturation ceiling and `floor` is the fraction of it the
     #: DRIEST texel gets, with the pooling spending what is left. A ground
@@ -746,9 +761,32 @@ def _wet_maps(grammar, albedo, rough_f, height, seed, albedo_u8):
         alpha = albedo_u8[..., 3:].astype(np.float32) / 255.0
         wet_albedo = np.concatenate([wet_albedo, alpha], axis=-1)
 
-    # Gloss is 1 - roughness (the response model's own relationship), so a
-    # gloss boost is a roughness cut of the same size inside the mask.
-    wet_rough = np.clip(rough_f - preset.wet_gloss_boost * wmask, 0.0, 1.0)
+    # TOWARD WATER, NOT AWAY FROM DRY. This was `dry - boost * mask`, which is
+    # gen7's `wet_gloss = gloss + wet_gloss_boost * mask` rearranged. That form
+    # cannot reach water: at `boost` 1 asphalt goes 0.95 - 1.0 = -0.05 and
+    # clips to roughness 0, a perfect mirror, when standing water sits around
+    # 0.05-0.10. A lerp lands on the target by construction, with no clip and
+    # no overshoot, and narrows the spread on the way instead of widening it
+    # (measured, RAIN_WETNESS.md: the shift raised roughness sd by 5-66%).
+    #
+    # `reach` is how far a fully wet texel goes. Absent, it is the preset's
+    # `wet_gloss_boost`, so PRESETS stays the authority for any grammar that
+    # does not declare one.
+    reach = float(w.get("saturation", preset.wet_gloss_boost))
+    if not 0.0 <= reach <= 1.0:
+        raise ValueError(
+            f"grammar '{grammar.id}': wet.saturation is {reach}, outside "
+            f"[0, 1]. It is the fraction of the way to water a fully wet "
+            f"texel travels; past 1 there is nowhere further to go.")
+    water = float(w.get("water_roughness", WATER_ROUGHNESS))
+    if not 0.0 <= water <= 1.0:
+        raise ValueError(
+            f"grammar '{grammar.id}': wet.water_roughness is {water}, "
+            f"outside [0, 1]")
+    lerped = rough_f + (water - rough_f) * reach * wmask
+    # NEVER ROUGHER THAN DRY. A material already glossier than water would be
+    # lerped UP toward it, which is wetness making a surface less smooth.
+    wet_rough = np.clip(np.minimum(rough_f, lerped), 0.0, 1.0)
 
     return {"wetness": _to_u8(wmask),
             "wet_albedo": _to_u8(wet_albedo),

@@ -55,6 +55,7 @@
     "responds_like": "concrete",
     "amount": 0.85,
     "floor": 0.65,
+    "saturation": 1.0,
     "cavity_bias": 0.75
   },
   "notes": "WET VARIANT: as cobblestone but shallower joints -- the mask still leans on the recesses, less hard."
