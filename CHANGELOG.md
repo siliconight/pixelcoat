@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.46.1] - one version, and the 32 releases that had two
+
+`pixelcoat/version.py` held `__version__ = "0.16.0"` while `VERSION` read
+0.46.0. It now READS `VERSION`, with a `_FALLBACK` literal for an installed
+wheel that `tests/test_version_is_single_sourced.py` pins to the file.
+
+WHAT WAS WRONG, established from the history rather than assumed. `VERSION` and
+`version.py` were created in the SAME commit at 0.10.0 (351bf7c, 2026-07-18)
+and agreed exactly through 0.16.0 (7bedbb1, 2026-08-21). After that 32 commits
+moved `VERSION` and none moved the literal. So this is drift by neglect, not
+the deliberate divergence PIPELINE_MAP.md records for Lot -- it says so of Lot
+and says nothing of the kind here.
+
+WHAT IT COST. `__version__` is stamped as `tool_version` into every pack
+manifest, atlas manifest, batch report and decal (`material_grammar.py:788`,
+`atlas.py:86,114`, `batch.py:65`, `decals.py:110`,
+`pipeline_generation_7.py:289,549`), and `pyproject.toml` publishes the same
+attribute. Roughly thirty releases of packs therefore claimed 0.16.0, and
+`pixelcoat --version` agreed with them.
+
+WHY `VERSION` IS THE ONE THAT COUNTS, and it is not a preference. Level
+Factory's `_read_tool_version` (`packages/adapters/sdk.py:172`) reads a repo's
+`VERSION` file FIRST and only falls back to a package `__version__`, so
+`VERSION` is already the number every `BuildFingerprint` carries
+(`packages/jobs/scheduler.py:479`). Deriving from it points the manifests at
+the number the pipeline already trusts, and it inverts the direction of the
+neglect: the file people actually edit at release time is the one that decides.
+
+WHAT THIS INVALIDATES, said before it happens. `tool_version` is inside every
+`*.pack.json`, so the manifests change bytes. Two adapters hash those bytes
+into a fingerprint -- Lot folds each pack manifest AND its map files
+(`adapters/lot/__init__.py:156-162`), Zoo hashes the manifests alone
+(`adapters/zoo/__init__.py:175-178`) -- so every Lot ground-skin job and every
+Zoo kit job in every existing workspace re-runs once. Nothing READS
+`tool_version` for behaviour: Zoo's skins loader takes `asset_id`, `maps`,
+`meters_per_tile`, `tileable`, `tintable` and `import_hints.transparency`
+(`zoo/zoo_keeper/core/skins.py:164-189`) and never looks at it, and neither
+LF's invalidation nor its export closure mentions it. So the cost is a rebuild,
+not a behaviour change.
+
 ## [0.46.0] - a wet street is a second material, not a second pass
 
 Ten ground grammars grow a `wet` block and their packs now carry `wet_albedo`,
