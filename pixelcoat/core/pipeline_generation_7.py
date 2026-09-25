@@ -27,6 +27,7 @@ from PIL import Image
 
 from ..recipe import Recipe
 from ..version import __version__
+from . import pack as pack_meta
 from . import (color_space as cs, detail_texture as dtex, frequency,
                image_io, lighting_flatten, maps, material_response as mr,
                preview as pv, quantization, tiling, transforms, weathering)
@@ -280,7 +281,7 @@ def build_generation_7(recipe: Recipe, out_dir: str) -> dict:
     preview_report = _previews(recipe, g, out_maps, tile_maps, asset_dir,
                                warnings)
 
-    pack = _pack_manifest(recipe, g, preset, map_files, sha)
+    pack = _pack_manifest(recipe, g, preset, map_files, sha, asset_dir)
     with open(os.path.join(asset_dir, f"{recipe.asset_id}.pack.json"),
               "w", encoding="utf-8") as f:
         json.dump(pack, f, indent=2, sort_keys=True)
@@ -538,7 +539,7 @@ def _seam_axis(name: str, label: str, arr: np.ndarray, axis: int,
 
 
 def _pack_manifest(recipe: Recipe, g, preset, map_files: dict,
-                   sha: str) -> dict:
+                   sha: str, asset_dir: str) -> dict:
     """pixelcoat-pack/2: additive over pack/1 — downstream tools that only
     know pack/1 keep reading maps/tileable/meters_per_tile the same way."""
     color_space_hints = {
@@ -552,6 +553,10 @@ def _pack_manifest(recipe: Recipe, g, preset, map_files: dict,
         "material_profile": preset.name,
         "material_workflow": g.material.workflow,
         "maps": map_files,
+        # The counterpart of `source_sha256`, pointed at the OUTPUT. See
+        # `core/pack.py` for why naming files without digesting them was a
+        # defect and not an untidiness.
+        "map_sha256": pack_meta.map_sha256(asset_dir, map_files),
         "tileable": recipe.tiling.axes if recipe.tiling.enabled else None,
         "meters_per_tile": recipe.export.meters_per_tile,
         "source_sha256": sha,

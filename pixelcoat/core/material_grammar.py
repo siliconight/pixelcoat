@@ -32,7 +32,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from . import maps, procedural_surface as ps
+from . import maps, pack as pack_meta, procedural_surface as ps
 from . import material_response as mr
 from . import weathering
 from ..version import __version__, DEFAULT_SEED
@@ -792,6 +792,12 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
         "material_kind": grammar.kind,
         "material_profile": grammar.id,
         "maps": map_files,
+        # WHAT IS IN THE FILES, not just their names. A manifest that named
+        # filenames alone stayed byte-identical through a grammar retune, so a
+        # consumer hashing it -- the obvious cheap thing, and what LF's Zoo
+        # adapter did -- could not tell a re-themed material from the old one
+        # and shipped the previously baked GLB. See `core/pack.py`.
+        "map_sha256": pack_meta.map_sha256(pack_dir, map_files),
         "tileable": ["x", "y"],
         "meters_per_tile": float(grammar.meters_per_tile),
         "seed": int(seed),

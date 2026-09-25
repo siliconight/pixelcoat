@@ -25,6 +25,7 @@ from PIL import Image
 
 from . import procedural_surface as ps
 from ..version import __version__, DEFAULT_SEED
+from . import pack as pack_meta
 
 __all__ = ["traffic_lens", "build_lens_pack", "LENS_COLORS"]
 
@@ -112,6 +113,7 @@ def build_lens_pack(pack_dir: str, *, color: str = "red", state: str = "lit",
         "processing_mode": "decal",
         "source_kind": "procedural",
         "maps": maps,
+        "map_sha256": pack_meta.map_sha256(pack_dir, maps),
         "tileable": None,                       # a lens face never tiles
         "meters_per_tile": 1.0,
         "import_hints": {

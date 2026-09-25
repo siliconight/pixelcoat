@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.47.0] - a pack manifest says what is in the files it names
+
+Every pack now carries `map_sha256`: `{map key: sha256 of the file}`, read back
+from disk by the process that wrote it. All five writers state it -- the
+grammar library, the gen7 pipeline, the pixel pipeline, decals and signage --
+through one helper, `core/pack.py`, because `packages/core/hashing.py` already
+says what a second copy costs.
+
+WHY, and it is a defect rather than an untidiness. A manifest named FILENAMES
+and said nothing about their contents, so a grammar retune -- new pixels, same
+metadata, which is what a material edit usually is -- left it byte-identical:
+
+    asphalt_delco.pack.json    fd4678dbc03ab70f -> fd4678dbc03ab70f  IDENTICAL
+    asphalt_delco_albedo.png   68e2fd2cb8509e28 -> 500265cbf2630a20  differs
+
+A consumer asking "did this material change" reaches for the manifest -- it is
+one small JSON beside a directory of PNGs, and hashing it is the obvious cheap
+thing. Level Factory's Zoo adapter did exactly that, so the kit job cache-hit
+and, because Zoo BAKES these maps into a GLB, shipped the previously baked
+material. LF 0.111.0 fixed that consumer by hashing every map a pack names.
+This fixes the PRODUCER, so the next consumer does not have to know.
+
+Measured after the change, same experiment: the manifest's digest now moves
+with the albedo's.
+
+IT IS A CLAIM, NOT A SUBSTITUTE FOR HASHING THE FILES, and the module says so
+in as many words. It is written by the process that wrote them, so it describes
+what the producer emitted and not what is on disk now; a consumer whose
+question is "have these bytes changed since I last looked" should still hash
+the bytes, which is why LF 0.111.0 stays as it is. What it buys is three things
+that are not that: a manifest that MOVES when the pixels move; a pack that can
+be checked INTACT; and one hash at build time in place of every consumer
+re-hashing every PNG on every fingerprint.
+
+`pack.verify(dir, manifest)` returns the reasons a pack disagrees with the
+files beside it -- a map that no longer matches its digest, one that is not on
+disk, a digest naming a map the pack does not. A manifest with no `map_sha256`
+returns clean: packs written before this have nothing to disagree with, and
+reporting them as faults would turn an upgrade into a wall of findings about
+files that are fine.
+
+READ BACK RATHER THAN HASHED IN MEMORY, on purpose: the digest should describe
+the bytes a consumer will open, so a short write or a file that never landed
+shows up instead of being asserted away. A map the manifest names but which is
+absent records `<missing>` rather than being dropped -- a pack that lost a file
+must not hash the same as a complete one, which is the very failure this
+closes.
+
+ADDITIVE. `pixelcoat-pack/2` does not move; its own writer calls it "additive
+over pack/1 -- downstream tools that only know pack/1 keep reading
+maps/tileable/meters_per_tile the same way", and a reader that has never heard
+of `map_sha256` reads these manifests exactly as before. Zoo's `load_pack`
+resolves through a fixed key set and is untouched, which a test holds.
+
+13 new tests in `tests/test_pack_digest.py`; 7 of them fail against the unfixed
+writers, checked by stashing them. Suite 583.
+
 ## [0.46.1] - one version, and the 32 releases that had two
 
 `pixelcoat/version.py` held `__version__ = "0.16.0"` while `VERSION` read

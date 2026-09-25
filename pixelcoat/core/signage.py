@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from . import procedural_surface as ps
 from ..version import __version__, DEFAULT_SEED
+from . import pack as pack_meta
 
 __all__ = ["neon_sign", "panel_sign", "screen", "hazard_stripes", "arrow",
            "render_text", "build_sign_pack"]
@@ -472,6 +473,7 @@ def build_sign_pack(pack_dir: str, arrays: dict, asset_id: str,
         "processing_mode": "decal",
         "source_kind": "procedural",
         "maps": maps,
+        "map_sha256": pack_meta.map_sha256(pack_dir, maps),
         "tileable": None,
         "meters_per_tile": float(meters_per_tile),
         "import_hints": {

@@ -18,6 +18,7 @@ import numpy as np
 
 from ..recipe import Recipe
 from ..version import __version__
+from . import pack as pack_meta
 from . import (alpha as alpha_mod, dithering, image_io, maps,
                quantization, simplification, tiling, transforms)
 
@@ -155,6 +156,10 @@ def build_pixel(recipe: Recipe, out_dir: str) -> dict:
         "asset_id": recipe.asset_id,
         "processing_mode": "pixel",              # additive in 0.3
         "maps": map_files,
+        # additive in 0.47.0; the counterpart of `source_sha256` pointed at
+        # the output. pack/1 stays pack/1 -- a reader that does not know the
+        # key reads this manifest exactly as before.
+        "map_sha256": pack_meta.map_sha256(asset_dir, map_files),
         "tileable": recipe.tiling.axes if recipe.tiling.enabled else None,
         "meters_per_tile": recipe.export.meters_per_tile,
         "export_type": recipe.export.type,        # additive in 0.7
