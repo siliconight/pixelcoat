@@ -30,7 +30,7 @@ from pathlib import Path
 
 #: Used only when `VERSION` is not on disk (an installed wheel). Pinned to the
 #: file by a test -- do not edit one without the other.
-_FALLBACK = "0.49.0"
+_FALLBACK = "0.50.0"
 
 #: The repo root, two levels up from this module: <repo>/pixelcoat/version.py
 VERSION_FILE = Path(__file__).resolve().parent.parent / "VERSION"

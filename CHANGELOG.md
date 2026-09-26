@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.50.0] - the drop atlas a drip shader reads, generated rather than painted
+
+`core/droplets.drop_atlas` writes the four-channel texture a rain-drip shader
+needs, in the packing the reference material uses:
+
+    R, G   the drop normal's X and Y. Z is NOT stored -- a drop's normal is
+           near-vertical almost everywhere, so the shader reconstructs it as
+           1.0 and the error is invisible. Two channels saved.
+    B      a per-drop random value, floored at 0.1. Every texel of one drop
+           carries the SAME number, so each drop runs its animation on its own
+           clock. Never 0: a drop valued 0 never advances and sits frozen
+           while its neighbours run, a trap the reference names outright.
+    A      the SMALL drops, which surface tension holds in place and which
+           therefore do not animate at all.
+
+WHY IT IS GENERATED. The reference builds this by hand -- sculpting drops in
+Blender, baking a normal pass, baking an island-random pass, then recombining
+channels in an image editor. That is the improvisation `USING_THE_FACTORY.md`
+sends people back from: the owning tool grows the capability and nothing is
+hand-authored downstream. It is also the step its own author was least happy
+with ("I have not a good artistic skill"), and a generator does not have that
+problem.
+
+IT TILES, all four channels, by this repo's own seam rule -- the step across
+the wrap is no worse than the largest step inside. A wall repeats this atlas
+and a seam would draw a line down it. Drops that cross an edge arrive on the
+far side rather than being cut in half.
+
+A DEFECT CAUGHT IN ITS OWN FIRST RENDER. Ownership was claimed only where a
+drop RAISED the height above what was there, so a drop landing across an older
+one came out in TWO PIECES with two random values -- two-tone drops in the B
+channel, and in a shader half a drop animating on its own clock. A later drop
+sits ON an earlier one and takes its whole footprint. Held by a test that
+measures what fraction of the drop area borders a different drop's value:
+seams between touching drops only, under 5%.
+
+RADII ARE FRACTIONS OF THE TILE, not pixels, so 256 and 1024 give the same
+drops. A texture whose content changed with its resolution would make a size
+bump a look change, and a test holds the covered fraction steady across three
+sizes.
+
+16 tests. Suite 628.
+
+WHAT THIS IS NOT. It is not a shader and it does not shade anything. The cost
+of a drip `next_pass` on GL Compatibility is UNMEASURED, and the last figure
+this repo published for a next_pass was withdrawn (LF 0.115.0) because the
+pass was never drawn. No shader ships against a number until one exists.
+
 ## [0.49.0] - the water accumulates, instead of being spread evenly over everything
 
 `weathering.pooling_mask` fills a surface's hollows to a level, and
