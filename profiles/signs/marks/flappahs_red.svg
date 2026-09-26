@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Flappahs</title>
+  <desc id="desc">A red, cream, and charcoal goose mascot above the Flappahs wordmark.</desc>
+  <g stroke="#242326" stroke-width="17" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Goose body and long upright neck -->
+    <path fill="#FFF0D7" d="M250 435c-12-78 58-145 159-151 47-4 87 11 119 33 18-35 29-82 31-136 2-48 30-77 76-82 41-4 74 21 79 59 5 37-15 64-50 77 25 16 46 40 57 73 17 52 11 113-18 158-27 42-71 69-125 77-72 11-143-12-194-42-46 23-102 32-154 24-50-8-87-38-90-75-2-30 20-48 54-50 20-1 39 4 56 15z"/>
+    <!-- Wing -->
+    <path fill="#FFF0D7" d="M286 386c40-38 98-46 146-23 31 15 52 39 64 67-32-16-65-20-98-9 30 4 53 18 68 42-34-9-66-5-94 12 23 6 41 19 53 39-46-5-84-18-112-39-30-22-42-52-27-89z"/>
+    <!-- Head feather tufts -->
+    <path fill="#FFF0D7" d="M588 105c-4-34 8-57 30-70 3 21 12 35 26 43 7-23 22-38 44-44 1 21 8 37 22 49 22 18 30 46 19 72-11 27-39 43-71 40-40-4-65-37-70-90z"/>
+    <!-- Bill -->
+    <path fill="#EE241C" d="M700 170c34-19 71-21 121-9-17 25-39 38-70 41 28 8 46 21 55 42-45 8-89-5-119-34z"/>
+    <!-- Eye -->
+    <ellipse cx="671" cy="137" rx="9" ry="13" fill="#242326" stroke="none"/>
+    <!-- Tail accent -->
+    <path fill="#EE241C" d="M259 382c-31-8-53-24-67-49 31 2 56 14 76 35z"/>
+    <!-- Feet -->
+    <path fill="#EE241C" d="M429 548c-2 28-11 47-27 65-25 6-49 5-73-2 24-9 40-23 49-44l3-27zM578 553c6 24 19 43 40 59 25 2 48-3 70-14-26-5-45-16-58-35l-12-24z"/>
+  </g>
+  <!-- Wordmark -->
+  <g paint-order="stroke fill" stroke="#FFF0D7" stroke-width="30" stroke-linejoin="round">
+    <text x="600" y="735" text-anchor="middle" fill="#EE241C" font-family="DejaVu Sans, Arial, sans-serif" font-size="186" font-weight="900" font-style="italic" letter-spacing="-12">Flappahs</text>
+  </g>
+  <text x="600" y="735" text-anchor="middle" fill="#EE241C" font-family="DejaVu Sans, Arial, sans-serif" font-size="186" font-weight="900" font-style="italic" letter-spacing="-12" stroke="#242326" stroke-width="8" stroke-linejoin="round" paint-order="stroke fill">Flappahs</text>
+  <!-- Baseline swoosh -->
+  <path d="M142 770c245 20 661 20 916-3" fill="none" stroke="#EE241C" stroke-width="18" stroke-linecap="round"/>
+</svg>

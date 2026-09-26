@@ -1,297 +1,312 @@
 {
-  "theme": "delco_1997",
-  "description": "The businesses of a Delaware County commercial strip in 1997, as the signs over their doors. INVENTED, every one: these are the genre of a 1990s Pennsylvania street -- the hoagie shop, the beer distributor, the state store, the corner tap, the video rental -- and not any company's name, mark or trade dress. A sign whose face reproduced a real brand would be the one asset in a generated level nobody could ship.",
-  "signs": [
+ "theme": "delco_1997",
+ "description": "The businesses of a Delaware County commercial strip in 1997, as the signs over their doors. INVENTED, every one: these are the genre of a 1990s Pennsylvania street -- the hoagie shop, the beer distributor, the state store, the corner tap, the video rental -- and not any company's name, mark or trade dress. A sign whose face reproduced a real brand would be the one asset in a generated level nobody could ship.",
+ "signs": [
+  {
+   "slug": "flappahs",
+   "text": "FLAPPAHS",
+   "style": "panel",
+   "panel": "#ee241c",
+   "text_color": "#fff0d7",
+   "border": "#242326",
+   "families": [
+    "convenience",
+    "gas_station",
+    "default"
+   ],
+   "mark": "marks/flappahs_red.svg",
+   "notes": "Named by the walker 2026-09-26. Wawa is the Lenape word for goose and its mark is a flying one, so a Flappah is the same bird in Delco-speak -- the genre of the thing, not the thing. The mark is a walking goose in a ball cap carrying a bag. `mark` is NOT read by the sign builder yet: its styles are neon, panel, screen, hazard and arrow, all text only, so this renders today as the red panel with cream lettering and the goose waits on signage growing a mark composite."
+  },
+  {
+   "slug": "goose_mart",
+   "text": "GOOSE MART",
+   "style": "panel",
+   "panel": "#c8102e",
+   "text_color": "#fff6e5",
+   "border": "#f2c00e",
+   "families": [
+    "convenience",
+    "gas_station",
+    "default"
+   ]
+  },
+  {
+   "slug": "quik_korner",
+   "text": "QUIK KORNER",
+   "style": "panel",
+   "panel": "#0b6e4f",
+   "text_color": "#ffffff",
+   "border": "#f2f2f2",
+   "families": [
+    "convenience",
+    "gas_station"
+   ]
+  },
+  {
+   "slug": "hoagie_hut",
+   "text": "HOAGIE HUT",
+   "style": "panel",
+   "panel": "#e0a800",
+   "text_color": "#2a1a05",
+   "border": "#8c2b0e",
+   "families": [
+    "deli",
+    "restaurant",
+    "default"
+   ]
+  },
+  {
+   "slug": "pizza_king",
+   "text": "PIZZA KING",
+   "style": "neon",
+   "color": "#ff3b30",
+   "backer": "#120a08",
+   "families": [
+    "restaurant",
+    "deli"
+   ]
+  },
+  {
+   "slug": "silver_spoon",
+   "text": "SILVER SPOON DINER",
+   "style": "neon",
+   "color": "#39c6ff",
+   "backer": "#0a0f14",
+   "families": [
+    "restaurant",
+    "diner",
+    "default"
+   ]
+  },
+  {
+   "slug": "beer_world",
+   "text": "BEER WORLD",
+   "style": "panel",
+   "panel": "#123f8c",
+   "text_color": "#ffd34d",
+   "border": "#ffffff",
+   "families": [
+    "liquor",
+    "warehouse",
+    "default"
+   ]
+  },
+  {
+   "slug": "case_lot",
+   "text": "CASE LOT BEER",
+   "style": "panel",
+   "panel": "#8c1c13",
+   "text_color": "#f5e6c8",
+   "border": "#f5e6c8",
+   "families": [
+    "liquor",
+    "warehouse"
+   ]
+  },
+  {
+   "slug": "state_spirits",
+   "text": "STATE WINE + SPIRITS",
+   "style": "panel",
+   "panel": "#11324d",
+   "text_color": "#e8e2d0",
+   "border": "#9a8a5c",
+   "families": [
+    "liquor",
+    "civic"
+   ]
+  },
+  {
+   "slug": "rusty_tap",
+   "text": "THE RUSTY TAP",
+   "style": "neon",
+   "color": "#ffb020",
+   "backer": "#140f08",
+   "families": [
+    "bar",
+    "restaurant"
+   ]
+  },
+  {
+   "slug": "corner_tap",
+   "text": "CORNER TAP",
+   "style": "neon",
+   "color": "#ff2a6d",
+   "backer": "#120810",
+   "families": [
+    "bar",
+    "default"
+   ]
+  },
+  {
+   "slug": "club_velvet",
+   "text": "CLUB VELVET",
+   "style": "neon",
+   "color": "#c14bff",
+   "backer": "#0d0713",
+   "families": [
+    "club",
+    "bar"
+   ]
+  },
+  {
+   "slug": "video_stop",
+   "text": "VIDEO STOP",
+   "style": "panel",
+   "panel": "#1b2a6b",
+   "text_color": "#ffd83d",
+   "border": "#ffd83d",
+   "families": [
+    "retail",
+    "default"
+   ]
+  },
+  {
+   "slug": "apex_markets",
+   "text": "APEX MARKETS",
+   "style": "panel",
+   "panel": "#b3131b",
+   "text_color": "#ffffff",
+   "border": "#ffffff",
+   "families": [
+    "supermarket",
+    "retail"
+   ]
+  },
+  {
+   "slug": "gold_and_pawn",
+   "text": "GOLD + PAWN",
+   "style": "panel",
+   "panel": "#1a1a1a",
+   "text_color": "#f2c00e",
+   "border": "#f2c00e",
+   "families": [
+    "pawn",
+    "retail"
+   ]
+  },
+  {
+   "slug": "check_cash",
+   "text": "CHECK CASH NOW",
+   "style": "panel",
+   "panel": "#0f7b3f",
+   "text_color": "#f7f7f2",
+   "border": "#f7f7f2",
+   "families": [
+    "pawn",
+    "bank",
+    "retail"
+   ]
+  },
+  {
+   "slug": "keystone_savings",
+   "text": "KEYSTONE SAVINGS",
+   "style": "panel",
+   "panel": "#123a2b",
+   "text_color": "#d8c98a",
+   "border": "#d8c98a",
+   "families": [
+    "bank",
+    "civic",
+    "default"
+   ]
+  },
+  {
+   "slug": "first_delco",
+   "text": "FIRST DELCO BANK",
+   "style": "panel",
+   "panel": "#14294d",
+   "text_color": "#e6e9ef",
+   "border": "#8fa3c8",
+   "families": [
+    "bank"
+   ]
+  },
+  {
+   "slug": "a1_auto",
+   "text": "A-1 AUTO",
+   "style": "panel",
+   "panel": "#d4471a",
+   "text_color": "#1a1208",
+   "border": "#f2f2f2",
+   "families": [
+    "auto",
+    "industrial"
+   ]
+  },
+  {
+   "slug": "lube_n_go",
+   "text": "LUBE-N-GO",
+   "style": "panel",
+   "panel": "#f2c00e",
+   "text_color": "#141414",
+   "border": "#141414",
+   "families": [
+    "auto",
+    "gas_station"
+   ]
+  },
+  {
+   "slug": "wash_house",
+   "text": "WASH HOUSE",
+   "style": "panel",
+   "panel": "#2f6fa8",
+   "text_color": "#ffffff",
+   "border": "#ffffff",
+   "families": [
+    "retail",
+    "default"
+   ]
+  },
+  {
+   "slug": "delco_storage",
+   "text": "DELCO STORAGE",
+   "style": "panel",
+   "panel": "#5a5f52",
+   "text_color": "#f0efe6",
+   "border": "#2b2e27",
+   "families": [
+    "warehouse",
+    "industrial",
+    "default"
+   ]
+  },
+  {
+   "slug": "keystone_brewing",
+   "text": "KEYSTONE BREWING",
+   "style": "panel",
+   "panel": "#6b3a12",
+   "text_color": "#f5d98a",
+   "border": "#f5d98a",
+   "families": [
+    "industrial",
+    "liquor"
+   ]
+  },
+  {
+   "slug": "fuel_price",
+   "style": "price",
+   "panel": "#f2f2ee",
+   "text_color": "#141414",
+   "grade_color": "#c8102e",
+   "border": "#c8102e",
+   "families": [
+    "gas_station"
+   ],
+   "rows": [
     {
-      "slug": "goose_mart",
-      "text": "GOOSE MART",
-      "style": "panel",
-      "panel": "#c8102e",
-      "text_color": "#fff6e5",
-      "border": "#f2c00e",
-      "families": [
-        "convenience",
-        "gas_station",
-        "default"
-      ]
+     "grade": "REGULAR",
+     "price": "1.21"
     },
     {
-      "slug": "quik_korner",
-      "text": "QUIK KORNER",
-      "style": "panel",
-      "panel": "#0b6e4f",
-      "text_color": "#ffffff",
-      "border": "#f2f2f2",
-      "families": [
-        "convenience",
-        "gas_station"
-      ]
+     "grade": "PLUS",
+     "price": "1.31"
     },
     {
-      "slug": "hoagie_hut",
-      "text": "HOAGIE HUT",
-      "style": "panel",
-      "panel": "#e0a800",
-      "text_color": "#2a1a05",
-      "border": "#8c2b0e",
-      "families": [
-        "deli",
-        "restaurant",
-        "default"
-      ]
-    },
-    {
-      "slug": "pizza_king",
-      "text": "PIZZA KING",
-      "style": "neon",
-      "color": "#ff3b30",
-      "backer": "#120a08",
-      "families": [
-        "restaurant",
-        "deli"
-      ]
-    },
-    {
-      "slug": "silver_spoon",
-      "text": "SILVER SPOON DINER",
-      "style": "neon",
-      "color": "#39c6ff",
-      "backer": "#0a0f14",
-      "families": [
-        "restaurant",
-        "diner",
-        "default"
-      ]
-    },
-    {
-      "slug": "beer_world",
-      "text": "BEER WORLD",
-      "style": "panel",
-      "panel": "#123f8c",
-      "text_color": "#ffd34d",
-      "border": "#ffffff",
-      "families": [
-        "liquor",
-        "warehouse",
-        "default"
-      ]
-    },
-    {
-      "slug": "case_lot",
-      "text": "CASE LOT BEER",
-      "style": "panel",
-      "panel": "#8c1c13",
-      "text_color": "#f5e6c8",
-      "border": "#f5e6c8",
-      "families": [
-        "liquor",
-        "warehouse"
-      ]
-    },
-    {
-      "slug": "state_spirits",
-      "text": "STATE WINE + SPIRITS",
-      "style": "panel",
-      "panel": "#11324d",
-      "text_color": "#e8e2d0",
-      "border": "#9a8a5c",
-      "families": [
-        "liquor",
-        "civic"
-      ]
-    },
-    {
-      "slug": "rusty_tap",
-      "text": "THE RUSTY TAP",
-      "style": "neon",
-      "color": "#ffb020",
-      "backer": "#140f08",
-      "families": [
-        "bar",
-        "restaurant"
-      ]
-    },
-    {
-      "slug": "corner_tap",
-      "text": "CORNER TAP",
-      "style": "neon",
-      "color": "#ff2a6d",
-      "backer": "#120810",
-      "families": [
-        "bar",
-        "default"
-      ]
-    },
-    {
-      "slug": "club_velvet",
-      "text": "CLUB VELVET",
-      "style": "neon",
-      "color": "#c14bff",
-      "backer": "#0d0713",
-      "families": [
-        "club",
-        "bar"
-      ]
-    },
-    {
-      "slug": "video_stop",
-      "text": "VIDEO STOP",
-      "style": "panel",
-      "panel": "#1b2a6b",
-      "text_color": "#ffd83d",
-      "border": "#ffd83d",
-      "families": [
-        "retail",
-        "default"
-      ]
-    },
-    {
-      "slug": "apex_markets",
-      "text": "APEX MARKETS",
-      "style": "panel",
-      "panel": "#b3131b",
-      "text_color": "#ffffff",
-      "border": "#ffffff",
-      "families": [
-        "supermarket",
-        "retail"
-      ]
-    },
-    {
-      "slug": "gold_and_pawn",
-      "text": "GOLD + PAWN",
-      "style": "panel",
-      "panel": "#1a1a1a",
-      "text_color": "#f2c00e",
-      "border": "#f2c00e",
-      "families": [
-        "pawn",
-        "retail"
-      ]
-    },
-    {
-      "slug": "check_cash",
-      "text": "CHECK CASH NOW",
-      "style": "panel",
-      "panel": "#0f7b3f",
-      "text_color": "#f7f7f2",
-      "border": "#f7f7f2",
-      "families": [
-        "pawn",
-        "bank",
-        "retail"
-      ]
-    },
-    {
-      "slug": "keystone_savings",
-      "text": "KEYSTONE SAVINGS",
-      "style": "panel",
-      "panel": "#123a2b",
-      "text_color": "#d8c98a",
-      "border": "#d8c98a",
-      "families": [
-        "bank",
-        "civic",
-        "default"
-      ]
-    },
-    {
-      "slug": "first_delco",
-      "text": "FIRST DELCO BANK",
-      "style": "panel",
-      "panel": "#14294d",
-      "text_color": "#e6e9ef",
-      "border": "#8fa3c8",
-      "families": [
-        "bank"
-      ]
-    },
-    {
-      "slug": "a1_auto",
-      "text": "A-1 AUTO",
-      "style": "panel",
-      "panel": "#d4471a",
-      "text_color": "#1a1208",
-      "border": "#f2f2f2",
-      "families": [
-        "auto",
-        "industrial"
-      ]
-    },
-    {
-      "slug": "lube_n_go",
-      "text": "LUBE-N-GO",
-      "style": "panel",
-      "panel": "#f2c00e",
-      "text_color": "#141414",
-      "border": "#141414",
-      "families": [
-        "auto",
-        "gas_station"
-      ]
-    },
-    {
-      "slug": "wash_house",
-      "text": "WASH HOUSE",
-      "style": "panel",
-      "panel": "#2f6fa8",
-      "text_color": "#ffffff",
-      "border": "#ffffff",
-      "families": [
-        "retail",
-        "default"
-      ]
-    },
-    {
-      "slug": "delco_storage",
-      "text": "DELCO STORAGE",
-      "style": "panel",
-      "panel": "#5a5f52",
-      "text_color": "#f0efe6",
-      "border": "#2b2e27",
-      "families": [
-        "warehouse",
-        "industrial",
-        "default"
-      ]
-    },
-    {
-      "slug": "keystone_brewing",
-      "text": "KEYSTONE BREWING",
-      "style": "panel",
-      "panel": "#6b3a12",
-      "text_color": "#f5d98a",
-      "border": "#f5d98a",
-      "families": [
-        "industrial",
-        "liquor"
-      ]
-    },
-    {
-      "slug": "fuel_price",
-      "style": "price",
-      "panel": "#f2f2ee",
-      "text_color": "#141414",
-      "grade_color": "#c8102e",
-      "border": "#c8102e",
-      "families": [
-        "gas_station"
-      ],
-      "rows": [
-        {
-          "grade": "REGULAR",
-          "price": "1.21"
-        },
-        {
-          "grade": "PLUS",
-          "price": "1.31"
-        },
-        {
-          "grade": "SUPER",
-          "price": "1.41"
-        }
-      ],
-      "derivation": "A Pennsylvania pump price in 1997, derived rather than chosen. EIA's Pennsylvania conventional regular retail series -- price by all sellers, which EXCLUDES tax -- averages 0.770 $/gal across 1997's twelve months. Pennsylvania levied 0.259 (a 0.12 liquid fuels tax and a 0.139 oil company franchise tax, the highest in the nation); the federal excise was 0.183 until 1 October 1997 and 0.184 after it, when the Taxpayer Relief Act put the LUST tenth of a cent back. 0.770 + 0.259 + 0.184 = 1.213, so the board reads 1.21 and nine tenths. The national pump average for 1997 was 1.234 (EIA via the Alternative Fuels Data Center, nominal dollars), which is the same number from the other end -- the two series disagree only by the tax the state one leaves out. Grades step a dime, as they did."
+     "grade": "SUPER",
+     "price": "1.41"
     }
-  ]
+   ],
+   "derivation": "A Pennsylvania pump price in 1997, derived rather than chosen. EIA's Pennsylvania conventional regular retail series -- price by all sellers, which EXCLUDES tax -- averages 0.770 $/gal across 1997's twelve months. Pennsylvania levied 0.259 (a 0.12 liquid fuels tax and a 0.139 oil company franchise tax, the highest in the nation); the federal excise was 0.183 until 1 October 1997 and 0.184 after it, when the Taxpayer Relief Act put the LUST tenth of a cent back. 0.770 + 0.259 + 0.184 = 1.213, so the board reads 1.21 and nine tenths. The national pump average for 1997 was 1.234 (EIA via the Alternative Fuels Data Center, nominal dollars), which is the same number from the other end -- the two series disagree only by the tax the state one leaves out. Grades step a dime, as they did."
+  }
+ ]
 }

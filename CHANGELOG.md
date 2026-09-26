@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.51.0] - Flappahs, and a sign that wants a mark it cannot render yet
+
+The walker named the gas station 2026-09-26: **Flappahs**, a Wawa rip-off.
+Wawa is the Lenape word for goose and its mark is a flying one, so a Flappah is
+the same bird in Delco-speak -- the genre of the thing rather than the thing,
+which is the rule the whole `profiles/signs/delco.json` already states in its
+own description: "INVENTED, every one ... A sign whose face reproduced a real
+brand would be the one asset in a generated level nobody could ship."
+
+Added to the delco sign profile ahead of `goose_mart`, which is the same family
+and the same joke told less well. Panel style, `#ee241c` on `#fff0d7` with a
+`#242326` border -- the three colours read out of the walker's own artwork
+rather than picked to match it.
+
+AND THE MARK IS STORED BUT NOT READ, which is said here so nobody discovers it
+by surprise. `profiles/signs/marks/flappahs_red.svg` is the walker's goose: a
+walking bird in a ball cap carrying a bag, over the wordmark. The sign builder's
+styles are `neon`, `panel`, `screen`, `hazard` and `arrow`, and every one of
+them composes TEXT. There is no path that puts a mark on a face, so the entry
+carries a `mark` key that nothing consumes and the sign renders today as the
+red panel with cream lettering.
+
+That is a gap in this tool, recorded as one rather than worked around
+downstream: a business whose sign is a MASCOT is ordinary on a 1990s American
+strip, and the profile can now say so even though the renderer cannot yet
+answer. `docs/proposals/GAS_STATION_SHOP.md` carries the references.
+
 ## [0.50.0] - the drop atlas a drip shader reads, generated rather than painted
 
 `core/droplets.drop_atlas` writes the four-channel texture a rain-drip shader
