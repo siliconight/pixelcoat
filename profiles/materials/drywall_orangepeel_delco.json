@@ -10,7 +10,7 @@
   "bands": {
     "macro": 0.18,
     "meso": 0.42,
-    "micro": 0.3
+    "micro": 0.15
   },
   "macro": {
     "generator": "fbm",
@@ -18,12 +18,13 @@
     "octaves": 2
   },
   "meso": {
-    "generator": "worley_f1",
-    "cells": 24
+    "generator": "fbm",
+    "cells": 16,
+    "octaves": 2
   },
   "micro": {
     "generator": "fbm",
-    "cells": 40,
+    "cells": 160,
     "octaves": 2
   },
   "detail_strength": 0.04,
@@ -32,7 +33,7 @@
     "base": 0.88,
     "variation": 0.08
   },
-  "height_strength": 0.3,
+  "height_strength": 0.15,
   "emit": {
     "roughness": true,
     "normal": false

@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.52.0] - orange-peel drywall stops being a cheetah print
+
+`drywall_orangepeel_delco` read as a spotted hide on every interior wall it
+dressed, and the walker called it: "We need to change/fix this". Measured
+before touched:
+
+THE TEXEL CANNOT HOLD THE FINISH. The pack is 256 px over 2.0 m, 7.8 mm a
+texel. Real orange peel is a 2-5 mm stipple -- sub-texel at this density, so
+the grammar cannot draw it and never did. What it drew was `worley_f1` at
+24 cells (8.3 cm blobs) carrying 42% of the tile over a 40-cell micro fbm
+that is itself blobs at this size. Eight-centimetre cells at 0.42 weight are
+spots, whatever the grammar's name says.
+
+THE NUMBER THAT SEES IT. Share of luminance variance at 40-150 mm
+wavelength -- the band an 8 cm cell lives in -- on the synthesized albedo,
+beside the neighbour correlation `tests/test_theme_profiles.py` already
+held this grammar to (ac1, 1.0 smooth, 0.0 static):
+
+    shipped (0.51.0)       blob 48.0%   grain 14%   ac1 0.70   spots
+    C, worley at 120       blob 13.5%   grain 33%   ac1 0.27   static
+    this (D)               blob  9.2%   grain 18%   ac1 0.64
+    drywall_delco          blob 10.0%   grain 26%   ac1 0.60   (the flat sibling)
+
+A first attempt at a spectrum metric reported a "dominant wavelength" of
+666.7 mm for all four candidates -- the macro band, the same for every one
+-- and was thrown out for the band shares above, which move between rows. A
+metric that cannot move is not evidence (CLAUDE.md, draw-call section).
+
+THE FIRST PICK WAS RETRACTED BY AN OLDER INSTRUMENT. The walker chose C from
+a four-way contact sheet: Worley kept, because orange peel IS a cellular
+stipple, taken to 120 cells (1.7 cm, two texels). It passed the blob gate
+and failed `test_delco_interior_finishes_read_as_surface_not_noise` at ac1
+0.27 against a floor of 0.5 -- a floor written from the walker's own
+earlier complaint, "too much digital noise". C had traded spots for static;
+two instruments, two things the walker has objected to, and C satisfied
+one. A sweep of 648 grammars found 139 that pass both; a second sheet put
+four of them beside the shipped and C, and the walker chose this one.
+
+THE CHANGE is fbm at 16 cells (12.5 cm, two octaves) at 0.42 in place of
+the Worley -- the cheetah print is the cell structure, not the scale, and
+Worley at ANY cell count this density can draw is either spots or static --
+under a 160-cell fbm micro at 0.15; `height_strength` 0.30 -> 0.15, in line
+with the other drywalls. It reads as a soft mottled plaster. It is NOT
+orange peel: real orange peel is 2-5 mm, this pack's texel is 7.8 mm, and no
+grammar at this density can draw the finish the id names. A wall that is
+neither spots nor static is what can be had; the name is kept because the
+theme keys on it.
+
+A SECOND FAULT THE SAME MEASUREMENT TURNED UP. The 0.51.0 tile was blown
+(L > 0.94) on 2.2% of its texels against the audit's 1% budget -- a light
+base under a 0.42 blob band -- and no test had ever held this grammar to the
+audit. 0.52.0 measures 0.18%. Not a goal of the change; recorded because it
+moved.
+
+Held by `tests/test_drywall_orangepeel.py`: blob share under 25% (the
+0.51.0 grammar fails it at 48%, and the test rebuilds that grammar to prove
+the metric can see it), grain share under 25% (C fails it at 33%), the
+tile still tiles, and it meets the audit's budget. The ac1 floor stays
+where it was, in `test_theme_profiles.py`. Interior walls carry this on
+every level, so a cold run is the confirmation that matters and is the
+next thing.
+
+ALSO: 0.51.0 moved `VERSION` and left `pixelcoat/version.py`'s `_FALLBACK`
+at 0.50.0, so `test_the_wheel_fallback_matches_the_file` -- the test that
+exists to catch exactly that -- was failing on main for one release. Both
+say 0.52.0 now.
+
 ## [0.51.0] - Flappahs, and a sign that wants a mark it cannot render yet
 
 The walker named the gas station 2026-09-26: **Flappahs**, a Wawa rip-off.
