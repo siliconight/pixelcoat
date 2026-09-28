@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.53.0] - two more CC0 pixel faces, vendored for Zoo's lettering
+
+`assets/fonts/m5x7/` (Daniel Linssen) and `assets/fonts/monogram/`
+(datagoblin: the extended face and its italic), each beside
+`pixel_operator/` with its own `LICENSE.txt` (the CC0 1.0 dedication) and a
+`README.md` recording the designer, the source page, the date fetched, each
+file's byte size and SHA-256, and what was measured before it was vendored.
+docs/proposals/CC0_FONTS.md named them; the walker approved the three
+downloads, 2026-09-28. Fetched through each itch.io page's free download
+path; nothing was purchased.
+
+MEASURED FIRST, through Zoo's mint rules: all 96 characters the factory
+letters are in each character map, and at 16 px every glyph is pure on/off
+with a whole-pixel advance and nothing kerns -- so Zoo mints them as it
+mints Pixel Operator. Neither face is used by this repo's `signage.py`,
+which still sets every shop sign in Pixel Operator; they are here because
+Pixelcoat is where the factory's typefaces live. The m5x7 page's siblings
+m3x6 and m6x11 ask for attribution and are not here.
+
 ## [0.52.0] - orange-peel drywall stops being a cheetah print
 
 `drywall_orangepeel_delco` read as a spotted hide on every interior wall it
