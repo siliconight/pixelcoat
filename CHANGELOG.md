@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.55.0] - three CC0 faces, so each owner has a voice
+
+`assets/fonts/aileron/` (Sora Sagano: SemiBold, Bold), `assets/fonts/vegur/`
+(Sora Sagano: Regular, Bold) and `assets/fonts/mfb_oldstyle/` (Daniel
+Benjamin Miller's revival of Morris Fuller Benton's Century Oldstyle, 1909:
+Regular, Bold, Italic), each beside the CC0 1.0 dedication text and a README
+giving the source, the evidence for the licence, the byte counts and the
+sha256 of every file.
+
+The walker's font catalog (factory root, `docs/reference/
+CC0_FONTS_FOR_HUMAN_AUTHORED_GAMES.md`), 2026-10-02: "Assign a typeface to an
+owner." Everything Zoo 1.46.0 to 1.48.0 painted in the real look was Blue
+Highway -- a bank's machine, a cigarette maker's ad and the law's small print
+in one voice. The walker approved these three downloads the same day. Zoo
+1.49.0 mints them and gives Aileron to institutions and machine makers,
+Vegur to notices nobody designed, and MFB Oldstyle to printed advertising.
+
+WHAT THE EVIDENCE IS, per family, because it is not equal. MFB Oldstyle
+carries CC0 three ways: the project's `COPYING`, GitHub's licence record, and
+each file's own licence URL. Aileron's files say "No Rights Reserved." and
+its catalogue page and designer's page both give CC0. VEGUR'S FILES CARRY NO
+LICENCE RECORD AT ALL; its CC0 rests on Font Library's page and the
+designer's own, as read on 2026-10-02, and its README says so.
+
+Nothing in Pixelcoat sets them yet.
+
 ## [0.54.0] - two CC0 OUTLINE faces, vendored for Zoo's smooth lettering
 
 `assets/fonts/blue_highway/` (Ray Larabie, 1998: Regular, Bold, Condensed)
