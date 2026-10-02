@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.54.0] - two CC0 OUTLINE faces, vendored for Zoo's smooth lettering
+
+`assets/fonts/blue_highway/` (Ray Larabie, 1998: Regular, Bold, Condensed)
+and `assets/fonts/minisystem/` (Ray Larabie, 2004), each beside the CC0 1.0
+dedication text and a README giving the source, the licence in the
+publisher's own words, the byte counts and the sha256 of every file.
+
+The walker, 2026-10-02: "this looks like it is made with a 90s GPU ... replace
+the retro look", and, asked, gave permission for the download. Every face
+vendored before these is a pixel face; a printed marquee's letter has an
+outline. Zoo 1.46.0 mints them into anti-aliased coverage tables
+(`tools/mint_smooth_type.py`) and sets machine legends, marquees and the
+register's display in them. Nothing in Pixelcoat sets them yet.
+
 ## [0.53.0] - two more CC0 pixel faces, vendored for Zoo's lettering
 
 `assets/fonts/m5x7/` (Daniel Linssen) and `assets/fonts/monogram/`
