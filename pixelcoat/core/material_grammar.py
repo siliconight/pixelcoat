@@ -253,6 +253,10 @@ def _generator(spec: dict, size, seed: int, label: str) -> np.ndarray:
     if gen == "ribs":
         return ps.ribs(size, spec.get("count", 12), seed,
                        axis=spec.get("axis", "x"), label=label)
+    if gen == "diamond_mesh":
+        return ps.diamond_mesh(size, spec.get("count", 16), seed,
+                               wire=spec.get("wire", 0.14),
+                               weave=bool(spec.get("weave", False)), label=label)
     if gen == "wave":
         return ps.wave(size, spec.get("count", 12), seed,
                        axis=spec.get("axis", "x"),

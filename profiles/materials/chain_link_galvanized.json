@@ -1,0 +1,67 @@
+{
+  "id": "chain_link_galvanized",
+  "kind": "chain_link",
+  "base_colors": [
+    "#9ca09b",
+    "#8f938e",
+    "#a7aaa4"
+  ],
+  "meters_per_tile": 1.0,
+  "bands": {
+    "macro": 0.3,
+    "meso": 0.5,
+    "micro": 0.2
+  },
+  "macro": {
+    "generator": "fbm",
+    "cells": 3,
+    "octaves": 2
+  },
+  "meso": {
+    "generator": "diamond_mesh",
+    "count": 16,
+    "wire": 0.14,
+    "weave": true
+  },
+  "micro": {
+    "generator": "fbm",
+    "cells": 120,
+    "octaves": 2
+  },
+  "wear": {
+    "generator": {
+      "generator": "fbm",
+      "cells": 5,
+      "octaves": 4
+    },
+    "coverage": 0.18,
+    "color": "#7a5a3e",
+    "strength": 0.55,
+    "feather": 0.4,
+    "roughness": 0.15
+  },
+  "detail_strength": 0.1,
+  "posterize": 10,
+  "roughness": {
+    "base": 0.55,
+    "variation": 0.15
+  },
+  "height_strength": 0.2,
+  "cutout": {
+    "generator": {
+      "generator": "diamond_mesh",
+      "count": 16,
+      "wire": 0.14
+    },
+    "threshold": 0.5
+  },
+  "transparency": {
+    "opacity": 1.0,
+    "alpha_mode": "scissor"
+  },
+  "emit": {
+    "roughness": true,
+    "normal": false
+  },
+  "notes": "Chain-link fabric: galvanised wire woven into diamonds, alpha-cut so the lot behind it shows. Pixelcoat 0.56.0, for Zoo's `chain_link_fence` (the walker, 2026-10-04: a fenced vacant lot across the through road, 'empty lot is a good start'). A 1 m tile with 16 diamonds across it, 62.5 mm on a side -- the common 2 to 2.5 inch mesh. `wire` 0.14 of the diamond period keeps about a quarter of the tile, the wire and its knuckles; real fabric reads between 15 and 25 per cent covered. One theme-neutral profile mapped by every level theme: chain link is a commodity, galvanised the same in Delco as anywhere, and the wear is rust at the knuckles. THE WEAVE (from the walker's references, 2026-10-04): chain link is zig-zag strands hooked over and under each other, not straight wires crossing, so the albedo's meso band is the same mesh in `weave` mode -- a round highlight on each wire, darkened where it passes under its neighbour -- at the cutout's own count, so the shading lands on the wires the cutout keeps. Real wire geometry, which the references build, is out on cost: a 180 m street of it is hundreds of thousands of triangles."
+}

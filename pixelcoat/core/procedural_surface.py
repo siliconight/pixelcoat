@@ -40,6 +40,7 @@ __all__ = [
     "veins",
     "masonry",
     "ribs",
+    "diamond_mesh",
     "wave",
     "medallion",
     "posterize",
@@ -409,6 +410,51 @@ def ribs(size, count: int, seed: int = 0, *, axis: str = "x",
     prof = (0.5 + 0.5 * np.cos(t * 2.0 * np.pi)).astype(np.float32)
     return np.broadcast_to(prof[None, :] if axis == "x" else prof[:, None],
                            (h, w)).astype(np.float32)
+
+
+def diamond_mesh(size, count: int, seed: int = 0, *, wire: float = 0.14,
+                 weave: bool = False, label: str = "diamond_mesh") -> np.ndarray:
+    """Chain-link fabric in ``[0, 1]``: two crossed families of diagonal
+    wires, 1 on a wire and falling to 0 at a diamond's centre (0.56.0).
+
+    ``count`` diamonds across the tile on each axis, so the wires run on the
+    diagonals ``u + v`` and ``u - v`` at integer steps -- tileable for an
+    integer ``count``. ``wire`` is a wire's width as a fraction of the
+    diamond period; the field is 0.5 exactly at its edge, so a cutout at
+    threshold 0.5 keeps the wires and nothing else. ``seed`` is unused: woven
+    fabric is regular, and its irregularity is the wear's job.
+
+    ``weave`` gives the SHADING instead of the shape: chain link is zig-zag
+    strands, each hooked over its neighbour at one bend and under it at the
+    next, not two families of straight wires laid across each other. At a
+    crossing the family whose index parity says it is on top keeps its
+    round highlight and the other darkens where it passes under; off the
+    wire the field is 0. Used as an albedo band beside the cutout, at the
+    same `count`, so the shading lands on the wires the cutout keeps.
+    """
+    h, w = _as_hw(size)
+    n = max(1, int(count))
+    u = ((np.arange(w, dtype=np.float64) + 0.5) / w * n)[None, :]
+    v = ((np.arange(h, dtype=np.float64) + 0.5) / h * n)[:, None]
+    a = u + v
+    b = u - v
+    da = np.abs(a - np.round(a))                # distance to the nearest wire, per family
+    db = np.abs(b - np.round(b))
+    d = np.minimum(da, db)
+    half = max(1e-6, float(wire) / 2.0)
+    if not weave:
+        return np.clip(1.0 - 0.5 * d / half, 0.0, 1.0).astype(np.float32)
+    on = d <= half
+    # a round wire: brightest along its centre line
+    ridge = np.clip(1.0 - d / half, 0.0, 1.0) ** 0.5
+    # which family is on top at this crossing: alternate along each strand
+    top_a = ((np.round(a) + np.round(b)).astype(np.int64) % 2) == 0
+    near = (da <= half) & (db <= half)          # within a crossing
+    mine_a = da <= db                           # the pixel belongs to family a
+    under = near & (mine_a != top_a)
+    shade = 0.45 + 0.55 * ridge
+    shade = np.where(under, shade * 0.45, shade)
+    return np.where(on, shade, 0.0).astype(np.float32)
 
 
 def wave(size, count: int, seed: int = 0, *, axis: str = "x", warp: float = 0.15,

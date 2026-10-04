@@ -27,6 +27,7 @@
     "plaster": "plaster_delco",
     "plastic": "plastic_neutral",
     "road_paint": "road_paint_delco",
+    "chain_link": "chain_link_galvanized",
     "rubber": "rubber_delco",
     "shingle": "shingle_delco",
     "sidewalk": "sidewalk_delco",
