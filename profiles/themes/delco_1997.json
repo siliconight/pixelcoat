@@ -4,6 +4,8 @@
   "materials": {
     "asphalt": "asphalt_delco",
     "brick": "brick_delco",
+    "brick_brown": "brick_brown_delco",
+    "brick_orange": "brick_orange_delco",
     "canvas": "canvas_neutral",
     "carbon": "carbon_neutral",
     "carpet": "carpet_delco",

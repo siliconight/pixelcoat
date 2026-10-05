@@ -377,7 +377,10 @@ _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
               # tuple had drifted eight kinds behind `skins.KNOWN_KINDS`
               # (Zoo 0.88.0 CHANGELOG) and warned about kinds Zoo knew.
               "velvet", "cloth", "carpet_club", "wallpaper_club",
-              "wood_stained", "paint_block")
+              "wood_stained", "paint_block",
+              # a house's own brick (0.57.0, Zoo 1.73.0): the comp's row is
+              # brown, red and orange, one brick a house
+              "brick_brown", "brick_orange")
 
 
 #: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks
