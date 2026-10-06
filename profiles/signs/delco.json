@@ -25,8 +25,6 @@
    "text_color": "#fff6e5",
    "border": "#f2c00e",
    "families": [
-    "convenience",
-    "gas_station",
     "default"
    ]
   },
@@ -38,8 +36,7 @@
    "text_color": "#ffffff",
    "border": "#f2f2f2",
    "families": [
-    "convenience",
-    "gas_station"
+    "retail"
    ]
   },
   {
@@ -241,8 +238,7 @@
    "text_color": "#141414",
    "border": "#141414",
    "families": [
-    "auto",
-    "gas_station"
+    "auto"
    ]
   },
   {
