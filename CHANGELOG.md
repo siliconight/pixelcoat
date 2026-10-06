@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.61.0] - one name list: a band is dealt the names Zoo paints over the door
+
+**The walker, 2026-10-06, option A** on the factory root's
+`docs/findings/two_names_one_building/`: "Agreed". One list names a building
+on both its signs, and it is the door box's: Zoo's `storefront_names.KINDS`,
+written to the Delco-slang brand rule. Level Factory 0.148.0 deals each shell
+one business and hands the same pack to its door box (Zoo 1.79.0), so the
+band and the door cannot disagree.
+
+**For each kind Zoo names, the family Level Factory deals now holds exactly
+Zoo's names**, in both level themes:
+
+| Zoo kind | family | names |
+|---|---|---|
+| deli | deli | JAWN'S HOAGIES, WOODER ICE & HOAGIES, SCRAPPLE & SONS DELI, YO! DELI |
+| pizza | pizza (new) | PIE HOLE PIZZA, TOMATO PIE TONY'S, SAUCE BOSS PIZZA |
+| bank | bank | FIRST DELCO SAVINGS, PIKE SAVINGS & LOAN, MATTRESS MONEY TRUST, YOUSE CREDIT CO-OP |
+| pawn | pawn | HOCK IT HERE, CASH 4 YOUR JAWN, GOLD N STUFF PAWN |
+| market | supermarket | PIKE FOOD MARKET, THE BIG CART, SCRAPPLE SUPERMARKET |
+| pharmacy | pharmacy (new) | PILLS N THRILLS, DOC'S DISCOUNT DRUGS |
+| card | card (new) | TOPDECK TONY'S, MINT-ISH CARDS |
+| video | video (new) | MACDADE MOVIES |
+| brewery | brewery (new) | DOWN THE SHORE BREWING, HONEST HON BREW CO |
+
+- Each new entry is a panel from a palette of five. The brand's green is
+  kept for FLAPPAHS alone.
+- The names that held those families before keep every other family they
+  had, and lose only these.
+- The families Zoo has no names for (auto, warehouse, industrial, retail,
+  bar, diner, restaurant, liquor) are unchanged. Their doors wear the band's
+  pack too, so they agree by construction.
+
+**Two constraints the new names met:**
+- **`&` joins the bitmap fallback** (`signage._FONT`). WOODER ICE & HOAGIES
+  and SCRAPPLE & SONS DELI need it, and a missing glyph renders as a silent
+  space whenever the TTF cannot be found.
+- **Legibility is measured, not counted.** `test_theme_signs` capped a name
+  at 20 characters, and DOWN THE SHORE BREWING is 22.
+  - `fit_scale` puts it on the band's 128 x 512 canvas at scale 5, the scale
+    SCRAPPLE SUPERMARKET (20) always passed at.
+  - The test now asserts the scale, at least 5, instead of the count.
+
+**Tests:** `tests/test_one_name_list.py`, 20.
+- Nine kinds x two themes: each family holds exactly Zoo's names. Zoo is
+  read as source from a checkout above this repo.
+- The brand green is FLAPPAHS alone: the control.
+- On 0.60.0's profiles all 18 mirrors fail; the control passes.
+
+**Suite:** 667 passed (0.60.0's 647 and these 20), run after the version
+bump.
+
 ## [0.60.0] - FLAPPAHS is cream on green, and the chain-link fabric blends
 
 **FLAPPAHS is cream on green.** The walker, 2026-10-06, choosing between

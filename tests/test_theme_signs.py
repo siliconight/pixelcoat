@@ -32,7 +32,11 @@ def test_the_theme_names_a_street_of_businesses():
             assert s["rows"] and "derivation" in s
             continue
         assert s["text"] == s["text"].upper()
-        assert len(s["text"]) <= 20, s["text"]
+        # LEGIBLE, MEASURED (0.61.0). This was `len(text) <= 20`, a count
+        # standing in for legibility; DOWN THE SHORE BREWING (22, Zoo's door
+        # list) fits the band's 128 x 512 canvas at scale 5, the scale
+        # SCRAPPLE SUPERMARKET (20) always passed at.
+        assert sgn.fit_scale(s["text"], (128, 512)) >= 5, s["text"]
 
 
 def test_every_sign_renders_with_the_built_in_font():

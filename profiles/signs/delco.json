@@ -47,7 +47,6 @@
    "text_color": "#2a1a05",
    "border": "#8c2b0e",
    "families": [
-    "deli",
     "restaurant",
     "default"
    ]
@@ -59,8 +58,7 @@
    "color": "#ff3b30",
    "backer": "#120a08",
    "families": [
-    "restaurant",
-    "deli"
+    "restaurant"
    ]
   },
   {
@@ -165,7 +163,6 @@
    "text_color": "#ffffff",
    "border": "#ffffff",
    "families": [
-    "supermarket",
     "retail"
    ]
   },
@@ -177,7 +174,6 @@
    "text_color": "#f2c00e",
    "border": "#f2c00e",
    "families": [
-    "pawn",
     "retail"
    ]
   },
@@ -189,8 +185,6 @@
    "text_color": "#f7f7f2",
    "border": "#f7f7f2",
    "families": [
-    "pawn",
-    "bank",
     "retail"
    ]
   },
@@ -202,7 +196,6 @@
    "text_color": "#d8c98a",
    "border": "#d8c98a",
    "families": [
-    "bank",
     "civic",
     "default"
    ]
@@ -214,9 +207,7 @@
    "panel": "#14294d",
    "text_color": "#e6e9ef",
    "border": "#8fa3c8",
-   "families": [
-    "bank"
-   ]
+   "families": []
   },
   {
    "slug": "a1_auto",
@@ -303,6 +294,270 @@
     }
    ],
    "derivation": "A Pennsylvania pump price in 1997, derived rather than chosen. EIA's Pennsylvania conventional regular retail series -- price by all sellers, which EXCLUDES tax -- averages 0.770 $/gal across 1997's twelve months. Pennsylvania levied 0.259 (a 0.12 liquid fuels tax and a 0.139 oil company franchise tax, the highest in the nation); the federal excise was 0.183 until 1 October 1997 and 0.184 after it, when the Taxpayer Relief Act put the LUST tenth of a cent back. 0.770 + 0.259 + 0.184 = 1.213, so the board reads 1.21 and nine tenths. The national pump average for 1997 was 1.234 (EIA via the Alternative Fuels Data Center, nominal dollars), which is the same number from the other end -- the two series disagree only by the tax the state one leaves out. Grades step a dime, as they did."
+  },
+  {
+   "slug": "jawns_hoagies",
+   "text": "JAWN'S HOAGIES",
+   "style": "panel",
+   "panel": "#462414",
+   "text_color": "#faecce",
+   "border": "#e2b05c",
+   "families": [
+    "deli"
+   ]
+  },
+  {
+   "slug": "wooder_ice_hoagies",
+   "text": "WOODER ICE & HOAGIES",
+   "style": "panel",
+   "panel": "#162c52",
+   "text_color": "#f0ecde",
+   "border": "#d6c496",
+   "families": [
+    "deli"
+   ]
+  },
+  {
+   "slug": "scrapple_sons_deli",
+   "text": "SCRAPPLE & SONS DELI",
+   "style": "panel",
+   "panel": "#60161a",
+   "text_color": "#f8f0de",
+   "border": "#e8d4aa",
+   "families": [
+    "deli"
+   ]
+  },
+  {
+   "slug": "yo_deli",
+   "text": "YO! DELI",
+   "style": "panel",
+   "panel": "#1e1e20",
+   "text_color": "#f0c850",
+   "border": "#f0c850",
+   "families": [
+    "deli"
+   ]
+  },
+  {
+   "slug": "pie_hole_pizza",
+   "text": "PIE HOLE PIZZA",
+   "style": "panel",
+   "panel": "#e6dcc8",
+   "text_color": "#2a1e16",
+   "border": "#3c2a1e",
+   "families": [
+    "pizza"
+   ]
+  },
+  {
+   "slug": "tomato_pie_tonys",
+   "text": "TOMATO PIE TONY'S",
+   "style": "panel",
+   "panel": "#462414",
+   "text_color": "#faecce",
+   "border": "#e2b05c",
+   "families": [
+    "pizza"
+   ]
+  },
+  {
+   "slug": "sauce_boss_pizza",
+   "text": "SAUCE BOSS PIZZA",
+   "style": "panel",
+   "panel": "#162c52",
+   "text_color": "#f0ecde",
+   "border": "#d6c496",
+   "families": [
+    "pizza"
+   ]
+  },
+  {
+   "slug": "first_delco_savings",
+   "text": "FIRST DELCO SAVINGS",
+   "style": "panel",
+   "panel": "#60161a",
+   "text_color": "#f8f0de",
+   "border": "#e8d4aa",
+   "families": [
+    "bank"
+   ]
+  },
+  {
+   "slug": "pike_savings_loan",
+   "text": "PIKE SAVINGS & LOAN",
+   "style": "panel",
+   "panel": "#1e1e20",
+   "text_color": "#f0c850",
+   "border": "#f0c850",
+   "families": [
+    "bank"
+   ]
+  },
+  {
+   "slug": "mattress_money_trust",
+   "text": "MATTRESS MONEY TRUST",
+   "style": "panel",
+   "panel": "#e6dcc8",
+   "text_color": "#2a1e16",
+   "border": "#3c2a1e",
+   "families": [
+    "bank"
+   ]
+  },
+  {
+   "slug": "youse_credit_co_op",
+   "text": "YOUSE CREDIT CO-OP",
+   "style": "panel",
+   "panel": "#462414",
+   "text_color": "#faecce",
+   "border": "#e2b05c",
+   "families": [
+    "bank"
+   ]
+  },
+  {
+   "slug": "hock_it_here",
+   "text": "HOCK IT HERE",
+   "style": "panel",
+   "panel": "#162c52",
+   "text_color": "#f0ecde",
+   "border": "#d6c496",
+   "families": [
+    "pawn"
+   ]
+  },
+  {
+   "slug": "cash_4_your_jawn",
+   "text": "CASH 4 YOUR JAWN",
+   "style": "panel",
+   "panel": "#60161a",
+   "text_color": "#f8f0de",
+   "border": "#e8d4aa",
+   "families": [
+    "pawn"
+   ]
+  },
+  {
+   "slug": "gold_n_stuff_pawn",
+   "text": "GOLD N STUFF PAWN",
+   "style": "panel",
+   "panel": "#1e1e20",
+   "text_color": "#f0c850",
+   "border": "#f0c850",
+   "families": [
+    "pawn"
+   ]
+  },
+  {
+   "slug": "pike_food_market",
+   "text": "PIKE FOOD MARKET",
+   "style": "panel",
+   "panel": "#e6dcc8",
+   "text_color": "#2a1e16",
+   "border": "#3c2a1e",
+   "families": [
+    "supermarket"
+   ]
+  },
+  {
+   "slug": "the_big_cart",
+   "text": "THE BIG CART",
+   "style": "panel",
+   "panel": "#462414",
+   "text_color": "#faecce",
+   "border": "#e2b05c",
+   "families": [
+    "supermarket"
+   ]
+  },
+  {
+   "slug": "scrapple_supermarket",
+   "text": "SCRAPPLE SUPERMARKET",
+   "style": "panel",
+   "panel": "#162c52",
+   "text_color": "#f0ecde",
+   "border": "#d6c496",
+   "families": [
+    "supermarket"
+   ]
+  },
+  {
+   "slug": "pills_n_thrills",
+   "text": "PILLS N THRILLS",
+   "style": "panel",
+   "panel": "#60161a",
+   "text_color": "#f8f0de",
+   "border": "#e8d4aa",
+   "families": [
+    "pharmacy"
+   ]
+  },
+  {
+   "slug": "docs_discount_drugs",
+   "text": "DOC'S DISCOUNT DRUGS",
+   "style": "panel",
+   "panel": "#1e1e20",
+   "text_color": "#f0c850",
+   "border": "#f0c850",
+   "families": [
+    "pharmacy"
+   ]
+  },
+  {
+   "slug": "topdeck_tonys",
+   "text": "TOPDECK TONY'S",
+   "style": "panel",
+   "panel": "#e6dcc8",
+   "text_color": "#2a1e16",
+   "border": "#3c2a1e",
+   "families": [
+    "card"
+   ]
+  },
+  {
+   "slug": "mint_ish_cards",
+   "text": "MINT-ISH CARDS",
+   "style": "panel",
+   "panel": "#462414",
+   "text_color": "#faecce",
+   "border": "#e2b05c",
+   "families": [
+    "card"
+   ]
+  },
+  {
+   "slug": "macdade_movies",
+   "text": "MACDADE MOVIES",
+   "style": "panel",
+   "panel": "#162c52",
+   "text_color": "#f0ecde",
+   "border": "#d6c496",
+   "families": [
+    "video"
+   ]
+  },
+  {
+   "slug": "down_the_shore_brewing",
+   "text": "DOWN THE SHORE BREWING",
+   "style": "panel",
+   "panel": "#60161a",
+   "text_color": "#f8f0de",
+   "border": "#e8d4aa",
+   "families": [
+    "brewery"
+   ]
+  },
+  {
+   "slug": "honest_hon_brew_co",
+   "text": "HONEST HON BREW CO",
+   "style": "panel",
+   "panel": "#1e1e20",
+   "text_color": "#f0c850",
+   "border": "#f0c850",
+   "families": [
+    "brewery"
+   ]
   }
  ]
 }
