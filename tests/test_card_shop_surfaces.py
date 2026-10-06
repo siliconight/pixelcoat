@@ -387,15 +387,31 @@ def test_every_card_shop_grammar_is_in_the_art_standard_baseline():
     assert not [g for g in CARD_SHOP if g not in base]
 
 
-def test_the_new_kinds_are_not_claimed_as_kinds_zoo_knows():
+def test_the_kinds_zoo_knows_are_the_kinds_zoo_knows():
     """`cli.main._ZOO_KINDS` mirrors Zoo's `skins.KNOWN_KINDS`, and the
     warning it drives is the only thing that tells an author a pack will
-    reach no mesh. `wood_panel` and `slatwall` are not in Zoo's vocabulary
-    yet, so listing them here would turn a true warning into a false
-    reassurance. When Zoo grows them, this test is what says so.
-    """
+    reach no mesh. Until 0.59.0 this test asserted `wood_panel` and
+    `slatwall` were absent, "until Zoo grows them" -- and never read Zoo,
+    so when Zoo 0.95.0 grew them it went on passing while the warning lied.
+    It reads Zoo now, as source (Zoo's skins module is pure, but importing
+    another repo's package from here is a coupling this suite does not
+    need)."""
+    import ast
+    from pathlib import Path
+
     from pixelcoat.cli import main as cli
-    for kind in ("wood_panel", "slatwall"):
-        assert kind not in cli._ZOO_KINDS, (
-            f"{kind} is listed as a kind Zoo knows -- check "
-            f"zoo_keeper/core/skins.KNOWN_KINDS actually has it")
+    skins = None
+    for parent in Path(__file__).resolve().parents:
+        cand = parent / "zoo" / "zoo_keeper" / "core" / "skins.py"
+        if cand.is_file():
+            skins = cand
+            break
+    if skins is None:
+        pytest.skip("no Zoo checkout above this repo")
+    tree = ast.parse(skins.read_text(encoding="utf-8"))
+    known = next(ast.literal_eval(n.value) for n in tree.body
+                 if isinstance(n, ast.Assign)
+                 and any(getattr(t, "id", None) == "KNOWN_KINDS" for t in n.targets))
+    assert set(cli._ZOO_KINDS) == set(known), (
+        f"missing here: {sorted(set(known) - set(cli._ZOO_KINDS))}; "
+        f"not in Zoo ({skins}): {sorted(set(cli._ZOO_KINDS) - set(known))}")

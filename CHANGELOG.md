@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.59.0] - the kinds Zoo knows are the kinds Zoo knows
+
+**`cli.main._ZOO_KINDS` is a copy of Zoo's `skins.KNOWN_KINDS`, and it had
+drifted.** Measured 2026-10-06, both read as source:
+- Zoo knew 38 kinds and this listed 36.
+- `wood_panel` and `slatwall`, in Zoo since its 0.95.0 card shop, were
+  missing here. So `_warn_unknown_kind` told whoever built those packs they
+  would reach no mesh, and they did reach one.
+- The test standing guard,
+  `test_the_new_kinds_are_not_claimed_as_kinds_zoo_knows`, asserted the two
+  were ABSENT, "until Zoo grows them". It never read Zoo, so it went on
+  passing after Zoo grew them.
+
+**Now:**
+- `_ZOO_KINDS` lists `wood_panel`, `slatwall`, and `chain_link`, the fence
+  fabric this repo profiled in 0.56.0. Zoo 1.77.0's `chain_link_fence` wears
+  it.
+- The guard is a mirror,
+  `test_card_shop_surfaces.test_the_kinds_zoo_knows_are_the_kinds_zoo_knows`:
+  - it finds a Zoo checkout by walking up from the test;
+  - it reads `KNOWN_KINDS` with `ast`;
+  - it asserts the two sets are equal, and names what is missing on each
+    side;
+  - it skips only when no Zoo checkout exists.
+- On 0.58.0's list it fails: missing here, `chain_link`, `slatwall`,
+  `wood_panel`.
+
+**And 0.58.0's wheel fallback.**
+- `pixelcoat/version.py`'s `_FALLBACK` stayed at 0.57.0 when 0.58.0 bumped
+  VERSION. `test_version_is_single_sourced` failed on 0.58.0 as committed.
+- That suite had run before the release patch, so it never saw the bump.
+- `_FALLBACK` is now 0.59.0, beside VERSION, and this release's suite ran
+  after both.
+
+**Suite:** 645 passed, run after the version bump.
+
 ## [0.58.0] - a gas station and a convenience store are FLAPPAHS
 
 **The walker, 2026-10-06:** "Flappahs store always Flappahs". Zoo builds

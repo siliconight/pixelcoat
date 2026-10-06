@@ -380,7 +380,12 @@ _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
               "wood_stained", "paint_block",
               # a house's own brick (0.57.0, Zoo 1.73.0): the comp's row is
               # brown, red and orange, one brick a house
-              "brick_brown", "brick_orange")
+              "brick_brown", "brick_orange",
+              # the card shop's panels (0.44.0), which Zoo has known since
+              # its 0.95.0 and this list missed until 0.59.0
+              "wood_panel", "slatwall",
+              # a fence's wire fabric (0.56.0, Zoo 1.77.0)
+              "chain_link")
 
 
 #: Kinds Lot asks for, not Zoo: the outdoor ground plate, its sidewalks
