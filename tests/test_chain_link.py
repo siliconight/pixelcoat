@@ -24,9 +24,13 @@ def test_the_diamond_mesh_is_two_crossed_wire_families_and_tiles():
     assert 0.15 < frac < 0.35, frac
 
 
-def test_the_fabric_is_a_scissor_cutout_mostly_open():
+def test_the_fabric_is_a_cutout_that_blends_mostly_open():
+    """0.60.0: the cutout alpha is unchanged, and the consumer BLENDS it
+    rather than testing it. Tested at 0.5 the far fabric vanished, its mips
+    being about a quarter wire (cold run 9183); blended, it keeps a faint
+    screen at 20 m and along a 16.8 m run (rendered on 9184's walk copy)."""
     g = mg.MaterialGrammar.load(_PROFILE)
-    assert g.kind == "chain_link" and g.transparency["alpha_mode"] == "scissor"
+    assert g.kind == "chain_link" and g.transparency["alpha_mode"] == "blend_texture"
     a = mg.synthesize(g, size=256, seed=1999)["albedo"]
     assert a.shape == (256, 256, 4)
     alpha = a[..., 3]

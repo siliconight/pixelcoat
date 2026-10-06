@@ -57,7 +57,7 @@
   },
   "transparency": {
     "opacity": 1.0,
-    "alpha_mode": "scissor"
+    "alpha_mode": "blend_texture"
   },
   "emit": {
     "roughness": true,
