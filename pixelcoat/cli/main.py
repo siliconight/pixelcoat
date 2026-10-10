@@ -197,9 +197,11 @@ def main(argv: list[str] | None = None) -> int:
     ts.add_argument("--theme", default="delco_1997")
     ts.add_argument("--profile", default=None,
                     help="a signs profile to use instead of the theme's")
-    ts.add_argument("--size", type=int, default=512,
-                    help="the sign's WIDTH; a cabinet is four times as wide "
-                         "as it is tall, so the tile is size x size/4")
+    ts.add_argument("--size", type=int, default=1536,
+                    help="a business sign's WIDTH; its cabinet is six times "
+                         "as wide as it is tall, the shape of the band Lot "
+                         "hangs it on, so the tile is size x size/6 (a price "
+                         "board keeps PRICE_WIDTH)")
     ts.add_argument("--out", default="./build/signs")
     ts.add_argument("--force", action="store_true")
     ts.add_argument("--json-log", action="store_true", dest="json_log")
@@ -370,6 +372,10 @@ _ZOO_KINDS = ("laminate", "wood", "metal", "plastic", "leather", "rubber",
               "vegetation",
               # foliage: the leaf-cluster cutout a tree's crown cards wear
               "foliage",
+              # flat paint gone chalky: the crew's van (Zoo 1.82.0). Missing
+              # here until 0.62.0, and `test_the_kinds_zoo_knows_are_the_kinds_
+              # zoo_knows` said so
+              "paint_matte",
               # object-owned prop metals (Zoo 0.8x): the mesh supplies the hue
               "metal_painted", "metal_bare",
               # the club (Zoo 0.88.0 / 0.89.0): upholstery and a tablecloth's
@@ -548,6 +554,11 @@ def _slug(s: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in s.lower()).strip("_") or "sign"
 
 
+#: A fuel price board's width, the size `theme-signs` drew every sign at
+#: before 0.62.0: a board is its own shape, not a band's.
+PRICE_WIDTH = 512
+
+
 def _theme_signs(args) -> int:
     """One sign pack per business the theme names, plus an index of them.
 
@@ -563,6 +574,7 @@ def _theme_signs(args) -> int:
     suits. Lot hangs the pack; Level Factory picks the slug.
     """
     from ..core import signage as sgn
+    from ..core import smooth_type
 
     pkg = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     profiles = os.path.normpath(os.path.join(pkg, "..", "profiles"))
@@ -594,13 +606,18 @@ def _theme_signs(args) -> int:
         pack_dir = os.path.join(root, f"sign_{slug}")
         if glob.glob(os.path.join(pack_dir, "*.pack.json")) and not args.force:
             raise ValueError(f"{pack_dir} already holds a pack (use --force)")
-        shape = (max(32, args.size // 4), args.size)      # a cabinet, not a tile
+        # THE BAND'S SHAPE (0.62.0, roadmap 223). Lot hangs a business's
+        # pack on a band six times as wide as it is tall (`SIGN_ASPECT`); this
+        # drew a 4:1 cabinet, so every band's letters stood 1.5x too wide.
+        shape = (max(32, args.size // 6), args.size)
+        smooth = s.get("style") != "price"
         if s.get("style") == "price":
             # a price board is taller than it is wide per row; one row is
-            # about a third of the width
+            # about a third of the width. It keeps its pixel figures and its
+            # size: a board is not a band.
             rows = [(r["grade"], r["price"]) for r in s["rows"]]
             arrays = sgn.fuel_price_sign(
-                rows, (max(48, int(args.size * 0.62)), args.size),
+                rows, (max(48, int(PRICE_WIDTH * 0.62)), PRICE_WIDTH),
                 panel=s.get("panel", "#f2f2ee"),
                 text_color=s.get("text_color", "#1a1a1a"),
                 grade_color=s.get("grade_color", "#c8102e"),
@@ -608,13 +625,17 @@ def _theme_signs(args) -> int:
         elif s.get("style") == "neon":
             arrays = sgn.neon_sign(s["text"], shape,
                                    color=s.get("color", "#ff2a6d"),
-                                   backer=s.get("backer", "#0b0b10"))
+                                   backer=s.get("backer", "#0b0b10"),
+                                   face=smooth_type.SHOP_FACE)
         else:
             arrays = sgn.panel_sign(s["text"], shape,
                                     panel=s.get("panel", "#12351f"),
                                     text_color=s.get("text_color", "#4dff8a"),
-                                    border=s.get("border"))
-        man = sgn.build_sign_pack(pack_dir, arrays, f"sign_{slug}")
+                                    border=s.get("border"),
+                                    face=smooth_type.SHOP_FACE)
+        man = sgn.build_sign_pack(pack_dir, arrays, f"sign_{slug}",
+                                  interpolation="linear" if smooth else "nearest",
+                                  mipmaps=smooth)
         # a price board has rows rather than one name; the index says what
         # the sign READS so a consumer can pick one without re-reading the
         # profile

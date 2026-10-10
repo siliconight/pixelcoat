@@ -8,7 +8,10 @@ lenses so Zoo's emissive-face path consumes them.
 
 Text is drawn from a **built-in 5x7 pixel font** (below), so signage is
 byte-deterministic and crisp with no system-font dependency — and the blocky
-look is era-appropriate. Which sign is powered / how bright it glows is Lux's
+look is era-appropriate. SINCE 0.62.0 a business's name on its street band is
+SMOOTH instead: Blue Highway Condensed from `smooth_type`'s minted table, the
+face Zoo paints the same name in over the door, byte-deterministic the same
+way and sampled filtered (roadmap 223). Which sign is powered / how bright it glows is Lux's
 call at runtime (emissive_energy); this module only authors the lit (and, where
 useful, unpowered) art.
 """
@@ -230,10 +233,33 @@ def fit_scale(text: str, canvas_hw, *, spacing: int = 1, margin: float = 0.86,
 def _place_text(canvas_hw, text, scale, *, cx=0.5, cy=0.5):
     """Return a full-canvas mask with the text block centred at (cx, cy).
     ``scale`` of None fits the text to the canvas (`fit_scale`)."""
-    h, w = canvas_hw
     if scale is None:
         scale = fit_scale(text, canvas_hw)
-    ink = render_text(text, scale=scale)
+    return _centred(canvas_hw, render_text(text, scale=scale), cx=cx, cy=cy)
+
+
+#: How much of a smooth sign its lettering may fill: the width a sign painter
+#: leaves either side of a name, and the cap height a cabinet's face carries.
+#: A name is set as large as it fits inside both, so a short name stops at the
+#: height and a long one at the width.
+SMOOTH_MARGIN_W = 0.86
+SMOOTH_MARGIN_H = 0.56
+
+
+def _place_smooth(canvas_hw, text, face, *, cx=0.5, cy=0.5):
+    """``text`` in the smooth ``face`` (`smooth_type`), as large as it fits, on a full canvas:
+    COVERAGE 0..1, anti-aliased, and the cap height chosen. A name that does not set even at a
+    4 px cap raises rather than crop: a sign that lost a letter is a different sign."""
+    from . import smooth_type
+    h, w = canvas_hw
+    cap = smooth_type.fit_cap(text, w * SMOOTH_MARGIN_W, h * SMOOTH_MARGIN_H, face)
+    if cap is None:
+        raise ValueError(f"{text!r} does not set on a {w} x {h} sign in {face}")
+    return _centred(canvas_hw, smooth_type.coverage(text, cap, face), cx=cx, cy=cy), cap
+
+
+def _centred(canvas_hw, ink, *, cx=0.5, cy=0.5):
+    h, w = canvas_hw
     th, tw = ink.shape
     out = np.zeros((h, w), np.float32)
     y0 = int(round(cy * h - th / 2)); x0 = int(round(cx * w - tw / 2))
@@ -273,13 +299,19 @@ def _hw(size):
 
 def neon_sign(text: str, size=128, *, color: str = "#ff2a6d",
               backer: str = "#0b0b10", scale: int | None = None, glow: float = 0.6,
-              powered: bool = True) -> dict:
-    """Glowing neon tube text on a dark backer."""
+              powered: bool = True, face: str | None = None) -> dict:
+    """Glowing neon tube text on a dark backer. ``face`` sets it in a smooth face
+    (`smooth_type`) instead of the pixel one: a business's name on its street band (0.62.0)."""
     h, w = _hw(size)
-    ink = _place_text((h, w), text, scale)
+    if face:
+        ink, cap = _place_smooth((h, w), text, face)
+        radius = max(2, cap // 6)
+    else:
+        ink = _place_text((h, w), text, scale)
+        radius = max(2, scale if scale else fit_scale(text, (h, w)))
     tube = ps.hex_to_rgb(color)
     back = ps.hex_to_rgb(backer)
-    halo = _blur(ink, max(2, scale if scale else fit_scale(text, (h, w)))) * glow
+    halo = _blur(ink, radius) * glow
     if powered:
         emis = tube[None, None] * (ink[..., None] + 0.5 * halo[..., None])
         alb = back[None, None] * (1 - ink[..., None]) + tube[None, None] * ink[..., None]
@@ -293,10 +325,15 @@ def neon_sign(text: str, size=128, *, color: str = "#ff2a6d",
 
 def panel_sign(text: str, size=128, *, panel: str = "#12351f",
                text_color: str = "#4dff8a", scale: int | None = None,
-               powered: bool = True, border: str | None = None) -> dict:
-    """Backlit panel sign — glowing letters on a lit panel (EXIT, OPEN, ...)."""
+               powered: bool = True, border: str | None = None,
+               face: str | None = None) -> dict:
+    """Backlit panel sign — glowing letters on a lit panel (EXIT, OPEN, ...). ``face`` sets it
+    in a smooth face (`smooth_type`) instead of the pixel one (0.62.0)."""
     h, w = _hw(size)
-    ink = _place_text((h, w), text, scale)
+    if face:
+        ink, _cap = _place_smooth((h, w), text, face)
+    else:
+        ink = _place_text((h, w), text, scale)
     pan = ps.hex_to_rgb(panel)
     txt = ps.hex_to_rgb(text_color)
     field = pan[None, None] * np.ones((h, w, 1), np.float32)
@@ -460,8 +497,16 @@ def _pack_arrays(albedo, emissive, glass=None) -> dict:
 
 
 def build_sign_pack(pack_dir: str, arrays: dict, asset_id: str,
-                    *, meters_per_tile: float = 1.0) -> dict:
-    """Write a signage decal pack (albedo + emissive + roughness) for Zoo."""
+                    *, meters_per_tile: float = 1.0, interpolation: str = "nearest",
+                    mipmaps: bool = False) -> dict:
+    """Write a signage decal pack (albedo + emissive + roughness) for Zoo.
+
+    ``interpolation`` is how the pack asks to be sampled: ``"nearest"`` for pixel lettering,
+    whose every texel is meant to be seen, ``"linear"`` for smooth lettering, whose edge IS the
+    partial pixel (0.62.0). A filtered sign seen across a street is minified several times, so
+    one also asks for ``mipmaps``: without the chain, its letters shimmer."""
+    if interpolation not in ("nearest", "linear"):
+        raise ValueError(f"interpolation is nearest or linear, not {interpolation!r}")
     os.makedirs(pack_dir, exist_ok=True)
     maps: dict[str, str] = {}
     for key, arr in arrays.items():
@@ -481,9 +526,11 @@ def build_sign_pack(pack_dir: str, arrays: dict, asset_id: str,
         "import_hints": {
             "color_space": {k: ("srgb" if k in ("albedo", "emissive") else "linear")
                             for k in maps},
-            "interpolation": "nearest", "extension": "extend", "emissive": True,
+            "interpolation": interpolation, "extension": "extend", "emissive": True,
         },
     }
+    if mipmaps:
+        manifest["import_hints"]["generate_mipmaps"] = True
     with open(os.path.join(pack_dir, f"{asset_id}.pack.json"), "w",
               encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
