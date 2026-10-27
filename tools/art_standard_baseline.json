@@ -913,16 +913,16 @@
       "value_range": 0.09754411292807619
     },
     "vct_floor_beige": {
-      "blown_frac": 0.051727294921875,
-      "chroma_mean": 0.022898052902385384,
-      "chroma_p95": 0.02995733208184239,
+      "blown_frac": 0.0015869140625,
+      "chroma_mean": 0.016397492839109854,
+      "chroma_p95": 0.022798269648112622,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.04829928589067713,
+      "hf_energy": 0.01946350828976353,
       "kind": "tile",
-      "rough_mean": 0.349711638805913,
+      "rough_mean": 0.1195904301662071,
       "tier": null,
-      "value_range": 0.19203651607408112
+      "value_range": 0.03841575115114182
     },
     "vegetation_neutral": {
       "blown_frac": 0.0,

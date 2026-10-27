@@ -2,15 +2,15 @@
   "id": "vct_floor_beige",
   "kind": "tile",
   "base_colors": [
-    "#d8d2c4",
-    "#e0dacc",
-    "#cfc9bb"
+    "#dedad1",
+    "#e0dcd4",
+    "#dbd7ce"
   ],
-  "meters_per_tile": 1.0,
+  "meters_per_tile": 1.22,
   "bands": {
-    "macro": 0.2,
-    "meso": 0.15,
-    "micro": 0.15
+    "macro": 0.08,
+    "meso": 0.05,
+    "micro": 0.06
   },
   "macro": {
     "generator": "fbm",
@@ -30,15 +30,15 @@
     "rows": 4,
     "cols": 4,
     "offset": 0.0,
-    "mortar": 0.02,
-    "mortar_color": "#b8b2a4",
-    "brick_variation": 0.14
+    "mortar": 0.008,
+    "mortar_color": "#c6c2b9",
+    "brick_variation": 0.025
   },
-  "detail_strength": 0.06,
+  "detail_strength": 0.03,
   "posterize": 16,
   "roughness": {
-    "base": 0.35,
-    "variation": 0.06
+    "base": 0.12,
+    "variation": 0.04
   },
   "height_strength": 0.15,
   "emit": {
