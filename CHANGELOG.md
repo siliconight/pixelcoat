@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.64.0] - a material pack asks to be sampled linear
+
+The factory's roadmap 324. The walker, 2026-10-28: "how would we make our assets look more realistic?", and the target,
+"the look of Xbox 360 Games like Halo 3 and Gears of War ... we don't have to make it look like Runescape either". Every
+grammar pack asked its consumer for `nearest` sampling -- the retro look's, kept after realism replaced it -- and with
+53 of the 118 shipped packs at 128 px that is what read as blocky up close. `build_material_pack` now asks for
+`linear`, with the mip chain every pack already asked for. Zoo 1.144.0 honours the hint (it hardcoded Closest before).
+A sign's pixel lettering still asks for itself (`signage`), and decals are unchanged. The hint is in the manifest, so
+a consumer hashing it sees the change. Tests: tests/test_material_grammar.py, a material pack asks to be sampled
+linear (fails on 0.63.0).
+
 ## [0.63.0] - a store's vinyl tile is one pale colour, polished
 
 On 2026-10-26 the walker was shown seed 9205's supermarket under Deli Counter 0.274.0's lamps, with its floor

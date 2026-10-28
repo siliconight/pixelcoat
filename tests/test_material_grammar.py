@@ -236,3 +236,12 @@ def test_the_ground_grammars_stopped_reading_as_paving():
     slab = mg.MaterialGrammar.load(os.path.join(_PROFILES, "sidewalk_delco.json"))
     assert slab.masonry["rows"] == slab.masonry["cols"] == 2   # 1.25 m squares
     assert slab.masonry["offset"] == 0.0                       # a grid, not a bond
+
+
+def test_a_material_pack_asks_to_be_sampled_linear(tmp_path):
+    """0.64.0 (the factory's roadmap 324): every grammar pack asks its consumer for filtered sampling with mips, the
+    art target's; Zoo 1.144.0 honours the hint. FAILS ON 0.63.0, which asked for `nearest`."""
+    for name in ("painted_metal_industrial",):
+        manifest = mg.build_material_pack(os.path.join(_PROFILES, name + ".json"), str(tmp_path / name), size=48)
+        hints = manifest["import_hints"]
+        assert hints["interpolation"] == "linear" and hints["generate_mipmaps"] is True

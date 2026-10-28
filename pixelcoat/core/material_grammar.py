@@ -883,7 +883,13 @@ def build_material_pack(grammar, pack_dir: str, *, asset_id: str | None = None,
                             for k in map_files},
             "normal_format": "opengl",
             "generate_mipmaps": True,
-            "interpolation": "nearest",
+            # LINEAR (0.64.0, the factory's roadmap 324): a surface sampled
+            # with filtering and its mip chain, as the factory's art target
+            # asks -- "the look of Xbox 360 Games like Halo 3 and Gears of
+            # War" (the walker, 2026-10-28). `nearest` was the retro look's,
+            # and kept a 128 px tile blocky up close after realism replaced
+            # it. A sign's pixel lettering asks for itself (`signage`).
+            "interpolation": "linear",
         },
     }
     # See-through glass: the pack asks the consumer (Zoo -> Godot) for a
