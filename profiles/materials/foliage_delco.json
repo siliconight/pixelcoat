@@ -52,6 +52,14 @@
     "ellipse": {
       "rx": 0.46,
       "ry": 0.44
+    },
+    "leaves": {
+      "sprays": 16,
+      "per": 260,
+      "length": 13.0,
+      "width": 0.42,
+      "spread": 0.12,
+      "shade": 0.1
     }
   },
   "transparency": {

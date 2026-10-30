@@ -369,6 +369,61 @@ def _warp_apply(arr, dy, dx):
     return arr[sy, sx]
 
 
+
+def leaf_scatter(shape, spec: dict, seed: int, ellipse=None):
+    """``(keep, shade)`` for a crown card's cutout made of LEAVES (0.65.0, the factory's roadmap 324).
+
+    The walker, 2026-10-30, of the vertical slice's street trees: "try the card-based trees". The foliage pack's
+    cutout was a Worley field at 7 cells a tile -- a dozen discs the size of a dinner plate on a 4 m card -- so a
+    card crown read as green circles, the reason it was judged not ready on cold run 9032. A real crown seen from the
+    street is many small leaves, gathered in sprays along the twigs, with sky between the sprays.
+
+    So: `sprays` spray centres, seeded, inside the card's ellipse (the same ellipse the Worley cutout is clipped to,
+    centred on the tile's corner and wrapped, so a card's UVs running -0.5 to 0.5 tiles frame it); round each, `per`
+    leaves at a radius drawn from the spray's own, each a rotated ellipse `length` px long and `width` of that wide,
+    pointing out from the spray's centre with a seeded wobble. ``keep`` is the union of the leaves; ``shade`` a
+    per-leaf brightness in [1 - `shade`, 1 + `shade`] that multiplies the albedo, so neighbouring leaves differ and
+    the crown has a texture, not just a silhouette. Leaves wrap at the tile's edges. Deterministic for a seed."""
+    h, w = shape
+    rng = np.random.default_rng(seed)
+    sprays = int(spec.get("sprays", 14))
+    per = int(spec.get("per", 110))
+    length = float(spec.get("length", 12.0))
+    width = float(spec.get("width", 0.42)) * length
+    spread = float(spec.get("spread", 0.11)) * min(h, w)
+    vary = float(spec.get("shade", 0.18))
+    rx = float((ellipse or {}).get("rx", 0.46)) * w
+    ry = float((ellipse or {}).get("ry", 0.46)) * h
+    keep = np.zeros((h, w), dtype=bool)
+    shade = np.ones((h, w), dtype=np.float32)
+    r = int(np.ceil(length / 2.0)) + 1
+    oy, ox = np.mgrid[-r:r + 1, -r:r + 1].astype(np.float32)
+    for _s in range(sprays):
+        # a spray's centre inside the ellipse about the tile's corner, (0, 0) wrapped
+        while True:
+            u, v = rng.uniform(-1.0, 1.0, 2)
+            if u * u + v * v <= 0.72:
+                break
+        cy, cx = v * (ry - spread), u * (rx - spread)
+        for _l in range(per):
+            ang = rng.uniform(0.0, 2.0 * np.pi)
+            dist = abs(rng.normal(0.0, spread * 0.55))
+            py, px = cy + np.sin(ang) * dist, cx + np.cos(ang) * dist
+            if (px / rx) ** 2 + (py / ry) ** 2 > 1.0:
+                continue
+            theta = ang + rng.normal(0.0, 0.6)
+            ct, st = np.cos(theta), np.sin(theta)
+            a = (ox * ct + oy * st) / (length / 2.0)
+            b = (-ox * st + oy * ct) / (width / 2.0)
+            leaf = a * a + b * b <= 1.0
+            yy = (np.round(py).astype(int) + oy.astype(int)) % h
+            xx = (np.round(px).astype(int) + ox.astype(int)) % w
+            k = 1.0 + rng.uniform(-vary, vary)
+            keep[yy[leaf], xx[leaf]] = True
+            shade[yy[leaf], xx[leaf]] = k
+    return keep, shade
+
+
 def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> dict:
     """Compose a grammar into aligned map arrays.
 
@@ -643,7 +698,16 @@ def synthesize(grammar: MaterialGrammar, size=512, seed: int = DEFAULT_SEED) -> 
     out: dict[str, Any] = {"albedo": _to_u8(albedo)}
     rough_f = None
 
-    if grammar.cutout:
+    if grammar.cutout and grammar.cutout.get("leaves"):
+        # LEAVES, NOT BLOBS (0.65.0): see `leaf_scatter`
+        co = grammar.cutout
+        keep, shade = leaf_scatter((h, w), co["leaves"], ps.stream_seed(seed, "leaves"),
+                                   co.get("ellipse"))
+        albedo = np.clip(albedo * shade[..., None], 0.0, 1.0)
+        if grammar.posterize:
+            albedo = ps.posterize(albedo, grammar.posterize)
+        out["albedo"] = _to_u8(np.concatenate([albedo, keep.astype(np.float32)[..., None]], axis=-1))
+    elif grammar.cutout:
         co = grammar.cutout
         fld = _generator(co.get("generator") or {"generator": "worley_f1", "cells": 8},
                          (h, w), ps.stream_seed(seed, "cutout"), "cutout")

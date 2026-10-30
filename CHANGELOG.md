@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.65.0] - a crown card's cutout is leaves, not discs
+
+The factory's roadmap 324; the walker, 2026-10-30, of the vertical slice: "try the card-based trees". The foliage pack
+a tree's crown cards wear cut its alpha from a Worley field at 7 cells a tile -- a dozen plate-sized discs on a 4 m
+card -- so a card crown read as green circles, the reason Zoo's card crown was judged not ready on cold run 9032.
+`material_grammar.leaf_scatter` cuts it instead from leaves: `sprays` seeded spray centres inside the card's ellipse,
+`per` leaves round each at a radius drawn from the spray's own, each a rotated ellipse `length` px long and `width` of
+that wide pointing out from its spray with a seeded wobble, wrapped at the tile's edges; each leaf multiplies the
+albedo by its own shade in [1 - `shade`, 1 + `shade`], so neighbouring leaves differ. A grammar asks for it with
+`cutout.leaves`; `foliage_delco` does (16 sprays, 260 leaves each, 13 px, at 512 px, shade 0.10 -- the slice was
+judged at 0.20, and halving it keeps the pack inside the Controlled Contrast baseline, `tests/test_art_standard.py`,
+which 0.20 broke: value range 0.196 -> 0.247). Zoo (>= 1.151.0) frames one
+tile a card. On the slice (the factory's `docs/findings/slice_look/`, slice 13b) the street trees read as trees.
+Tests: tests/test_leaf_scatter.py.
+
 ## [0.64.0] - a material pack asks to be sampled linear
 
 The factory's roadmap 324. The walker, 2026-10-28: "how would we make our assets look more realistic?", and the target,
