@@ -805,16 +805,16 @@
       "value_range": 0.14636750203120852
     },
     "road_paint_delco": {
-      "blown_frac": 0.30645751953125,
-      "chroma_mean": 0.017186821239022765,
+      "blown_frac": 0.0753326416015625,
+      "chroma_mean": 0.019050014629965625,
       "chroma_p95": 0.0676023708362515,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.07663848427755691,
+      "hf_energy": 0.0899714206529233,
       "kind": "road_paint",
       "rough_mean": 0.751440190333946,
       "tier": null,
-      "value_range": 0.1673910786845857
+      "value_range": 0.3045595735924407
     },
     "rubber_delco": {
       "blown_frac": 0.0,

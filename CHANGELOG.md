@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.67.0] - Delco's road paint, worn
+
+The walker, of the game's vertical slice: "keep getting us closer to that amazing vertical slice look".
+
+### Changed
+- **`road_paint_delco`**: the avenue's lines read crisp and new -- 90 % coverage, an off-white at 0.87 -- on a street
+  meant to be 1999's. Dirt-grey base colours (#cfcac0 / #c2bdb2 / #d8d3c9, the map 0.75), `detail_strength` 0.2,
+  `cutout.coverage` 0.8 with its field at 8 cells (1 m) instead of 4, so the loss is ragged nicks along a line.
+  **Refused on the way, kept in the grammar's notes:** 70 % at 4 cells cut the edge lines into random dashes that read
+  as a broken lane line. Re-baked on the slice's walk copy with each map swapped in (the factory's
+  `docs/findings/sodium_pools/`); a map, so no draw moves.
+- **`tools/art_standard_baseline.json` re-snapshotted**: worn paint is wider-ranged by construction -- value_range
+  0.167 -> 0.305, hf_energy 0.077 -> 0.090 -- inside the environment budget (value_range 0.500).
+
+Tests: tests/test_road_paint_worn.py (fails on 0.66.0).
+
 ## [0.66.0] - Delco's asphalt at a weathered road's albedo
 
 The walker, 2026-10-30, of the game's vertical slice: "keep getting us closer to that amazing vertical slice look".

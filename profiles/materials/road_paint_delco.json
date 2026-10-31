@@ -2,9 +2,9 @@
   "id": "road_paint_delco",
   "kind": "road_paint",
   "base_colors": [
-    "#e6e3dc",
-    "#d8d4ca",
-    "#efece5"
+    "#cfcac0",
+    "#c2bdb2",
+    "#d8d3c9"
   ],
   "meters_per_tile": 8.0,
   "bands": {
@@ -26,7 +26,7 @@
     "cells": 640,
     "octaves": 2
   },
-  "detail_strength": 0.15,
+  "detail_strength": 0.2,
   "posterize": 6,
   "roughness": {
     "base": 0.75,
@@ -36,10 +36,10 @@
   "cutout": {
     "generator": {
       "generator": "fbm",
-      "cells": 4,
+      "cells": 8,
       "octaves": 6
     },
-    "coverage": 0.9
+    "coverage": 0.8
   },
   "transparency": {
     "opacity": 1.0,
@@ -49,7 +49,7 @@
     "roughness": true,
     "normal": false
   },
-  "notes": "An 8 m tile, not 0.5 m, because Lot projects this pack in WORLD space (uv1_world_triplanar at 1/meters_per_tile) and a crosswalk bar is 0.5 m wide on a 1.0 m pitch: at 0.5 m every bar of a crosswalk sampled the same phase of the tile, and every bar repeated the same holes every 0.5 m down its 9.4 m length -- measured on cold run 9044's themed build, 36 of 36 bar pairs within a crosswalk and 84 of 210 across the site pixel-identical. The walker's question was why the paint wore in identical blotches. The colour bands keep their size in metres (every cell count x16). The wear is fbm from 4 cells (2 m) down six octaves to 6 cm, so a whole stretch of paint is worn or intact and the nicks inside it are ragged; `coverage` 0.9 keeps nine tenths of the tile at the field's own quantile, because the fixed 0.40 threshold this carried would have kept 70% at these octaves. RESIDUE THIS CANNOT REMOVE: any world-space period repeats wherever two bars stand a multiple of it apart (5 of 210 pairs on 9044 still match within 24 cm of shift at 8 m; a 7.7 m tile only moved which pairs); a per-marking uv offset in Lot is what ends that. 1024 px at 8 m is the library's 128 px/m. WET VARIANT: a paint film is not porous, so it responds like painted metal -- the least darkening of the four presets (0.30). Its cavity bias is low because a flat film has almost no recesses to pool in; the water is on it, not in it.",
+  "notes": "WORN, 1999 (0.67.0): the paint read crisp and new on the vertical slice's avenue -- 90 % coverage, an off-white at 0.87. A 1999 Delco street's lines are dirty and chipped: dirt-grey colours (0.75), 80 % coverage, the wear field at 8 cells (1 m) not 4, so the loss is ragged nicks along a line, not missing stretches. 70 % at 4 cells was tried first and refused from its frames: it cut the edge lines into random dashes that read as a broken lane line (the factory's docs/findings/sodium_pools/). PREVIOUSLY: An 8 m tile, not 0.5 m, because Lot projects this pack in WORLD space (uv1_world_triplanar at 1/meters_per_tile) and a crosswalk bar is 0.5 m wide on a 1.0 m pitch: at 0.5 m every bar of a crosswalk sampled the same phase of the tile, and every bar repeated the same holes every 0.5 m down its 9.4 m length -- measured on cold run 9044's themed build, 36 of 36 bar pairs within a crosswalk and 84 of 210 across the site pixel-identical. The walker's question was why the paint wore in identical blotches. The colour bands keep their size in metres (every cell count x16). The wear is fbm from 4 cells (2 m) down six octaves to 6 cm, so a whole stretch of paint is worn or intact and the nicks inside it are ragged; `coverage` 0.9 keeps nine tenths of the tile at the field's own quantile, because the fixed 0.40 threshold this carried would have kept 70% at these octaves. RESIDUE THIS CANNOT REMOVE: any world-space period repeats wherever two bars stand a multiple of it apart (5 of 210 pairs on 9044 still match within 24 cm of shift at 8 m; a 7.7 m tile only moved which pairs); a per-marking uv offset in Lot is what ends that. 1024 px at 8 m is the library's 128 px/m. WET VARIANT: a paint film is not porous, so it responds like painted metal -- the least darkening of the four presets (0.30). Its cavity bias is low because a flat film has almost no recesses to pool in; the water is on it, not in it.",
   "wet": {
     "responds_like": "painted_metal",
     "amount": 0.9,
