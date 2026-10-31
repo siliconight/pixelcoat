@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.66.0] - Delco's asphalt at a weathered road's albedo
+
+The walker, 2026-10-30, of the game's vertical slice: "keep getting us closer to that amazing vertical slice look".
+
+### Changed
+- **`asphalt_delco`'s base colours** #33322f / #3a3936 / #2c2b28 -> #52514d / #5a5955 / #4a4945. Minted at 0.30.0
+  and never retuned for brightness, the pack's albedo map measured 0.035 linear -- darker than fresh asphalt (about
+  0.05-0.10) and a third of a weathered road's (0.10-0.20) -- and at Blue Hour the slice's avenue read as a black
+  band under every street view. The new map is 0.095 linear. Re-baked on the slice's walk copy with the map swapped
+  in (the factory's `docs/findings/sodium_pools/`): ave_east 48.9 -> 57.0 of 255, the gas forecourt 61.6 -> 72.1, and
+  the cracks and aggregate read inside each sodium pool. A map: no draw moves. `asphalt_street`, an older grammar no
+  Delco theme draws, is unchanged -- nothing has seen it on a level.
+- **`tools/art_standard_baseline.json` re-snapshotted**, the ceremony the art standard asks for a deliberate
+  regression: `asphalt_delco` brighter shows more of its own grain -- value_range 0.118 -> 0.204 and hf_energy 0.033
+  -> 0.060, chroma 0.006 -> 0.009 -- all inside the environment budget (value_range 0.500, chroma 0.030). The
+  snapshot also gains rows for three grammars added since the last (brick_brown_delco, brick_orange_delco,
+  chain_link_galvanized), which the budget judged and judges either way.
+
+Tests: tests/test_asphalt_albedo.py (fails on 0.65.0).
+
 ## [0.65.0] - a crown card's cutout is leaves, not discs
 
 The factory's roadmap 324; the walker, 2026-10-30, of the vertical slice: "try the card-based trees". The foliage pack

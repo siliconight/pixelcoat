@@ -2,15 +2,15 @@
   "materials": {
     "asphalt_delco": {
       "blown_frac": 0.0,
-      "chroma_mean": 0.0058960126120288685,
-      "chroma_p95": 0.045691271976724374,
+      "chroma_mean": 0.008996263183047148,
+      "chroma_p95": 0.042954777783392586,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.032709976416060306,
+      "hf_energy": 0.06003447277579105,
       "kind": "asphalt",
       "rough_mean": 0.9499688840379902,
       "tier": null,
-      "value_range": 0.118133954994807
+      "value_range": 0.2040432713171318
     },
     "asphalt_street": {
       "blown_frac": 0.0,
@@ -23,6 +23,18 @@
       "rough_mean": 0.9509860768037683,
       "tier": null,
       "value_range": 0.15731532473188314
+    },
+    "brick_brown_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.050357092293765095,
+      "chroma_p95": 0.0636539768940114,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.11090864930892713,
+      "kind": "brick_brown",
+      "rough_mean": 0.9007667691099878,
+      "tier": null,
+      "value_range": 0.2996026729578001
     },
     "brick_buff_civic": {
       "blown_frac": 0.0,
@@ -59,6 +71,18 @@
       "rough_mean": 0.200018310546875,
       "tier": null,
       "value_range": 0.4315452783555903
+    },
+    "brick_orange_delco": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.10217723332314116,
+      "chroma_p95": 0.1362779038935292,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.07927389340298882,
+      "kind": "brick_orange",
+      "rough_mean": 0.9007667691099878,
+      "tier": null,
+      "value_range": 0.20453583617050036
     },
     "brick_painted_white": {
       "blown_frac": 0.070281982421875,
@@ -155,6 +179,18 @@
       "rough_mean": 0.9196217854817709,
       "tier": null,
       "value_range": 0.1596961385368385
+    },
+    "chain_link_galvanized": {
+      "blown_frac": 0.0,
+      "chroma_mean": 0.011698986386888929,
+      "chroma_p95": 0.05423233010644616,
+      "crushed_frac": 0.0,
+      "emissive": false,
+      "hf_energy": 0.05871324449508961,
+      "kind": "chain_link",
+      "rough_mean": 0.5594137752757353,
+      "tier": null,
+      "value_range": 0.18939157654594208
     },
     "cinderblock_delco": {
       "blown_frac": 0.0,
@@ -301,16 +337,16 @@
       "value_range": 0.10083821756504574
     },
     "drywall_orangepeel_delco": {
-      "blown_frac": 0.0224761962890625,
-      "chroma_mean": 0.018034801704513895,
+      "blown_frac": 0.005035400390625,
+      "chroma_mean": 0.018002928693062345,
       "chroma_p95": 0.023127946873855516,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.039692834304010646,
+      "hf_energy": 0.03287488730747374,
       "kind": "drywall",
-      "rough_mean": 0.8793188356885723,
+      "rough_mean": 0.879146022422641,
       "tier": null,
-      "value_range": 0.11914006576804115
+      "value_range": 0.10083821756504574
     },
     "drywall_scuffed_delco": {
       "blown_frac": 0.0,
@@ -362,11 +398,11 @@
     },
     "foliage_delco": {
       "blown_frac": 0.0,
-      "chroma_mean": 0.09495397048158215,
+      "chroma_mean": 0.0947480684046324,
       "chroma_p95": 0.11620500298904476,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.04651432189965989,
+      "hf_energy": 0.04822980458497159,
       "kind": "foliage",
       "rough_mean": 0.7999353745404412,
       "tier": null,
@@ -769,12 +805,12 @@
       "value_range": 0.14636750203120852
     },
     "road_paint_delco": {
-      "blown_frac": 0.32574462890625,
-      "chroma_mean": 0.016313511688395163,
+      "blown_frac": 0.30645751953125,
+      "chroma_mean": 0.017186821239022765,
       "chroma_p95": 0.0676023708362515,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.07588622602590224,
+      "hf_energy": 0.07663848427755691,
       "kind": "road_paint",
       "rough_mean": 0.751440190333946,
       "tier": null,
