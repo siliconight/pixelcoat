@@ -40,6 +40,31 @@
     "decay": 0.95,
     "strength": 0.22
   },
+  "wear": [
+    {
+      "generator": {
+        "generator": "fbm",
+        "cells": 3,
+        "octaves": 3
+      },
+      "coverage": 0.14,
+      "feather": 0.7,
+      "color": "#5a5751",
+      "strength": 0.3
+    },
+    {
+      "generator": {
+        "generator": "fbm",
+        "cells": 64,
+        "octaves": 2
+      },
+      "coverage": 0.018,
+      "feather": 0.05,
+      "color": "#2b2927",
+      "strength": 0.8,
+      "roughness": -0.25
+    }
+  ],
   "detail_strength": 0.2,
   "posterize": 14,
   "roughness": {
@@ -69,7 +94,7 @@
     "intensity": 0.012,
     "angle": 100
   },
-  "notes": "A concrete walk is SLABS: a 2x2 grid of scored joints on a 2.5 m tile is 1.25 m squares, which is what a Delco sidewalk is poured in. REFUTED ON THE WAY: the white mosaic on the frames was read as the meso Worley and it was the `edges` crack network (5 cells at 0.35 strength) -- adding slabs without fixing that gave a sidewalk wearing both. Edges are now hairlines and nearly nothing (0.07 at a 0.985 threshold): at 0.16 the crack web still read over the slabs, so the walk wore both; the joints are the masonry grid and the face is fine sand. CORRECTED after cold run 9041: the crack layer is a closed tessellation, so the 'few long cracks' the retune claimed were a honeycomb at every threshold. sparsity 0.28 breaks it. WET VARIANT: a sidewalk is under awnings and trees for part of its run and its slabs drain to their joints, so it reads slightly less uniformly wet than the road beside it.",
+  "notes": "GUM AND GRIME (0.68.0): a 1999 Philly sidewalk is flecked with flattened gum and patched with grime, and the vertical slice's slabs were clean. Two `wear` layers: broad soft grime (fbm 3 cells, 14 %, feathered) and gum -- fbm at 64 cells on the 2.5 m tile, 1.8 %, hard-edged, near black and a little glossier. Re-baked on the slice with the map swapped in (the factory's docs/findings/sodium_pools/): flecks read across the near slabs and no repeat shows. A concrete walk is SLABS: a 2x2 grid of scored joints on a 2.5 m tile is 1.25 m squares, which is what a Delco sidewalk is poured in. REFUTED ON THE WAY: the white mosaic on the frames was read as the meso Worley and it was the `edges` crack network (5 cells at 0.35 strength) -- adding slabs without fixing that gave a sidewalk wearing both. Edges are now hairlines and nearly nothing (0.07 at a 0.985 threshold): at 0.16 the crack web still read over the slabs, so the walk wore both; the joints are the masonry grid and the face is fine sand. CORRECTED after cold run 9041: the crack layer is a closed tessellation, so the 'few long cracks' the retune claimed were a honeycomb at every threshold. sparsity 0.28 breaks it. WET VARIANT: a sidewalk is under awnings and trees for part of its run and its slabs drain to their joints, so it reads slightly less uniformly wet than the road beside it.",
   "wet": {
     "responds_like": "concrete",
     "amount": 0.85,

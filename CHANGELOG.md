@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.68.0] - Delco's sidewalk, flecked with gum
+
+The walker, of the game's vertical slice: "keep getting us closer to that amazing vertical slice look".
+
+### Changed
+- **`sidewalk_delco` gains two `wear` layers**: a 1999 Philly sidewalk is flecked with flattened gum and patched with
+  grime, and the slice's slabs were clean. Broad soft grime (fbm 3 cells, 14 % of the tile, feathered, #5a5751 at
+  0.3) and gum (fbm 64 cells on the 2.5 m tile, 1.8 %, hard-edged, #2b2927 at 0.8, 0.25 glossier). Re-baked on the
+  slice's walk copy with the map swapped in (the factory's `docs/findings/sodium_pools/`): flecks across the near slabs,
+  no repeat seen at 2.5 m. A map: no draw moves.
+- **`tools/art_standard_baseline.json` re-snapshotted**: hf_energy 0.062 -> 0.069, rough_mean 0.930 -> 0.927, both
+  the gum, both inside the environment budget (rough_mean_min 0.45).
+
+Tests: tests/test_sidewalk_gum.py (fails on 0.67.0).
+
 ## [0.67.0] - Delco's road paint, worn
 
 The walker, of the game's vertical slice: "keep getting us closer to that amazing vertical slice look".

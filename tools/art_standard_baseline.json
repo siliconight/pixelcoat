@@ -842,13 +842,13 @@
     },
     "sidewalk_delco": {
       "blown_frac": 0.0,
-      "chroma_mean": 0.011550065078511923,
+      "chroma_mean": 0.011334354380193656,
       "chroma_p95": 0.029772930586986823,
       "crushed_frac": 0.0,
       "emissive": false,
-      "hf_energy": 0.0623945826392481,
+      "hf_energy": 0.06889202965181884,
       "kind": "sidewalk",
-      "rough_mean": 0.9298452339920343,
+      "rough_mean": 0.9265450271905638,
       "tier": null,
       "value_range": 0.19985138841589167
     },
